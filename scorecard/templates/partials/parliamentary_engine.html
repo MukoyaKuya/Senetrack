@@ -1,0 +1,193 @@
+<!-- Partial Fragment: 4-Quadrant Performance Breakdown -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+    <!-- 1. Parliamentary Participation -->
+    <div class="bg-white rounded-[2rem] p-8 border border-slate-200 shadow-sm space-y-6">
+        <h3 class="text-sm font-black text-[#0369a1] uppercase tracking-widest flex items-center justify-between">
+            Parliamentary Participation
+            <span class="w-8 h-px bg-slate-200 flex-1 ml-4"></span>
+        </h3>
+        <div class="space-y-4">
+            <div class="flex justify-between items-end">
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Speeches Made:</p>
+                    <p class="text-2xl font-black text-slate-800">{{ perf.speeches }}</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Attendance Rate:</p>
+                    <p class="text-2xl font-black text-slate-800">{{ perf.attendance_rate|floatformat:0 }}%</p>
+                </div>
+            </div>
+            <!-- Trend Graph (Mini Bars) -->
+            <div class="h-20 flex items-end gap-1 pt-2">
+                {% for val in perf.trend_data %}
+                <div class="flex-1 bg-[#10b981] rounded-sm transition-all duration-1000"
+                    style="height: {{ val }}%; opacity: {{ forloop.counter|add:2 }}0%"></div>
+                {% endfor %}
+            </div>
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Performance Trend
+            </p>
+        </div>
+    </div>
+
+    <!-- 2. Legislative Effectiveness -->
+    <div class="bg-white rounded-[2rem] p-8 border border-slate-200 shadow-sm space-y-6 relative overflow-hidden">
+        <h3 class="text-sm font-black text-[#0369a1] uppercase tracking-widest flex items-center justify-between">
+            Legislative Effectiveness
+            <span class="w-8 h-px bg-slate-200 flex-1 ml-4"></span>
+        </h3>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-4">
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Bills Sponsored:</p>
+                    <p class="text-2xl font-black text-slate-800">{{ perf.sponsored_bills }}</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Bills Passed:</p>
+                    <p class="text-2xl font-black text-slate-800 text-blue-600">{{ perf.passed_bills }}</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Amendments:</p>
+                    <p class="text-2xl font-black text-slate-800">{{ perf.amendments }}</p>
+                </div>
+            </div>
+            <!-- Gavel Icon & Charts -->
+            <div class="flex flex-col items-center justify-center space-y-4">
+                <div class="text-5xl opacity-20">⚖️</div>
+                <div class="flex items-end gap-2 h-16 w-full px-4">
+                    <div class="w-1/2 bg-[#0369a1] rounded-t-lg transition-all" style="height: 40%"></div>
+                    <div class="w-1/2 bg-[#f59e0b] rounded-t-lg transition-all" style="height: 60%"></div>
+                </div>
+                <div class="flex gap-4 text-[8px] font-bold uppercase text-slate-400">
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 bg-[#0369a1] rounded"></span>
+                        Spon.</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 bg-[#f59e0b] rounded"></span>
+                        Pass.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Voting Record -->
+    <div class="bg-white rounded-[2rem] p-8 border border-slate-200 shadow-sm space-y-6 flex flex-col justify-between">
+        <div class="space-y-6">
+            <h3 class="text-sm font-black text-[#0369a1] uppercase tracking-widest flex items-center justify-between">
+                Voting Record
+                <span class="w-8 h-px bg-slate-200 flex-1 ml-4"></span>
+            </h3>
+            <div class="space-y-4">
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Weighted points:</p>
+                    <p class="text-2xl font-black text-slate-800">{{ results.pillars.voting }} / 20</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Major Votes Missed:</p>
+                    <p class="text-2xl font-black text-slate-800">{{ missed_votes }}</p>
+                </div>
+            </div>
+        </div>
+        <!-- Checklist Icon Decoration -->
+        <div class="flex justify-end pr-4">
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col gap-2">
+                <div class="flex items-center gap-2 text-xs font-bold text-emerald-500">✅ <span
+                        class="w-8 h-1 bg-emerald-500/20 rounded-full"></span></div>
+                <div class="flex items-center gap-2 text-xs font-bold text-emerald-500">✅ <span
+                        class="w-12 h-1 bg-emerald-500/20 rounded-full"></span></div>
+                <div class="flex items-center gap-2 text-xs font-bold text-red-500">❌ <span
+                        class="w-6 h-1 bg-red-500/20 rounded-full"></span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Committee Performance -->
+    <div class="bg-white rounded-[2rem] p-8 border border-slate-200 shadow-sm space-y-6">
+        <h3 class="text-sm font-black text-[#0369a1] uppercase tracking-widest flex items-center justify-between">
+            Committee Performance
+            <span class="w-8 h-px bg-slate-200 flex-1 ml-4"></span>
+        </h3>
+        <div class="flex items-center justify-between">
+            <div class="space-y-4">
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Active Role:</p>
+                    <p class="text-lg font-black text-slate-800">{{ perf.committee_role }}</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Performance Index:</p>
+                    <p class="text-2xl font-black text-slate-800">{{ results.percentages.committee|floatformat:0 }}%</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Attendance:</p>
+                    <p class="text-2xl font-black text-slate-800">{{ perf.committee_attendance|floatformat:0 }}%</p>
+                </div>
+            </div>
+            <!-- Circle Gauge -->
+            <div class="relative w-32 h-32 flex items-center justify-center">
+                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="45" fill="transparent" stroke="#f1f5f9" stroke-width="10" />
+                    <circle cx="50" cy="50" r="45" fill="transparent" stroke="#10b981" stroke-width="10"
+                        stroke-dasharray="{{ results.percentages.committee|floatformat:0|add:'0' }} 282.6"
+                        stroke-linecap="round"
+                        style="stroke-dasharray: calc({{ results.percentages.committee }} * 2.826) 282.6" />
+                </svg>
+                <div class="absolute text-center">
+                    <p class="text-3xl font-black text-slate-800">{{ results.percentages.committee|floatformat:0 }}<span
+                            class="text-sm">%</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Qualitative Insights (Bottom Section) -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+    <!-- Strengths -->
+    <div class="bg-emerald-50 rounded-[2rem] p-8 border border-emerald-100 shadow-sm flex flex-col h-full">
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <h4 class="text-emerald-800 text-base font-black uppercase tracking-widest">Strengths</h4>
+        </div>
+        <ul class="space-y-3 flex-1">
+            {% for s in results.insights.strengths %}
+            <li class="flex items-start gap-3 text-emerald-900 font-semibold text-sm">
+                <span class="mt-0.5 w-5 h-5 rounded-full bg-emerald-200 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                    </svg>
+                </span>
+                {{ s }}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- Improvements -->
+    <div class="bg-orange-50 rounded-[2rem] p-8 border border-orange-100 shadow-sm flex flex-col h-full">
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                        d="M13 7h-2v6h2V7zm0 8h-2v2h2v-2z" />
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" fill="none" />
+                </svg>
+            </div>
+            <h4 class="text-orange-800 text-base font-black uppercase tracking-widest">Areas for Improvement</h4>
+        </div>
+        <ul class="space-y-3 flex-1">
+            {% for i in results.insights.improvements %}
+            <li class="flex items-start gap-3 text-orange-900 font-semibold text-sm">
+                <span class="mt-0.5 w-5 h-5 rounded-full bg-orange-200 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-3 h-3 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 9v4m0 4h.01" />
+                    </svg>
+                </span>
+                {{ i }}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>

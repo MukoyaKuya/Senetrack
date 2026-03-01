@@ -1,0 +1,136 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SENETRACK | Kenya Senate Scorecard</title>
+    <meta name="description" content="Track and assess the performance of Kenyan Senators.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-brutal { font-family: 'Space Mono', monospace; }
+        .card-hover { transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease; }
+        .card-hover:hover { box-shadow: 0 2px 0 0 #94a3b8; border-color: #94a3b8; transform: translateY(-2px); }
+        .card-hover:hover .arrow-icon { transform: translateX(3px); color: #64748b; }
+        .arrow-icon { transition: transform 0.2s ease, color 0.2s ease; }
+        .avatar-initials { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+        .senator-card-wrapper { animation: fadeUp 0.4s ease both; }
+        .hero-bg {
+            background-image: url("{% static 'scorecard/images/hero-background.png' %}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .hero-overlay {
+            background: linear-gradient(to bottom, rgba(255,255,255,0.85) 0%, rgba(248,250,252,0.9) 100%);
+        }
+    </style>
+</head>
+<body class="bg-[#f1f5f9] min-h-screen">
+
+    <!-- Navigation -->
+    <nav class="bg-red-700 text-white px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-4 sticky top-0 z-50 border-b border-red-800/50">
+        <div class="flex items-center gap-6 w-full sm:w-auto">
+            <h1 class="font-brutal text-xl font-bold tracking-tight shrink-0"><a href="/" class="hover:opacity-90 transition-opacity">SENETRACK</a></h1>
+            <div class="hidden md:flex gap-6 text-sm font-medium text-slate-300">
+                <a href="/" class="text-white">All Senators</a>
+                <a href="https://hansardsn.parliament.go.ke/" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">Hansard</a>
+            </div>
+        </div>
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+            <div class="relative flex-1 sm:flex-initial sm:min-w-[240px]">
+                <i data-lucide="search" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-200 w-5 h-5 pointer-events-none"></i>
+                <input type="text" id="searchInput" onkeyup="filterSenators()" placeholder="Search by name, county, or party..." class="w-full py-2.5 pl-11 pr-4 rounded-lg text-sm border border-slate-500/50 bg-slate-700/80 text-white placeholder-slate-300 focus:ring-2 focus:ring-slate-400 focus:border-slate-400 focus:bg-slate-700 outline-none">
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Header -->
+    <header class="relative border-b border-slate-200 overflow-hidden">
+        <div class="hero-bg absolute inset-0"></div>
+        <div class="hero-overlay absolute inset-0"></div>
+        <div class="relative z-10 max-w-6xl mx-auto px-6 py-10 md:py-12 text-center">
+            <h1 class="font-brutal text-4xl md:text-5xl font-black tracking-tight text-slate-800 uppercase">Kenya Senate Scorecard</h1>
+            <p class="text-slate-500 mt-2 text-sm md:text-base font-medium">Track performance, voting records, and legislative impact</p>
+        </div>
+    </header>
+
+    <div class="max-w-6xl mx-auto px-6 pt-12 pb-20">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5" id="senatorGrid">
+            {% for senator in senators %}
+            <a href="{% url 'senator-detail' senator.senator_id %}" class="senator-card block senator-card-wrapper" style="animation-delay:{{ forloop.counter0 }}0ms">
+                <div class="rounded-lg border overflow-hidden card-hover flex flex-col h-full {% if senator.nomination or senator.county and 'nominated' in senator.county|lower %}bg-indigo-50/60 border-indigo-200/60{% else %}bg-white border-slate-200{% endif %}">
+                    <div class="h-1 w-full" style="background-color:{% if senator.grade == 'A' %}#14532d{% elif senator.grade == 'A-' %}#16a34a{% elif senator.grade == 'B+' %}#1d4ed8{% elif senator.grade == 'B' %}#3b82f6{% elif senator.grade == 'B-' %}#0ea5e9{% elif senator.grade == 'C+' %}#c2410c{% elif senator.grade == 'C' %}#ea580c{% elif senator.grade == 'C-' %}#fb923c{% elif senator.grade == 'D+' %}#1F0954{% elif senator.grade == 'D' %}#6F00FE{% elif senator.grade == 'D-' %}#32127A{% elif senator.grade == 'E' %}#dc2626{% else %}#e2e8f0{% endif %}"></div>
+                    <div class="p-5 flex items-center gap-4 flex-grow">
+                        <div class="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200 bg-slate-100">
+                            {% if senator.image_url %}
+                            <img src="{{ senator.image_url }}" alt="{{ senator.name }}" class="w-full h-full object-cover aspect-square" style="object-position:center 20%;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                            <div class="avatar-initials w-full h-full items-center justify-center text-white font-black text-lg leading-none hidden">{{ senator.name|slice:":1" }}</div>
+                            {% else %}
+                            <div class="avatar-initials w-full h-full flex items-center justify-center text-white font-black text-lg leading-none">{{ senator.name|slice:":1" }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h2 class="text-base font-extrabold text-slate-800 leading-tight senator-county truncate flex items-center gap-1.5">
+                                {% if senator.nomination or senator.county and 'nominated' in senator.county|lower %}
+                                <i data-lucide="award" class="w-4 h-4 text-indigo-500 shrink-0"></i>
+                                {% endif %}
+                                <span class="truncate">{% if senator.nomination %}{{ senator.nomination }}{% elif senator.county and 'nominated' in senator.county|lower %}Nominated Senator{% else %}{{ senator.county }}{% if senator.county and 'County' not in senator.county and 'City' not in senator.county %} County{% endif %}{% endif %}</span>
+                            </h2>
+                            <p class="text-xs font-medium text-slate-500 mt-0.5 senator-name truncate">{{ senator.name }}</p>
+                        </div>
+                        {% if senator.overall_score %}
+                        <div class="flex-shrink-0 text-right">
+                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Score</p>
+                            <p class="text-xl font-black text-slate-800 leading-none">{{ senator.overall_score }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="px-5 pb-4 pt-0 flex items-center justify-between">
+                        <span class="inline-block px-3 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 senator-party truncate max-w-[200px]">{{ senator.party }}</span>
+                        <div class="flex items-center gap-2">
+                            {% if senator.grade %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-black tracking-wide" style="{% if senator.grade == 'A' %}background:#dcfce7;color:#14532d;{% elif senator.grade == 'A-' %}background:#bbf7d0;color:#15803d;{% elif senator.grade == 'B+' %}background:#dbeafe;color:#1d4ed8;{% elif senator.grade == 'B' %}background:#bfdbfe;color:#2563eb;{% elif senator.grade == 'B-' %}background:#e0f2fe;color:#0369a1;{% elif senator.grade == 'C+' %}background:#ffedd5;color:#c2410c;{% elif senator.grade == 'C' %}background:#fed7aa;color:#c2410c;{% elif senator.grade == 'C-' %}background:#fde8c8;color:#9a3412;{% elif senator.grade == 'D+' %}background:#ede9fe;color:#1F0954;{% elif senator.grade == 'D' %}background:#ede9fe;color:#6F00FE;{% elif senator.grade == 'D-' %}background:#f5f3ff;color:#32127A;{% elif senator.grade == 'E' %}background:#fee2e2;color:#dc2626;{% else %}background:#f1f5f9;color:#64748b;{% endif %}">{{ senator.grade }}</span>
+                            {% endif %}
+                            <svg class="w-4 h-4 text-slate-300 arrow-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        <div id="noResults" class="hidden text-center py-24">
+            <div class="text-5xl mb-4">&#128269;</div>
+            <h3 class="text-xl font-bold text-slate-700">No senators found</h3>
+            <p class="text-slate-400 mt-2 text-sm">Try a different name, county, or party.</p>
+        </div>
+    </div>
+
+    <div class="text-center pb-8 text-xs text-slate-500 font-medium font-brutal">SENETRACK &mdash; Assessing Senators' Performance in the Kenyan Senate</div>
+
+    <script>
+        lucide.createIcons();
+        function filterSenators() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toLowerCase();
+            const cards = document.querySelectorAll('.senator-card');
+            let count = 0;
+            cards.forEach(card => {
+                const name = card.querySelector('.senator-name').textContent.toLowerCase();
+                const county = card.querySelector('.senator-county').textContent.toLowerCase();
+                const party = card.querySelector('.senator-party').textContent.toLowerCase();
+                const show = name.includes(filter) || county.includes(filter) || party.includes(filter);
+                card.style.display = show ? '' : 'none';
+                if (show) count++;
+            });
+            document.getElementById('noResults').classList.toggle('hidden', count > 0);
+        }
+    </script>
+</body>
+</html>
