@@ -2,7 +2,60 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from unfold.admin import ModelAdmin
-from .models import Senator, ParliamentaryPerformance, SenatorQuote
+from .models import Senator, ParliamentaryPerformance, SenatorQuote, County, CountyImage, Party
+
+
+class CountyImageInline(admin.StackedInline):
+    model = CountyImage
+    extra = 1
+    fields = ('image', 'caption', 'order')
+
+
+@admin.register(County)
+class CountyAdmin(ModelAdmin):
+    inlines = [CountyImageInline]
+    list_display = ('name', 'region', 'logo_preview', 'order')
+    list_filter = ('region',)
+    search_fields = ('name',)
+    prepopulated_fields = {'slug': ('name',)}
+    fieldsets = (
+        ('Basic Info', {
+            'fields': ('name', 'slug', 'region', 'order', 'description', 'official_profile_url', 'development_dashboard_url'),
+        }),
+        ('Logo', {
+            'fields': ('logo', 'logo_preview'),
+            'description': 'Upload a county logo/crest to display on the county card.',
+        }),
+        ('Governor', {
+            'fields': ('governor_name', 'governor_party', 'governor_image', 'governor_image_preview'),
+            'description': "Governor's name, party, and photo shown on the county detail page.",
+        }),
+        ('Women Representative', {
+            'fields': ('women_rep_name', 'women_rep_party', 'women_rep_image'),
+            'description': "Women representative's name, party, and photo.",
+        }),
+    )
+    readonly_fields = ('logo_preview', 'governor_image_preview')
+
+    def logo_preview(self, obj):
+        if obj and obj.logo:
+            return format_html(
+                '<img src="{}" style="max-width:120px;max-height:120px;'
+                'object-fit:contain;border:1px solid #e2e8f0;border-radius:8px;" />',
+                obj.logo.url,
+            )
+        return mark_safe('<p style="color:#94a3b8;font-style:italic;">No logo yet</p>')
+    logo_preview.short_description = 'Preview'
+
+    def governor_image_preview(self, obj):
+        if obj and obj.governor_image:
+            return format_html(
+                '<img src="{}" style="max-width:120px;max-height:120px;'
+                'object-fit:cover;border:1px solid #e2e8f0;border-radius:50%%;" />',
+                obj.governor_image.url,
+            )
+        return mark_safe('<p style="color:#94a3b8;font-style:italic;">No governor photo yet</p>')
+    governor_image_preview.short_description = 'Preview'
 
 
 class SenatorQuoteInline(admin.StackedInline):
@@ -14,15 +67,28 @@ class SenatorQuoteInline(admin.StackedInline):
 @admin.register(Senator)
 class SenatorAdmin(ModelAdmin):
     inlines = [SenatorQuoteInline]
-    list_display = ('name', 'county', 'nomination', 'party', 'photo_preview', 'image_url')
-    search_fields = ('name', 'county', 'nomination', 'party')
-    list_filter = ('party', 'county')
+    list_display = ('name', 'county_name', 'nomination', 'party', 'photo_preview', 'image_url')
+    search_fields = ('name', 'county_fk__name', 'nomination', 'party')
+    list_filter = ('party', 'county_fk')
 
     # Group fields logically in the edit form
     fieldsets = (
         ('Basic Info', {
-            'fields': ('senator_id', 'name', 'county', 'nomination', 'party', 'available_engines'),
-            'description': "For nominated senators: set county to 'Nominated' and fill 'nomination' (e.g. 'Women Affairs Interest').",
+            'fields': (
+                'senator_id',
+                'name',
+                'county_fk',
+                'nomination',
+                'party',
+                'is_deceased',
+                'is_still_computing',
+                'available_engines',
+            ),
+            'description': (
+                "For nominated senators: link the home county (or a generic 'Nominated' county record) and fill "
+                "'nomination' (e.g. 'Women Affairs Interest'). Mark 'Still computing' for newly added senators whose "
+                "performance data is not yet available."
+            ),
         }),
         ('Profile Photo', {
             'fields': ('image', 'photo_preview_large', 'image_url'),
@@ -31,6 +97,12 @@ class SenatorAdmin(ModelAdmin):
         }),
     )
     readonly_fields = ('photo_preview_large',)
+
+    def county_name(self, obj):
+        return obj.county_fk.name if obj.county_fk else "—"
+
+    county_name.short_description = 'County'
+    county_name.admin_order_field = 'county_fk__name'
 
     def photo_preview(self, obj):
         """Small thumbnail shown in the list view."""
@@ -76,6 +148,31 @@ class SenatorQuoteAdmin(ModelAdmin):
     def quote_preview(self, obj):
         return (obj.quote[:60] + "…") if len(obj.quote) > 60 else obj.quote
     quote_preview.short_description = "Quote"
+
+
+@admin.register(Party)
+class PartyAdmin(ModelAdmin):
+    list_display = ('name', 'founded_year', 'leader_name', 'logo_preview')
+    search_fields = ('name', 'leader_name')
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'logo', 'logo_preview'),
+        }),
+        ('Leadership & History', {
+            'fields': ('founded_year', 'leader_name', 'history'),
+        }),
+    )
+    readonly_fields = ('logo_preview',)
+
+    def logo_preview(self, obj):
+        if obj and obj.logo:
+            return format_html(
+                '<img src="{}" style="max-width:48px;max-height:48px;'
+                'object-fit:contain;border:1px solid #e2e8f0;border-radius:6px;" />',
+                obj.logo.url,
+            )
+        return mark_safe('<span style="color:#94a3b8;font-style:italic;">No logo</span>')
+    logo_preview.short_description = 'Logo'
 
 
 @admin.register(ParliamentaryPerformance)

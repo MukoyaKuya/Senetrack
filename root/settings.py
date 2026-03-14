@@ -10,22 +10,31 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
+
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Redis URL for cache and sessions (set in production for concurrency)
+REDIS_URL = os.environ.get('REDIS_URL', '').strip() or None
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-nslt8yi9h@q!dqv(6%0g*j3zm(wad39#c@&l$$*^uzc#0l^vx@'
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-nslt8yi9h@q!dqv(6%0g*j3zm(wad39#c@&l$$*^uzc#0l^vx@'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'true').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 
 # Application definition
@@ -38,11 +47,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
     'scorecard',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -73,14 +84,35 @@ WSGI_APPLICATION = 'root.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+# Set DATABASE_URL (e.g. postgres://user:pass@host:5432/dbname) for PostgreSQL in production.
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+_db_config = dj_database_url.config(default=None, conn_max_age=60)
+if _db_config:
+    DATABASES = {'default': _db_config}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
 
+# Caches (set REDIS_URL in production for shared cache and better concurrency)
+if REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': REDIS_URL,
+        }
+    }
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+    SESSION_CACHE_ALIAS = 'default'
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -117,9 +149,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
     BASE_DIR / "scorecard" / "static",
 ]
+if not DEBUG:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files (user-uploaded content)
 MEDIA_URL = '/media/'
@@ -129,3 +164,18 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Mapbox access token for frontier map (get at https://account.mapbox.com/access-tokens/)
+MAPBOX_ACCESS_TOKEN = os.environ.get('MAPBOX_ACCESS_TOKEN', 'pk.eyJ1IjoiZGVsdG8yNTQiLCJhIjoiY21taTNoeTl4MGFnMzJwczdoanZzdXhzcyJ9.VfdR2KBhUBPsLKGGl4Uusw')
+
+# Kenya counties GeoJSON for frontier map (counties colored by region)
+KENYA_COUNTIES_GEOJSON_URL = os.environ.get(
+    'KENYA_COUNTIES_GEOJSON_URL',
+    'https://raw.githubusercontent.com/abugasavio/ke.counties/master/counties.geojson'
+)
+
+# App-specific config (override via ACTIVE_DEBATES env var)
+try:
+    ACTIVE_DEBATES = int(os.environ.get('ACTIVE_DEBATES', 12))
+except (TypeError, ValueError):
+    ACTIVE_DEBATES = 12

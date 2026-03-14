@@ -1,0 +1,150 @@
+{% extends "scorecard/base_light.html" %}
+{% load static scorecard_extras %}
+
+{% block title %}Counties{% endblock %}
+{% block meta_description %}Browse Kenya's 47 counties and find your senator.{% endblock %}
+{% block og_title %}Counties | Kenya Senate Scorecard{% endblock %}
+{% block og_description %}Browse Kenya's 47 counties and find your senator.{% endblock %}
+
+{% block nav %}
+{% include "partials/nav_light.html" with nav_active="counties" %}
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .county-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px -8px rgba(0,0,0,0.15);
+    }
+    .county-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(16px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .county-card-wrapper {
+        animation: fadeUp 0.4s ease both;
+    }
+    .region-btn.active {
+        background: #1e293b;
+        color: white;
+        border-color: #1e293b;
+    }
+    .region-btn.active:hover {
+        color: #020617; /* near-black text when hovered */
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<header class="relative border-b border-slate-200 overflow-hidden bg-white">
+    <div class="relative z-10 max-w-6xl mx-auto px-6 py-10 md:py-12 text-center">
+        <h1 class="font-brutal text-4xl md:text-5xl font-black tracking-tight text-slate-900 uppercase">Find Your County</h1>
+        <p class="text-slate-600 mt-2 text-sm md:text-base font-medium">Kenya's 47 counties — click a county to view its profile and senator</p>
+    </div>
+</header>
+
+<div class="max-w-6xl mx-auto px-6 pt-8 pb-20 bg-[#f1f5f9]">
+    <div class="flex flex-wrap items-center gap-2 mb-8">
+        <div class="flex flex-nowrap items-center gap-1.5 overflow-x-auto pb-2">
+            <button type="button" class="region-btn active px-3 py-1.5 rounded-lg text-xs font-bold border-2 transition-colors bg-slate-800 text-white border-slate-800" data-region="all">All</button>
+            <button type="button" class="region-btn px-3 py-1.5 rounded-lg text-xs font-bold border-2 border-slate-300 text-slate-600 hover:border-slate-500 hover:bg-slate-50" data-region="coast">Coast</button>
+            <button type="button" class="region-btn px-3 py-1.5 rounded-lg text-xs font-bold border-2 border-slate-300 text-slate-600 hover:border-slate-500 hover:bg-slate-50" data-region="north_eastern">North Eastern</button>
+            <button type="button" class="region-btn px-3 py-1.5 rounded-lg text-xs font-bold border-2 border-slate-300 text-slate-600 hover:border-slate-500 hover:bg-slate-50" data-region="eastern">Eastern</button>
+            <button type="button" class="region-btn px-3 py-1.5 rounded-lg text-xs font-bold border-2 border-slate-300 text-slate-600 hover:border-slate-500 hover:bg-slate-50" data-region="central">Central</button>
+            <button type="button" class="region-btn px-3 py-1.5 rounded-lg text-xs font-bold border-2 border-slate-300 text-slate-600 hover:border-slate-500 hover:bg-slate-50" data-region="rift_valley">Rift Valley</button>
+            <button type="button" class="region-btn px-3 py-1.5 rounded-lg text-xs font-bold border-2 border-slate-300 text-slate-600 hover:border-slate-500 hover:bg-slate-50" data-region="western">Western</button>
+            <button type="button" class="region-btn px-3 py-1.5 rounded-lg text-xs font-bold border-2 border-slate-300 text-slate-600 hover:border-slate-500 hover:bg-slate-50" data-region="nyanza">Nyanza</button>
+        </div>
+        <div class="flex items-center gap-2">
+            <input
+                id="countySearchInput"
+                type="text"
+                placeholder="Search county by name..."
+                class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-slate-800 focus:border-slate-800 bg-white"
+            />
+            <button
+                id="countySearchButton"
+                type="button"
+                class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold border-2 border-slate-800 bg-slate-800 text-white hover:bg-slate-900"
+            >
+                <i data-lucide="search" class="w-4 h-4"></i>
+                Search
+            </button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="countyGrid">
+        {% for county in counties %}
+        <a href="{% url 'county-detail' county.slug %}" class="county-card county-card-wrapper block" data-region="{{ county.region }}" data-name="{{ county.name|lower }}" style="animation-delay:{{ forloop.counter0 }}0ms">
+            <div class="rounded-xl border border-slate-200 bg-white overflow-hidden h-full flex flex-col">
+                <div class="p-5 flex flex-col items-center text-center flex-grow">
+                    <div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border border-slate-200 bg-slate-100 mb-3 flex items-center justify-center">
+                        {% if county.logo %}
+                        <img src="{{ county.logo.url }}" alt="{{ county.name }}" class="w-full h-full object-contain p-1" loading="lazy" decoding="async" width="64" height="64">
+                        {% else %}
+                        <i data-lucide="map-pin" class="w-8 h-8 text-slate-400"></i>
+                        {% endif %}
+                    </div>
+                    <h2 class="text-base font-extrabold text-slate-800 leading-tight">{{ county.name }}</h2>
+                    <p class="text-xs font-medium text-slate-500 mt-0.5">{{ county.region|replace_underscore }}</p>
+                </div>
+                <div class="px-4 pb-4 flex justify-center">
+                    <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+                        View profile
+                        <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                    </span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    const btns = document.querySelectorAll('.region-btn');
+    const cards = document.querySelectorAll('.county-card');
+    const searchInput = document.getElementById('countySearchInput');
+    const searchButton = document.getElementById('countySearchButton');
+
+    function getActiveRegion() {
+        const active = document.querySelector('.region-btn.active');
+        return active ? active.getAttribute('data-region') : 'all';
+    }
+
+    function applyFilters() {
+        const region = getActiveRegion();
+        const term = (searchInput.value || '').trim().toLowerCase();
+        cards.forEach(function(c) {
+            const cardRegion = c.getAttribute('data-region');
+            const cardName = (c.getAttribute('data-name') || '').toLowerCase();
+            const matchesRegion = (region === 'all' || cardRegion === region);
+            const matchesSearch = (!term || cardName.indexOf(term) !== -1);
+            c.style.display = (matchesRegion && matchesSearch) ? '' : 'none';
+        });
+    }
+
+    btns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            btns.forEach(function(b) { b.classList.remove('active'); b.classList.add('border-slate-300', 'text-slate-600'); b.classList.remove('bg-slate-800', 'border-slate-800', 'text-white'); });
+            this.classList.add('active', 'bg-slate-800', 'border-slate-800', 'text-white');
+            this.classList.remove('border-slate-300', 'text-slate-600');
+            applyFilters();
+        });
+    });
+
+    if (searchButton && searchInput) {
+        searchButton.addEventListener('click', applyFilters);
+        searchInput.addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') {
+                applyFilters();
+            }
+        });
+    }
+})();
+</script>
+{% endblock %}

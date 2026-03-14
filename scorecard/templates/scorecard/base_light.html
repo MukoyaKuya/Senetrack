@@ -1,0 +1,45 @@
+{% load static scorecard_extras %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SENETRACK{% endblock %} | Kenya Senate Scorecard</title>
+    <meta name="description" content="{% block meta_description %}Track and assess the performance of Kenyan Senators.{% endblock %}">
+    {# Open Graph #}
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:site_name" content="SENETRACK">
+    <meta property="og:title" content="{% block og_title %}SENETRACK | Kenya Senate Scorecard{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Track and assess the performance of Kenyan Senators.{% endblock %}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:image" content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'scorecard/images/hero-parliament.png' %}{% endblock %}">
+    <meta property="og:locale" content="en_KE">
+    {# Twitter Card #}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}SENETRACK | Kenya Senate Scorecard{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Track and assess the performance of Kenyan Senators.{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'scorecard/images/hero-parliament.png' %}{% endblock %}">
+    <script src="{% static 'scorecard/vendor/tailwind.js' %}"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="{% static 'scorecard/vendor/lucide.min.js' %}"></script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+        .font-brutal { font-family: 'Space Mono', monospace; }
+        .card-hover { transition: box-shadow 0.2s ease, border-color 0.2s ease; }
+        .card-hover:hover { box-shadow: 0 2px 0 0 #94a3b8; border-color: #94a3b8; }
+        .avatar-initials { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-[#f1f5f9] text-slate-900 min-h-screen">
+    {% block nav %}
+    {% include "partials/nav_light.html" %}
+    {% endblock %}
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="text-center py-6 text-xs text-slate-500 font-medium font-brutal">SENETRACK &mdash; Assessing Senators' Performance in the Kenyan Senate</footer>
+    <script>try { if (typeof lucide !== 'undefined') lucide.createIcons(); } catch(e) {}</script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

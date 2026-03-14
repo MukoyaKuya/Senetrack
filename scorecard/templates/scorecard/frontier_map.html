@@ -1,0 +1,233 @@
+{% extends "scorecard/base_light.html" %}
+{% load static %}
+
+{% block title %}Frontier Map | Kenya Senate{% endblock %}
+{% block meta_description %}Interactive map of Kenya showing Senate frontiers (regions).{% endblock %}
+{% block og_title %}Frontier Map | Kenya Senate Scorecard{% endblock %}
+{% block og_description %}Interactive map of Kenya showing Senate frontiers (regions).{% endblock %}
+
+{% block nav %}
+{% include "partials/nav_light.html" with nav_active="frontier" %}
+{% endblock %}
+
+{% block extra_head %}
+<link href="{% static 'scorecard/vendor/leaflet.css' %}" rel="stylesheet" />
+{% endblock %}
+
+{% block content %}
+<header class="bg-amber-900/90 text-white border-b border-amber-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="font-brutal text-2xl md:text-3xl font-black tracking-tight uppercase">Frontier Impact Map</h1>
+            <p class="text-amber-100 mt-1 text-sm">Kenya's 8 frontiers — colored by region</p>
+        </div>
+        <a href="{% url 'frontier-insights' %}" class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm font-semibold rounded-lg transition-colors">
+            Back to Analytics
+        </a>
+    </div>
+</header>
+
+<div class="max-w-[1600px] mx-auto px-4 sm:px-6 py-4">
+    <div class="flex flex-col lg:flex-row gap-4" style="min-height: 620px;">
+        <div class="flex-1 rounded-xl overflow-hidden border border-slate-200 shadow-xl relative bg-slate-100 ring-1 ring-slate-200/50">
+            <div id="map" class="w-full h-full relative" style="min-height: 560px;">
+                <div id="map-loading" class="absolute inset-0 z-[1000] flex items-center justify-center bg-slate-100 text-slate-500 text-sm font-medium">Loading map…</div>
+            </div>
+        </div>
+        <div class="lg:w-72 shrink-0 bg-slate-900 text-white rounded-xl p-5 shadow-xl border border-slate-700/50">
+            <h2 class="font-bold text-sm uppercase tracking-wider mb-2">County Status</h2>
+            <p class="text-slate-300 text-sm mb-1">Hover over a county</p>
+            <p class="text-slate-500 text-xs mb-4">Scroll to zoom · Drag to pan</p>
+            <div id="hover-info" class="text-sm text-slate-400 mb-4 min-h-[2.5rem]">—</div>
+            <h3 class="font-bold text-xs uppercase tracking-wider text-slate-400 mb-3">Frontiers</h3>
+            <div class="space-y-2.5">
+                <div class="flex items-center gap-3"><span class="w-5 h-5 rounded-md shrink-0 ring-1 ring-white/20" style="background:#0284c7"></span><span class="text-sm font-medium">Coast</span></div>
+                <div class="flex items-center gap-3"><span class="w-5 h-5 rounded-md shrink-0 ring-1 ring-white/20" style="background:#059669"></span><span class="text-sm font-medium">Eastern</span></div>
+                <div class="flex items-center gap-3"><span class="w-5 h-5 rounded-md shrink-0 ring-1 ring-white/20" style="background:#7c3aed"></span><span class="text-sm font-medium">Central</span></div>
+                <div class="flex items-center gap-3"><span class="w-5 h-5 rounded-md shrink-0 ring-1 ring-white/20" style="background:#d97706"></span><span class="text-sm font-medium">Rift Valley</span></div>
+                <div class="flex items-center gap-3"><span class="w-5 h-5 rounded-md shrink-0 ring-1 ring-white/20" style="background:#db2777"></span><span class="text-sm font-medium">Nyanza</span></div>
+                <div class="flex items-center gap-3"><span class="w-5 h-5 rounded-md shrink-0 ring-1 ring-white/20" style="background:#0891b2"></span><span class="text-sm font-medium">Western</span></div>
+                <div class="flex items-center gap-3"><span class="w-5 h-5 rounded-md shrink-0 ring-1 ring-white/20" style="background:#65a30d"></span><span class="text-sm font-medium">North Eastern</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'scorecard/vendor/leaflet.js' %}" defer></script>
+<script>
+(function() {
+    const metadata = {{ map_metadata_json|safe }};
+    const geojsonUrl = '{{ geojson_static_url|escapejs }}';
+    const countyUrlTemplate = '{{ county_url_template|escapejs }}';
+    const mapEl = document.getElementById('map');
+    const loadingEl = document.getElementById('map-loading');
+    const hoverInfo = document.getElementById('hover-info');
+
+    function getSlug(county, countySlugMap) {
+        if (!county || !countySlugMap) return null;
+        const c = String(county).trim();
+        const s = countySlugMap[c] || countySlugMap[c.replace(/-/g, ' ')] || countySlugMap[c.replace(/ County$| City$/, '')];
+        if (s) return s;
+        const cLower = c.toLowerCase();
+        for (const [name, slug] of Object.entries(countySlugMap)) {
+            if (!slug) continue;
+            const nLower = String(name).toLowerCase();
+            if (cLower === nLower || cLower.startsWith(nLower + ' ') || nLower.startsWith(cLower + ' ') || nLower.startsWith(cLower)) return slug;
+        }
+        return null;
+    }
+
+    function getRegion(county, countyRegionMap) {
+        if (!county || !countyRegionMap) return null;
+        const c = String(county).trim();
+        const r = countyRegionMap[c] || countyRegionMap[c.replace(/-/g, ' ')] || countyRegionMap[c.replace(/ County$| City$/, '')];
+        if (r) return r;
+        const cLower = c.toLowerCase();
+        for (const [name, region] of Object.entries(countyRegionMap)) {
+            if (!region) continue;
+            const nLower = String(name).toLowerCase();
+            if (cLower === nLower || cLower.startsWith(nLower + ' ') || nLower.startsWith(cLower + ' ') || nLower.startsWith(cLower)) return region;
+        }
+        return null;
+    }
+
+    function centroid(geom) {
+        if (!geom || !geom.coordinates) return null;
+        const ring = geom.type === 'Polygon' ? geom.coordinates[0] : geom.type === 'MultiPolygon' ? geom.coordinates[0][0] : null;
+        if (!ring || !ring.length) return null;
+        let lat = 0, lng = 0, n = ring.length;
+        for (let i = 0; i < n; i++) { lng += ring[i][0]; lat += ring[i][1]; }
+        return [lat / n, lng / n];
+    }
+
+    function applyData(data, countyRegionMap) {
+        if (!data || !data.features || !countyRegionMap) return;
+        data.features = data.features.filter(f => {
+            const county = (f.properties.COUNTY || f.properties.county || f.properties.name || '').trim();
+            const region = getRegion(county, countyRegionMap);
+            if (!region) return false;
+            f.properties.frontier = region;
+            return true;
+        });
+    }
+
+    function renderMap(data, countyRegionMap, countySlugMap, frontierColors) {
+        applyData(data, countyRegionMap);
+        const map = L.map('map', {
+            center: [0.0236, 37.9062],
+            zoom: 6,
+            minZoom: 4,
+            maxZoom: 14
+        });
+        if (navigator.onLine) {
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+        }
+        const geoJsonLayer = L.geoJSON(data, {
+            style: function(feature) {
+                const frontier = feature.properties.frontier || 'other';
+                const color = frontierColors[frontier] || '#64748b';
+                return {
+                    fillColor: color,
+                    fillOpacity: 0.95,
+                    color: '#1e293b',
+                    weight: 1.5
+                };
+            },
+            onEachFeature: function(feature, layer) {
+                const county = feature.properties.COUNTY || feature.properties.county || feature.properties.name || 'Unknown';
+                const frontier = (feature.properties.frontier || 'other').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                layer.bindTooltip(`<div class="frontier-tooltip-content"><strong>${county}</strong><br><span class="frontier-region">${frontier}</span><br><span class="frontier-hint">Click to view county</span></div>`, {
+                    permanent: false,
+                    direction: 'top',
+                    className: 'frontier-tooltip',
+                    sticky: false,
+                    offset: [0, -8]
+                });
+                layer.on('mouseover', () => { if (hoverInfo) hoverInfo.innerHTML = `<strong class="text-white">${county}</strong><br><span class="text-slate-400">${frontier}</span><br><span class="text-xs text-slate-500">Click to view county</span>`; });
+                layer.on('mouseout', function(ev) {
+                    if (hoverInfo) hoverInfo.textContent = '—';
+                    ev.target.closeTooltip();
+                });
+                const slug = getSlug(county, countySlugMap);
+                if (slug) {
+                    layer.on('click', () => { window.location.href = countyUrlTemplate.replace('__SLUG__', slug); });
+                }
+                const c = centroid(feature.geometry);
+                if (c) {
+                    const label = county.length > 14 ? county.substring(0, 12) + '…' : county;
+                    L.marker([c[0], c[1]], {
+                        icon: L.divIcon({
+                            className: 'county-label',
+                            html: '<span class="county-label-text">' + label + '</span>',
+                            iconSize: null
+                        })
+                    }).addTo(map);
+                }
+            }
+        }).addTo(map);
+        const bounds = geoJsonLayer.getBounds();
+        if (bounds && bounds.isValid && bounds.isValid()) {
+            map.fitBounds(bounds, { padding: [20, 20] });
+        }
+        map.getContainer().addEventListener('mouseleave', function() {
+            geoJsonLayer.eachLayer(function(l) { if (l.closeTooltip) l.closeTooltip(); });
+            if (hoverInfo) hoverInfo.textContent = '—';
+        });
+        if (loadingEl) loadingEl.remove();
+    }
+
+    function runWhenReady() {
+        if (typeof L === 'undefined') { setTimeout(runWhenReady, 30); return; }
+        const url = geojsonUrl.startsWith('/') ? window.location.origin + geojsonUrl : geojsonUrl;
+        fetch(url)
+            .then(function(r) {
+                if (!r.ok) throw new Error('GeoJSON load failed: ' + r.status);
+                return r.json();
+            })
+            .then(function(data) {
+                if (data && data.features && data.features.length) {
+                    try {
+                        renderMap(data, metadata.county_region_map || {}, metadata.county_slug_map || {}, metadata.frontier_colors || {});
+                    } catch (e) {
+                        console.error('Map render error:', e);
+                        if (loadingEl) loadingEl.textContent = 'Map error: ' + (e.message || 'Unknown error');
+                    }
+                } else if (loadingEl) {
+                    loadingEl.textContent = 'No map data available.';
+                }
+            })
+            .catch(function(err) {
+                console.error('Failed to load map:', err);
+                if (loadingEl) loadingEl.textContent = 'Failed to load map. Try refreshing.';
+            });
+    }
+    runWhenReady();
+})();
+</script>
+<style>
+#map .leaflet-interactive { cursor: pointer; }
+.leaflet-interactive:focus, .leaflet-interactive:focus-visible { outline: none !important; }
+.leaflet-container:focus { outline: none !important; }
+.leaflet-tooltip { border: none !important; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+.frontier-tooltip { font-size: 13px; padding: 10px 14px; border-radius: 8px; border: none !important; min-width: 140px; }
+.frontier-tooltip-content strong { font-size: 14px; display: block; margin-bottom: 2px; }
+.frontier-tooltip-content .frontier-region { color: #64748b; font-size: 12px; }
+.frontier-tooltip-content .frontier-hint { font-size: 11px; color: #94a3b8; margin-top: 4px; display: block; }
+.county-label { background: none !important; border: none !important; pointer-events: none !important; }
+.county-label-text {
+    font-weight: 700;
+    font-size: 11px;
+    color: #0f172a;
+    text-shadow: 0 0 3px #fff, 0 0 4px #fff, 0 1px 2px rgba(255,255,255,0.9), 0 1px 3px rgba(0,0,0,0.15);
+    white-space: nowrap;
+    padding: 1px 4px;
+    background: rgba(255,255,255,0.75);
+    border-radius: 3px;
+    letter-spacing: 0.02em;
+}
+</style>
+{% endblock %}

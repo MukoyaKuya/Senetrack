@@ -1,0 +1,261 @@
+{% extends "scorecard/base_light.html" %}
+{% load static %}
+
+{% block title %}SPM{% endblock %}
+{% block meta_description %}How senator performance scores are calculated.{% endblock %}
+{% block og_title %}SPM | Kenya Senate Scorecard{% endblock %}
+{% block og_description %}How senator performance scores are calculated.{% endblock %}
+
+{% block nav %}
+{% include "partials/nav_light.html" with nav_active="about" nav_show_back=True %}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-6 py-12 pb-20">
+    <div class="bg-white rounded-2xl p-8 md:p-10 border border-slate-200 shadow-sm">
+        <div class="mb-8">
+            <h1 class="font-brutal text-2xl md:text-3xl font-bold text-slate-900 uppercase tracking-tight mb-2">
+                Senator Performance Methodology
+            </h1>
+            <p class="text-slate-600">
+                This scorecard applies a documented, data-driven methodology to transform raw parliamentary records into a
+                single <strong>0–100 performance score</strong> for each senator. The approach follows standard practice in
+                quantitative political science: clearly defined indicators, transparent weights, and explicit formulas.
+            </p>
+        </div>
+
+        <h2
+            class="font-brutal text-lg font-bold text-slate-900 uppercase tracking-wider border-l-4 border-amber-600 pl-3 mb-4">
+            Why We Use the Hansard
+        </h2>
+        <p class="text-slate-600 mb-3">
+            In political science, the <strong>Hansard</strong> is the official verbatim record of debates and proceedings in Parliament.
+            In Kenya, Hansard provides a transparent and permanent record of what legislators say, propose, and decide in
+            institutions like the Parliament of Kenya.
+        </p>
+        <h3 class="font-brutal text-base font-bold text-slate-800 uppercase tracking-wider mt-4 mb-2">
+            Why Hansard matters for Kenya’s progressive democracy
+        </h3>
+        <ul class="space-y-3 mb-4 text-slate-600">
+            <li>
+                <strong>Transparency and accountability</strong> — Hansard records every speech, question, and response made by
+                Members of Parliament. Citizens, researchers, and civil society can review it to hold leaders accountable for
+                their statements and commitments.
+            </li>
+            <li>
+                <strong>Evidence of democratic debate</strong> — A progressive democracy relies on open debate. Hansard documents
+                how issues are discussed, contested, and negotiated in Parliament, showing whether democratic deliberation
+                is taking place.
+            </li>
+            <li>
+                <strong>Historical and policy record</strong> — It serves as an archive of legislative history, tracking how
+                laws were debated before being passed. Scholars can analyze how policies evolved over time.
+            </li>
+            <li>
+                <strong>Public participation and civic education</strong> — By making parliamentary debates accessible,
+                Hansard enables citizens, journalists, and organizations to understand government decisions and participate
+                more effectively in democratic processes.
+            </li>
+            <li>
+                <strong>Monitoring representation</strong> — Researchers can analyze Hansard to evaluate how effectively MPs
+                represent their constituencies: what issues they raise and how often they participate in debates.
+            </li>
+        </ul>
+        <p class="text-slate-600 mb-2">
+            <strong>In simple terms:</strong> Hansard helps measure how open, accountable, and participatory Kenya’s democracy
+            is, because it provides a detailed public record of parliamentary decision-making and debate.
+        </p>
+        <p class="text-slate-500 text-sm mb-8">
+            Political scientists use Hansard data in many ways—content analysis, discourse analysis, voting behavior, and
+            more—to measure democratic progress. This scorecard uses it to quantify participation and debate in the Senate.
+        </p>
+
+        <h2
+            class="font-brutal text-lg font-bold text-slate-900 uppercase tracking-wider border-l-4 border-red-700 pl-3 mb-4">
+            1. Data Sources and Coverage
+        </h2>
+        <p class="text-slate-600 mb-3">
+            The engine draws on administrative and parliamentary records only. No opinion polls, surveys, or manual
+            “expert scores” are used.
+        </p>
+        <ul class="list-disc list-inside text-slate-600 space-y-1 mb-4">
+            <li><strong>Hansard transcripts</strong>: word-level records of plenary debates and interventions.</li>
+            <li><strong>Attendance registers</strong>: official sitting-by-sitting attendance for plenary and committees.</li>
+            <li><strong>Legislative activity</strong>: sponsored bills, passed bills, and amendments credited to each
+                senator.</li>
+            <li><strong>Committee records</strong>: membership, leadership roles, and attendance per committee sitting.</li>
+            <li><strong>Division lists</strong>: how each senator voted (or if they were absent) when a formal vote was
+                recorded.</li>
+            <li><strong>County-level indicators</strong>: a composite score reflecting constituency-focused activity and
+                county development engagement.</li>
+        </ul>
+        <p class="text-slate-600 mb-6">
+            Where an indicator is missing for a senator (for example, for a newly sworn-in member), the model withholds
+            the final grade and displays <strong>“NEW”</strong> until a minimum evidence threshold is met rather than guessing a
+            score.
+        </p>
+
+        <h2
+            class="font-brutal text-lg font-bold text-slate-900 uppercase tracking-wider border-l-4 border-emerald-500 pl-3 mb-4">
+            2. From Raw Activity to Comparable Indicators
+        </h2>
+        <p class="text-slate-600 mb-3">
+            For each senator we construct a set of raw indicators. Let:
+        </p>
+        <ul class="list-disc list-inside text-slate-600 space-y-1 mb-4">
+            <li><strong>A</strong> = plenary attendance rate (0–1), based on days present / days eligible.</li>
+            <li><strong>S</strong> = total number of substantive speeches recorded in the Hansard.</li>
+            <li><strong>B<sub>s</sub></strong> = number of bills sponsored; <strong>B<sub>p</sub></strong> = number of bills passed.</li>
+            <li><strong>M</strong> = number of formal amendments moved.</li>
+            <li><strong>C<sub>a</sub></strong> = committee attendance rate (0–1).</li>
+            <li><strong>R</strong> = committee role score (0 for member, &gt; 0 for chair/vice-chair, scaled).</li>
+            <li><strong>V<sub>att</sub></strong> = votes attended; <strong>V<sub>tot</sub></strong> = votes where the senator was eligible.</li>
+            <li><strong>C<sub>c</sub></strong> = county representation score (0–10) from constituency-linked activity.</li>
+        </ul>
+
+        <p class="text-slate-600 mb-2">
+            To make these indicators comparable across senators, we apply a combination of <strong>rate-based measures</strong> and
+            <strong>logarithmic scaling</strong> for highly skewed counts (such as speeches):
+        </p>
+        <p class="font-mono text-xs md:text-sm bg-slate-100 p-3 rounded-lg border border-slate-200 mb-3">
+            speech_intensity = ln(1 + S) / ln(1 + S<sub>95</sub>)
+        </p>
+        <p class="text-slate-500 text-xs mb-6">
+            where S<sub>95</sub> is the 95th percentile number of speeches across all senators. This caps “super-speakers” so
+            that one or two very active members do not dominate the scale, a standard approach in productivity analysis.
+        </p>
+
+        <h2
+            class="font-brutal text-lg font-bold text-slate-900 uppercase tracking-wider border-l-4 border-sky-500 pl-3 mb-4">
+            3. The Five Public Pillars and Weights
+        </h2>
+        <p class="text-slate-600 mb-3">
+            Internally, the engine works with many sub-scores. For communication with the public, these are summarised
+            into <strong>five pillars</strong> that together sum to 100 points:
+        </p>
+        <ul class="space-y-2 mb-4 text-slate-600">
+            <li><strong>Participation</strong> — 30 points (30%)</li>
+            <li><strong>Legislative</strong> — 20 points (20%)</li>
+            <li><strong>Committee</strong> — 25 points (25%)</li>
+            <li><strong>Voting</strong> — 20 points (20%)</li>
+            <li><strong>County Representation</strong> — 5 points (5%)</li>
+        </ul>
+        <p class="text-slate-600 mb-2">
+            Each pillar is first expressed on a 0–1 scale, then mapped into its share of the 100-point total. Denote the
+            pillar-level scores by <strong>P</strong>, <strong>L</strong>, <strong>C</strong>, <strong>V</strong>, and <strong>R</strong> (all between 0 and 1). The overall
+            score is:
+        </p>
+        <p class="font-mono text-xs md:text-sm bg-slate-100 p-3 rounded-lg border border-slate-200 mb-8">
+            Total Score = 100 × (0.30·P + 0.20·L + 0.25·C + 0.20·V + 0.05·R)
+        </p>
+
+        <h3 class="font-brutal text-base font-bold text-slate-800 uppercase tracking-wider mt-4 mb-2">
+            3.1 Participation (30 points)
+        </h3>
+        <p class="text-slate-600 mb-2">
+            Participation combines attendance and substantive plenary contribution:
+        </p>
+        <p class="font-mono text-xs md:text-sm bg-slate-100 p-3 rounded-lg border border-slate-200 mb-3">
+            P = 0.5·A + 0.5·speech_intensity
+        </p>
+        <p class="text-slate-600 mb-4">
+            This balances “showing up” and “speaking up”. A senator who is always present but never speaks, or who speaks
+            often but rarely attends, will not achieve a high participation score.
+        </p>
+
+        <h3 class="font-brutal text-base font-bold text-slate-800 uppercase tracking-wider mt-4 mb-2">
+            3.2 Legislative Work (20 points)
+        </h3>
+        <p class="text-slate-600 mb-2">
+            Legislative work rewards <strong>quality-adjusted output</strong>: sponsoring bills, seeing them pass, and moving
+            amendments. A simple linear index is constructed and then normalised to 0–1:
+        </p>
+        <p class="font-mono text-xs md:text-sm bg-slate-100 p-3 rounded-lg border border-slate-200 mb-3">
+            raw_legislative = 35·B<sub>s</sub> + 25·B<sub>p</sub> + 10·M<br>
+            L = raw_legislative / max(raw_legislative across senators)
+        </p>
+        <p class="text-slate-600 mb-4">
+            Passed bills count more than merely sponsored ones; amendments are valued but at a lower weight, reflecting
+            typical practice in legislative productivity studies.
+        </p>
+
+        <h3 class="font-brutal text-base font-bold text-slate-800 uppercase tracking-wider mt-4 mb-2">
+            3.3 Committee Work (25 points)
+        </h3>
+        <p class="text-slate-600 mb-2">
+            Committees are where most detailed legislative work happens. The committee pillar combines leadership roles
+            and attendance:
+        </p>
+        <p class="font-mono text-xs md:text-sm bg-slate-100 p-3 rounded-lg border border-slate-200 mb-3">
+            C = 0.40·R + 0.60·C<sub>a</sub> + 0.02
+        </p>
+        <p class="text-slate-500 text-xs mb-4">
+            The constant term (0.02) avoids giving extremely low or zero scores to members of small or newly formed
+            committees, a standard technique to stabilise indices in small-sample settings.
+        </p>
+
+        <h3 class="font-brutal text-base font-bold text-slate-800 uppercase tracking-wider mt-4 mb-2">
+            3.4 Voting Discipline (20 points)
+        </h3>
+        <p class="text-slate-600 mb-2">
+            Voting discipline measures whether the senator is present when decisions are formally taken:
+        </p>
+        <p class="font-mono text-xs md:text-sm bg-slate-100 p-3 rounded-lg border border-slate-200 mb-3">
+            V = V<sub>att</sub> / V<sub>tot</sub>
+        </p>
+        <p class="text-slate-600 mb-4">
+            Only votes where the senator was eligible are counted. Abstentions recorded in the division lists are
+            distinguished from absence and treated as presence.
+        </p>
+
+        <h3 class="font-brutal text-base font-bold text-slate-800 uppercase tracking-wider mt-4 mb-4">
+            3.5 County Representation (5 points)
+        </h3>
+        <p class="text-slate-600 mb-2">
+            County representation focuses on constituency-linked activity and engagement, scaled from 0–10 and mapped
+            onto the 5-point share of the total:
+        </p>
+        <p class="font-mono text-xs md:text-sm bg-slate-100 p-3 rounded-lg border border-slate-200 mb-8">
+            R = C<sub>c</sub> / 10
+        </p>
+
+        <h2 class="font-brutal text-lg font-bold text-slate-900 uppercase tracking-wider border-l-4 border-red-700 pl-3 mb-6">
+            4. Grading Scale
+        </h2>
+        <div class="overflow-x-auto mb-10">
+            <table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="text-left py-3 px-4 font-bold text-slate-800">Score</th>
+                        <th class="text-left py-3 px-4 font-bold text-slate-800">Grade</th>
+                        <th class="text-left py-3 px-4 font-bold text-slate-800">Description</th>
+                    </tr>
+                </thead>
+                <tbody class="text-slate-600">
+                    <tr class="border-t border-slate-200"><td class="py-2 px-4">90 - 100</td><td class="py-2 px-4 font-bold">A</td><td class="py-2 px-4">OUTSTANDING</td></tr>
+                    <tr class="border-t border-slate-200 bg-slate-50/50"><td class="py-2 px-4">85 - 89</td><td class="py-2 px-4 font-bold">A-</td><td class="py-2 px-4">EXCELLENT</td></tr>
+                    <tr class="border-t border-slate-200"><td class="py-2 px-4">80 - 84</td><td class="py-2 px-4 font-bold">B+</td><td class="py-2 px-4">VERY GOOD</td></tr>
+                    <tr class="border-t border-slate-200 bg-slate-50/50"><td class="py-2 px-4">75 - 79</td><td class="py-2 px-4 font-bold">B</td><td class="py-2 px-4">GOOD</td></tr>
+                    <tr class="border-t border-slate-200"><td class="py-2 px-4">70 - 74</td><td class="py-2 px-4 font-bold">B-</td><td class="py-2 px-4">ABOVE AVERAGE</td></tr>
+                    <tr class="border-t border-slate-200 bg-slate-50/50"><td class="py-2 px-4">65 - 69</td><td class="py-2 px-4 font-bold">C+</td><td class="py-2 px-4">FAIRLY GOOD</td></tr>
+                    <tr class="border-t border-slate-200"><td class="py-2 px-4">60 - 64</td><td class="py-2 px-4 font-bold">C</td><td class="py-2 px-4">AVERAGE</td></tr>
+                    <tr class="border-t border-slate-200 bg-slate-50/50"><td class="py-2 px-4">55 - 59</td><td class="py-2 px-4 font-bold">C-</td><td class="py-2 px-4">BELOW AVERAGE</td></tr>
+                    <tr class="border-t border-slate-200"><td class="py-2 px-4">50 - 54</td><td class="py-2 px-4 font-bold">D+</td><td class="py-2 px-4">MARGINAL</td></tr>
+                    <tr class="border-t border-slate-200 bg-slate-50/50"><td class="py-2 px-4">45 - 49</td><td class="py-2 px-4 font-bold">D</td><td class="py-2 px-4">POOR</td></tr>
+                    <tr class="border-t border-slate-200"><td class="py-2 px-4">40 - 44</td><td class="py-2 px-4 font-bold">D-</td><td class="py-2 px-4">VERY POOR</td></tr>
+                    <tr class="border-t border-slate-200 bg-slate-50/50"><td class="py-2 px-4">0 - 39</td><td class="py-2 px-4 font-bold">E</td><td class="py-2 px-4">FAIL</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="text-slate-500 text-xs italic">
+            The methodology will continue to evolve as better data becomes available. Feedback from researchers, civil society, and citizens is welcome.
+        </p>
+    </div>
+    <div class="text-center mt-8">
+        <a href="{% url 'senator-list' %}" class="inline-flex items-center gap-2 font-brutal text-sm font-bold text-slate-900 hover:text-white transition-all bg-white hover:bg-red-700 border border-slate-200 rounded-lg px-6 py-3">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            View All Senators
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,1195 @@
+{% extends "scorecard/base_light.html" %}
+{% load static humanize scorecard_extras %}
+
+{% block title %}Data Insights{% endblock %}
+{% block meta_description %}Analytics dashboard for Kenya Senate performance data.{% endblock %}
+{% block og_title %}Data Insights | Kenya Senate Scorecard{% endblock %}
+{% block og_description %}Analytics dashboard for Kenya Senate performance data.{% endblock %}
+
+{% block nav %}
+{% include "partials/nav_light.html" with nav_active="insights" %}
+{% endblock %}
+
+{% block extra_head %}
+<script src="{% static 'scorecard/vendor/chart.min.js' %}"></script>
+<style>
+    .card-hover:hover { box-shadow: 0 8px 24px rgba(15,23,42,0.12); border-color: #94a3b8; transform: translateY(-1px); }
+</style>
+{% endblock %}
+
+{% block content %}
+<header class="bg-black text-white border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <h1 class="font-brutal text-3xl md:text-4xl font-black tracking-tight uppercase">Data Insights</h1>
+            <p class="text-slate-300 mt-2 text-sm md:text-base font-medium max-w-xl">
+                Explore attendance, voting, legislative activity, and overall performance across Kenya's Senate.
+            </p>
+        </div>
+    </div>
+</header>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 pb-20 space-y-8">
+    <!-- Filters -->
+    <section class="bg-white border border-slate-200 rounded-lg p-4">
+        <form method="get" action="" class="flex flex-wrap items-end gap-3" id="insightsFilterForm">
+            <input type="hidden" name="party" id="partyHiddenInput" value="{{ filters.party|default:'' }}">
+            <div class="flex flex-wrap items-end gap-3">
+            <div class="relative" id="partyDropdownWrap">
+                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Party</label>
+                <button type="button" id="partyDropdownTrigger" class="flex items-center gap-2 text-sm border border-slate-300 rounded px-2 py-1.5 bg-white min-w-[200px] text-left hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400">
+                    <span id="partyTriggerContent">
+                        {% if filters.party %}
+                        {% with party_logo=filters.party_logos|get_item:filters.party %}
+                        {% if party_logo %}<img src="{{ party_logo }}" alt="" class="w-5 h-5 object-contain flex-shrink-0">{% endif %}
+                        {% endwith %}
+                        <span>{{ filters.party }}</span>
+                        {% else %}
+                        <span>All parties</span>
+                        {% endif %}
+                    </span>
+                    <svg class="w-4 h-4 ml-auto flex-shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div id="partyDropdownPanel" class="hidden absolute left-0 top-full mt-1 z-50 bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[200px] max-h-72 overflow-y-auto">
+                    <button type="button" class="party-option w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-slate-50 focus:bg-slate-50 focus:outline-none" data-party-value="" data-party-name="All parties" data-party-logo="">
+                        <span class="w-5 h-5 flex-shrink-0"></span>
+                        <span>All parties</span>
+                    </button>
+                    {% for p in filters.parties %}
+                    {% with party_logo=filters.party_logos|get_item:p %}
+                    <button type="button" class="party-option w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-slate-50 focus:bg-slate-50 focus:outline-none" data-party-value="{{ p }}" data-party-name="{{ p }}" data-party-logo="{{ party_logo|default:'' }}">
+                        {% if party_logo %}<img src="{{ party_logo }}" alt="" class="w-5 h-5 object-contain flex-shrink-0">{% else %}<span class="w-5 h-5 flex-shrink-0 block"></span>{% endif %}
+                        <span>{{ p }}</span>
+                    </button>
+                    {% endwith %}
+                    {% endfor %}
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Frontier</label>
+                <select name="frontier" class="text-sm border border-slate-300 rounded px-2 py-1.5 bg-white">
+                    <option value="">All frontiers</option>
+                    {% for f in filters.frontiers %}
+                    <option value="{{ f }}" {% if filters.frontier == f %}selected{% endif %}>{{ f|title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">County</label>
+                <select name="county" class="text-sm border border-slate-300 rounded px-2 py-1.5 bg-white min-w-[140px]">
+                    <option value="">All counties</option>
+                    {% for slug, name in filters.counties %}
+                    <option value="{{ slug }}" {% if filters.county == slug %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="px-4 py-1.5 bg-slate-800 text-white text-sm font-semibold rounded hover:bg-slate-700">Apply</button>
+            {% if filters.party or filters.frontier or filters.county %}
+            <a href="{% url 'data-insights' %}" class="px-4 py-1.5 text-slate-600 text-sm font-medium hover:text-slate-900">Clear</a>
+            {% endif %}
+        </form>
+        {% if deceased_excluded %}<p class="mt-2 text-xs text-slate-500">Deceased senators excluded from analytics.</p>{% endif %}
+    </section>
+
+    <!-- Senators in view (cards) -->
+    <section>
+        <div class="flex items-center justify-between gap-3 mb-4">
+            <h2 class="text-lg font-black text-slate-900 uppercase tracking-tight">
+                Senators in view
+                {% if filters.party or filters.frontier or filters.county %}
+                <span class="text-slate-500 font-semibold normal-case text-base">({{ filtered_senators|length }} senator{{ filtered_senators|length|pluralize }})</span>
+                {% else %}
+                <span class="text-slate-500 font-semibold normal-case text-base">(all {{ filtered_senators|length }})</span>
+                {% endif %}
+            </h2>
+            <div class="flex items-center gap-2 text-xs sm:text-sm">
+                <span class="text-slate-500 font-semibold uppercase tracking-wide">View</span>
+                <select id="senatorCardView" class="text-xs sm:text-sm border border-slate-300 rounded px-2 py-1 bg-white">
+                    <option value="row">Top row only</option>
+                    <option value="all">All in view</option>
+                </select>
+            </div>
+        </div>
+        <div id="senatorCardsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {% for s in filtered_senators %}
+            <a href="{% url 'senator-detail' s.senator_id %}" class="block group" data-senator-card="1">
+                <div class="bg-white border border-slate-200 rounded-xl overflow-hidden card-hover flex flex-col h-full shadow-sm hover:border-slate-400">
+                    <div class="aspect-[3/4] w-full bg-slate-100 relative overflow-hidden">
+                        {% if s.image_url %}
+                        <img src="{{ s.image_url }}" alt="{{ s.name }}" class="w-full h-full object-cover object-[center_25%] group-hover:scale-105 transition-transform duration-300"
+                             loading="lazy" decoding="async" width="200" height="267"
+                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                        <div class="absolute inset-0 hidden items-center justify-center bg-slate-200 text-slate-500 font-black text-2xl">{{ s.name|slice:":1" }}</div>
+                        {% else %}
+                        <div class="absolute inset-0 flex items-center justify-center bg-slate-200 text-slate-500 font-black text-2xl">{{ s.name|slice:":1" }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="p-3 flex flex-col flex-1 min-w-0">
+                        <p class="font-bold text-slate-800 text-sm leading-tight line-clamp-2 group-hover:text-slate-600" title="{{ s.name }}">{{ s.name }}</p>
+                        <p class="text-xs text-slate-500 mt-0.5 truncate">{% if s.nomination %}{{ s.nomination }}{% else %}{{ s.county }}{% if s.county and 'County' not in s.county and 'City' not in s.county %} County{% endif %}{% endif %}</p>
+                        <div class="mt-2 flex items-center justify-between gap-1">
+                            <span class="text-lg font-black text-emerald-600 tabular-nums">{{ s.overall_score|floatformat:0 }}</span>
+                            <span class="text-xs font-semibold text-slate-400">/100</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+            {% empty %}
+            <p class="col-span-full text-sm text-slate-500 py-6">No senators match the current filters.</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- KPI cards -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+        <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-[0.18em] mb-1">Active Senators</p>
+            <p class="text-3xl font-black text-slate-900">{{ metrics.total_active }}</p>
+            {% if active_senators %}
+            <ul class="mt-3 space-y-1 max-h-32 overflow-y-auto text-sm text-slate-600">
+                {% for s in active_senators %}
+                <li><a href="{% url 'senator-detail' s.senator_id %}" class="hover:text-blue-600 hover:underline">{{ s.name }}</a></li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-[0.18em] mb-1">Avg. Overall Score</p>
+            <p class="text-3xl font-black text-slate-900">{{ metrics.avg_overall }}<span class="text-base text-slate-500 font-semibold ml-1">/ 100</span></p>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-[0.18em] mb-1">Avg. Attendance</p>
+            <p class="text-3xl font-black text-emerald-600">{{ metrics.avg_attendance }}<span class="text-base text-slate-500 font-semibold ml-1">%</span></p>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-[0.18em] mb-1">Bills Passed</p>
+            <p class="text-3xl font-black text-slate-900">{{ metrics.total_passed }}</p>
+            <p class="mt-1 text-xs text-slate-500">{{ metrics.pass_rate }}% pass rate from {{ metrics.total_bills }} sponsored</p>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-[0.18em] mb-1">Total Words (Hansard)</p>
+            <p class="text-3xl font-black text-red-600">{{ metrics.total_words|default:0|intcomma }}</p>
+            <p class="mt-1 text-xs text-slate-500">{{ metrics.total_speeches|default:0|intcomma }} speeches · {{ metrics.total_motions|default:0 }} motions</p>
+        </div>
+    </section>
+
+    <!-- Charts -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover lg:col-span-1">
+            <h2 class="text-sm font-bold text-slate-800 mb-3">Overall Score Distribution</h2>
+            <canvas id="scoreDistributionChart" class="w-full h-48"></canvas>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover lg:col-span-1">
+            <h2 class="text-sm font-bold text-slate-800 mb-3">Average Score by Frontier</h2>
+            <canvas id="frontierScoreChart" class="w-full h-48"></canvas>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover lg:col-span-1">
+            <h2 class="text-sm font-bold text-slate-800 mb-3">Attendance vs Overall Score</h2>
+            <canvas id="attendanceScoreChart" class="w-full h-48"></canvas>
+        </div>
+    </section>
+
+    <!-- Bills sponsored vs passed chart -->
+    <section class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+        <h2 class="text-sm font-bold text-slate-800 mb-3">Top 10 Senators: Bills Sponsored vs Passed</h2>
+        <canvas id="billsChart" class="w-full h-56"></canvas>
+    </section>
+
+    <!-- Leaderboards: highest by metric -->
+    <section>
+        <h2 class="text-lg font-black text-slate-900 uppercase tracking-tight mb-4">Leaderboards by Metric</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-3">Highest Attendance</h3>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.attendance %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-emerald-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-emerald-700 whitespace-nowrap">{{ s.attendance_rate }}%</span>
+                    </li>
+                    {% empty %}
+                    <li class="text-xs text-slate-400">No data.</li>
+                    {% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-3">Most Bills Sponsored</h3>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.sponsored_bills %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-blue-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-blue-700 whitespace-nowrap">{{ s.sponsored_bills }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="text-xs text-slate-400">No data.</li>
+                    {% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-violet-600 uppercase tracking-wider mb-3">Most Bills Passed</h3>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.passed_bills %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-violet-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-violet-700 whitespace-nowrap">{{ s.passed_bills }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="text-xs text-slate-400">No data.</li>
+                    {% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-amber-600 uppercase tracking-wider mb-3">Best Pass Rate (≥2 sponsored)</h3>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.pass_rate %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-amber-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-amber-700 whitespace-nowrap">{{ s.passed_bills }}/{{ s.sponsored_bills }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="text-xs text-slate-400">No data.</li>
+                    {% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-3">Most Speeches</h3>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.speeches %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-slate-900 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-slate-800 whitespace-nowrap">{{ s.speeches }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="text-xs text-slate-400">No data.</li>
+                    {% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-red-600 uppercase tracking-wider mb-3">Most Words (Hansard)</h3>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.words_spoken %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-red-700 whitespace-nowrap">{{ s.words_spoken|intcomma }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="text-xs text-slate-400">No data.</li>
+                    {% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-red-600 uppercase tracking-wider mb-3">Most Motions</h3>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.motions_sponsored %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-red-700 whitespace-nowrap">{{ s.motions_sponsored }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="text-xs text-slate-400">No data.</li>
+                    {% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-red-600 uppercase tracking-wider mb-3">Most Sessions Attended</h3>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.sessions_attended %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-red-700 whitespace-nowrap">{{ s.sessions_attended }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="text-xs text-slate-400">No data.</li>
+                    {% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-red-600 uppercase tracking-wider mb-3">Bills per Speech (≥20 sp)</h3>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.bills_per_speech %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-red-700 whitespace-nowrap">{{ s.bills_per_speech }}</span>
+                    </li>
+                    {% empty %}<li class="text-xs text-slate-400">No data.</li>{% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-red-600 uppercase tracking-wider mb-3">Words Percentile Rank</h3>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.words_percentile %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-red-700 whitespace-nowrap">{{ s.words_percentile }}%</span>
+                    </li>
+                    {% empty %}<li class="text-xs text-slate-400">No data.</li>{% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-red-600 uppercase tracking-wider mb-3">Highest Verbosity (words/speech, ≥10)</h3>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.verbosity %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-red-700 whitespace-nowrap">{{ s.words_per_speech }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="text-xs text-slate-400">No data.</li>
+                    {% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-rose-600 uppercase tracking-wider mb-3">Most Amendments</h3>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.amendments %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-rose-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-rose-700 whitespace-nowrap">{{ s.amendments }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="text-xs text-slate-400">No data.</li>
+                    {% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-teal-600 uppercase tracking-wider mb-3">Committee Attendance</h3>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.committee_attendance %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-teal-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-teal-700 whitespace-nowrap">{{ s.committee_attendance }}%</span>
+                    </li>
+                    {% empty %}
+                    <li class="text-xs text-slate-400">No data.</li>
+                    {% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-red-600 uppercase tracking-wider mb-3">Vote Participation</h3>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.vote_rate %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-red-700 whitespace-nowrap">{{ s.vote_rate }}%</span>
+                    </li>
+                    {% empty %}
+                    <li class="text-xs text-slate-400">No data.</li>
+                    {% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-amber-600 uppercase tracking-wider mb-3">Representation (/10)</h3>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.county_representation %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-amber-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-amber-700 whitespace-nowrap">{{ s.county_representation }}/10</span>
+                    </li>
+                    {% empty %}
+                    <li class="text-xs text-slate-400">No data.</li>
+                    {% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-cyan-600 uppercase tracking-wider mb-3">Oversight Actions</h3>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.oversight_actions %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-cyan-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-cyan-700 whitespace-nowrap">{{ s.oversight_actions }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="text-xs text-slate-400">No data.</li>
+                    {% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-rose-600 uppercase tracking-wider mb-3">Most Votes Missed</h3>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.most_votes_missed %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-rose-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-rose-700 whitespace-nowrap">{{ s.votes_missed }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="text-xs text-slate-400">No data.</li>
+                    {% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-3">Legislative Quality (pass rate)</h3>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.high_quality_legislative %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-emerald-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-emerald-700 whitespace-nowrap">{{ s.pass_rate_pct }}%</span>
+                    </li>
+                    {% empty %}
+                    <li class="text-xs text-slate-400">No data.</li>
+                    {% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-sky-600 uppercase tracking-wider mb-3">Efficiency (bills/speech, ≥10 speeches)</h3>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.efficiency %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-sky-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-sky-700 whitespace-nowrap">{{ s.efficiency }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="text-xs text-slate-400">No data.</li>
+                    {% endfor %}
+                </ol>
+            </div>
+        </div>
+    </section>
+
+    <!-- County performance -->
+    <section>
+        <h2 class="text-lg font-black text-slate-900 uppercase tracking-tight mb-4">County Performance (Top 20)</h2>
+        <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover overflow-x-auto">
+            <canvas id="countyPerformanceChart" class="w-full min-h-64"></canvas>
+        </div>
+    </section>
+
+    <!-- Committee leadership impact -->
+    <section>
+        <h2 class="text-lg font-black text-slate-900 uppercase tracking-tight mb-4">Committee Leadership Impact</h2>
+        <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover max-w-md">
+            <canvas id="committeeLeadershipChart" class="w-full h-48"></canvas>
+            <p class="mt-2 text-xs text-slate-500">Leaders: {{ committee_leadership_impact.leaders_count }} (Chair, Vice Chair, etc.) | Members: {{ committee_leadership_impact.members_count }}</p>
+        </div>
+    </section>
+
+    <!-- Statements Tracker leaderboard -->
+    <section>
+        <h2 class="text-lg font-black text-slate-900 uppercase tracking-tight mb-4">Statements Tracker (up to Nov 2025)</h2>
+        <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover max-w-lg">
+            <h3 class="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-3">Most Statements (Tracker 2025)</h3>
+            <ol class="space-y-1.5 text-sm text-slate-700">
+                {% for s in leaderboards.statements_2025 %}
+                <li class="flex justify-between items-center gap-2">
+                    <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-emerald-600 hover:underline">
+                        {{ forloop.counter }}. {{ s.name }}
+                    </a>
+                    <span class="font-bold text-emerald-700 whitespace-nowrap">
+                        {{ s.statements_2025 }} statements
+                    </span>
+                </li>
+                {% empty %}
+                <li class="text-xs text-slate-400">No statements data imported yet.</li>
+                {% endfor %}
+            </ol>
+            <p class="mt-2 text-xs text-slate-400">
+                Data from official Statements Tracker (updated as at 20 Nov 2025).
+            </p>
+        </div>
+    </section>
+
+    <!-- Party performance, Grade distribution, Committee role -->
+    <section>
+        <h2 class="text-lg font-black text-slate-900 uppercase tracking-tight mb-4">Party & Role Analytics</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-sm font-bold text-slate-800 mb-3">Party Performance (Avg Score)</h3>
+                <canvas id="partyPerformanceChart" class="w-full h-48"></canvas>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-sm font-bold text-slate-800 mb-3">Grade Distribution</h3>
+                <canvas id="gradeDistributionChart" class="w-full h-48"></canvas>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-sm font-bold text-slate-800 mb-3">Committee Role Distribution</h3>
+                <canvas id="committeeRoleChart" class="w-full h-48"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <!-- Nominated vs Elected -->
+    <section>
+        <h2 class="text-lg font-black text-slate-900 uppercase tracking-tight mb-4">Nominated vs Elected Senators</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-sm font-bold text-slate-800 mb-3">Avg Score Comparison</h3>
+                <canvas id="nomVsElecScoreChart" class="w-full h-40"></canvas>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-sm font-bold text-slate-800 mb-3">Avg Attendance Comparison</h3>
+                <canvas id="nomVsElecAttChart" class="w-full h-40"></canvas>
+            </div>
+        </div>
+        <p class="mt-2 text-sm text-slate-500">Nominated: {{ nominated_vs_elected.nominated_count }} | Elected: {{ nominated_vs_elected.elected_count }}</p>
+    </section>
+
+    <!-- Correlation charts -->
+    <section>
+        <h2 class="text-lg font-black text-slate-900 uppercase tracking-tight mb-4">Correlation Analysis</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-sm font-bold text-slate-800 mb-3">Speeches vs Overall Score</h3>
+                <canvas id="speechesScoreChart" class="w-full h-48"></canvas>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-sm font-bold text-slate-800 mb-3">Words vs Overall Score (Hansard)</h3>
+                <canvas id="wordsScoreChart" class="w-full h-48"></canvas>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-sm font-bold text-slate-800 mb-3">Amendments vs Bills Passed</h3>
+                <canvas id="amendmentsPassedChart" class="w-full h-48"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <!-- Frontier by metric -->
+    <section>
+        <h2 class="text-lg font-black text-slate-900 uppercase tracking-tight mb-4">Frontier Breakdown by Metric</h2>
+        <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover overflow-x-auto">
+            <canvas id="frontierMetricChart" class="w-full min-h-64"></canvas>
+        </div>
+    </section>
+
+    <!-- Structural vs Debate (Hansard 2025) -->
+    <section>
+        <h2 class="text-lg font-black text-slate-900 uppercase tracking-tight mb-4">Structural vs Debate (Top 15 Hansard)</h2>
+        <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover overflow-x-auto">
+            <canvas id="structuralDebateChart" class="w-full min-h-64"></canvas>
+        </div>
+    </section>
+
+    <!-- Participation Balance -->
+    <section>
+        <h2 class="text-lg font-black text-slate-900 uppercase tracking-tight mb-4">Participation Balance</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-3">Structural-Heavy (S &gt; D+5)</h3>
+                <p class="text-xs text-slate-500 mb-2">Strong on voting, attendance, bills</p>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.structural_heavy %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-blue-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-blue-700 whitespace-nowrap">S:{{ s.structural_score }} D:{{ s.debate_score }}</span>
+                    </li>
+                    {% empty %}<li class="text-xs text-slate-400">None.</li>{% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-3">Debate-Heavy (D &gt; S+5)</h3>
+                <p class="text-xs text-slate-500 mb-2">Strong on words, speeches, motions</p>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.debate_heavy %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-emerald-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-emerald-700 whitespace-nowrap">S:{{ s.structural_score }} D:{{ s.debate_score }}</span>
+                    </li>
+                    {% empty %}<li class="text-xs text-slate-400">None.</li>{% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-violet-600 uppercase tracking-wider mb-3">Balanced (|S−D| ≤ 5)</h3>
+                <p class="text-xs text-slate-500 mb-2">Even structural & debate</p>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.balanced_contributors %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-violet-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-violet-700 whitespace-nowrap">{{ s.overall_score|floatformat:0 }}</span>
+                    </li>
+                    {% empty %}<li class="text-xs text-slate-400">None.</li>{% endfor %}
+                </ol>
+            </div>
+        </div>
+    </section>
+
+    <!-- Floor Presence & Legislative Efficiency -->
+    <section>
+        <h2 class="text-lg font-black text-slate-900 uppercase tracking-tight mb-4">Floor Presence & Efficiency</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-amber-600 uppercase tracking-wider mb-3">Most Speeches per Session</h3>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.speeches_per_session %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-amber-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-amber-700 whitespace-nowrap">{{ s.speeches_per_session }}/sess</span>
+                    </li>
+                    {% empty %}<li class="text-xs text-slate-400">No data.</li>{% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-rose-600 uppercase tracking-wider mb-3">Silent Attenders</h3>
+                <p class="text-xs text-slate-500 mb-2">≥20 sessions, &lt;100 speeches</p>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.silent_attenders %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-rose-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-rose-700 whitespace-nowrap">{{ s.sessions_attended }} sess</span>
+                    </li>
+                    {% empty %}<li class="text-xs text-slate-400">None.</li>{% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-cyan-600 uppercase tracking-wider mb-3">Bills per Session</h3>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.bills_per_session %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-cyan-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-cyan-700 whitespace-nowrap">{{ s.bills_per_session }}</span>
+                    </li>
+                    {% empty %}<li class="text-xs text-slate-400">No data.</li>{% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-teal-600 uppercase tracking-wider mb-3">Punchy Speakers</h3>
+                <p class="text-xs text-slate-500 mb-2">Many speeches, &lt;60 words/speech</p>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.punchy_speakers %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-teal-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-teal-700 whitespace-nowrap">{{ s.speeches }}</span>
+                    </li>
+                    {% empty %}<li class="text-xs text-slate-400">No data.</li>{% endfor %}
+                </ol>
+            </div>
+        </div>
+    </section>
+
+    <!-- Composite Indices & Outliers -->
+    <section>
+        <h2 class="text-lg font-black text-slate-900 uppercase tracking-tight mb-4">Composite Indices & Outliers</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-red-600 uppercase tracking-wider mb-3">Floor Leader Index</h3>
+                <p class="text-xs text-slate-500 mb-2">Words + speeches + motions</p>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.floor_leader %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-red-700 whitespace-nowrap">{{ s.floor_leader_index }}</span>
+                    </li>
+                    {% empty %}<li class="text-xs text-slate-400">No data.</li>{% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-red-600 uppercase tracking-wider mb-3">Legislative Workhorse</h3>
+                <p class="text-xs text-slate-500 mb-2">Bills + votes + sessions</p>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.legislative_workhorse %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-red-700 whitespace-nowrap">{{ s.legislative_workhorse_index }}</span>
+                    </li>
+                    {% empty %}<li class="text-xs text-slate-400">No data.</li>{% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-amber-600 uppercase tracking-wider mb-3">High Bills, Low Debate</h3>
+                <p class="text-xs text-slate-500 mb-2">≥5 bills, debate &lt;30</p>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.high_bills_low_debate %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-amber-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-amber-700 whitespace-nowrap">{{ s.sponsored_bills }} bills</span>
+                    </li>
+                    {% empty %}<li class="text-xs text-slate-400">None.</li>{% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-amber-600 uppercase tracking-wider mb-3">Vote-Heavy, Low Debate</h3>
+                <p class="text-xs text-slate-500 mb-2">≥90% votes, debate &lt;35</p>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.vote_heavy_low_debate %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-amber-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-amber-700 whitespace-nowrap">{{ s.vote_rate }}%</span>
+                    </li>
+                    {% empty %}<li class="text-xs text-slate-400">None.</li>{% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-amber-600 uppercase tracking-wider mb-3">High Motions, Low Speeches</h3>
+                <p class="text-xs text-slate-500 mb-2">≥5 motions, &lt;200 speeches</p>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.high_motions_low_speeches %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-amber-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-amber-700 whitespace-nowrap">{{ s.motions_sponsored }} mot</span>
+                    </li>
+                    {% empty %}<li class="text-xs text-slate-400">None.</li>{% endfor %}
+                </ol>
+            </div>
+        </div>
+    </section>
+
+    <!-- Grade Tier Stats Chart -->
+    <section>
+        <h2 class="text-lg font-black text-slate-900 uppercase tracking-tight mb-4">Metrics by Grade Tier</h2>
+        <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover overflow-x-auto">
+            <canvas id="gradeTierChart" class="w-full min-h-64"></canvas>
+        </div>
+    </section>
+
+    <!-- All-rounders, Gap analysis, Trend -->
+    <section>
+        <h2 class="text-lg font-black text-slate-900 uppercase tracking-tight mb-4">Composite & Gap Analysis</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-3">All-Rounders (Top 25% in 4 metrics)</h3>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.all_rounders %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-emerald-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-emerald-700 whitespace-nowrap">{{ s.overall_score|floatformat:0 }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="text-xs text-slate-400">No senators in top 25% across attendance, speeches, votes, legislative.</li>
+                    {% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-amber-600 uppercase tracking-wider mb-3">Gap: High Attendance, Low Output</h3>
+                <p class="text-xs text-slate-500 mb-2">Top-half attendance but ≤2 bills/amendments</p>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.gap_high_att_low_leg %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-amber-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-amber-700 whitespace-nowrap">{{ s.attendance_rate }}%</span>
+                    </li>
+                    {% empty %}
+                    <li class="text-xs text-slate-400">None.</li>
+                    {% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-3">Gap: Low Attendance, High Output</h3>
+                <p class="text-xs text-slate-500 mb-2">Top-half legislative output but &lt;70% attendance</p>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in leaderboards.gap_low_att_high_leg %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-blue-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-blue-700 whitespace-nowrap">{{ s.sponsored_bills }}+{{ s.passed_bills }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="text-xs text-slate-400">None.</li>
+                    {% endfor %}
+                </ol>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+                <h3 class="text-xs font-bold text-violet-600 uppercase tracking-wider mb-3">Trend: Improving (if data)</h3>
+                <ol class="space-y-1.5 text-sm text-slate-700">
+                    {% for s in top_improving %}
+                    <li class="flex justify-between items-center gap-2">
+                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-violet-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <span class="font-bold text-violet-700 whitespace-nowrap">+{{ s.trend_change }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="text-xs text-slate-400">Trend data unavailable.</li>
+                    {% endfor %}
+                </ol>
+            </div>
+        </div>
+        {% if top_declining %}
+        <div class="mt-4 bg-white border border-slate-200 rounded-lg p-4 card-hover max-w-md">
+            <h3 class="text-xs font-bold text-rose-600 uppercase tracking-wider mb-3">Trend: Declining</h3>
+            <ol class="space-y-1.5 text-sm text-slate-700">
+                {% for s in top_declining %}
+                <li class="flex justify-between items-center gap-2">
+                    <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-rose-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                    <span class="font-bold text-rose-700 whitespace-nowrap">{{ s.trend_change }}</span>
+                </li>
+                {% endfor %}
+            </ol>
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- Top senators by score -->
+    <section>
+        <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover max-w-md">
+            <h2 class="text-sm font-bold text-slate-800 mb-3">Top 10 Senators by Score</h2>
+            <ol class="space-y-1 text-sm text-slate-700">
+                {% for s in top10 %}
+                <li class="flex items-center justify-between">
+                    <span class="truncate mr-2">{{ forloop.counter }}. {{ s.name }} <span class="text-xs text-slate-400">({{ s.county }})</span></span>
+                    <span class="font-bold text-slate-900">{{ s.overall_score|floatformat:0 }}</span>
+                </li>
+                {% empty %}
+                <li class="text-xs text-slate-400">No data available.</li>
+                {% endfor %}
+            </ol>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function() {
+        var wrap = document.getElementById('partyDropdownWrap');
+        var trigger = document.getElementById('partyDropdownTrigger');
+        var panel = document.getElementById('partyDropdownPanel');
+        var hidden = document.getElementById('partyHiddenInput');
+        var triggerContent = document.getElementById('partyTriggerContent');
+        if (!wrap || !trigger || !panel || !hidden || !triggerContent) return;
+
+        function closePanel() {
+            panel.classList.add('hidden');
+            document.removeEventListener('click', closePanel);
+        }
+
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var isHidden = panel.classList.toggle('hidden');
+            if (isHidden) {
+                document.removeEventListener('click', closePanel);
+            } else {
+                setTimeout(function() { document.addEventListener('click', closePanel); }, 0);
+            }
+        });
+
+        panel.querySelectorAll('.party-option').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var val = btn.getAttribute('data-party-value') || '';
+                var name = btn.getAttribute('data-party-name') || 'All parties';
+                var logo = btn.getAttribute('data-party-logo') || '';
+                hidden.value = val;
+                var html = '';
+                if (logo) {
+                    html += '<img src="' + logo.replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '" alt="" class="w-5 h-5 object-contain flex-shrink-0">';
+                }
+                html += '<span>' + name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>';
+                triggerContent.innerHTML = html;
+                closePanel();
+            });
+        });
+    })();
+
+    (function() {
+        var grid = document.getElementById('senatorCardsGrid');
+        var select = document.getElementById('senatorCardView');
+        if (!grid || !select) return;
+        var cards = Array.prototype.slice.call(grid.querySelectorAll('[data-senator-card]')) || [];
+
+        function applyMode() {
+            var mode = select.value || 'row';
+            cards.forEach(function(card, idx) {
+                if (mode === 'row' && idx >= 6) {
+                    card.classList.add('hidden');
+                } else {
+                    card.classList.remove('hidden');
+                }
+            });
+        }
+
+        select.addEventListener('change', applyMode);
+        applyMode();
+    })();
+
+    const charts = JSON.parse('{{ charts_json|escapejs }}');
+
+    if (typeof Chart !== 'undefined' && Chart.defaults && Chart.defaults.animation) {
+        Chart.defaults.animation.duration = 1500;
+    }
+    var chartAnimation = { duration: 1500 };
+    var chartAnimationStagger = {
+        duration: 1500,
+        delay: function(ctx) {
+            if (ctx.type === 'data' && ctx.mode === 'default') return (ctx.dataIndex != null ? ctx.dataIndex : 0) * 40;
+            return 0;
+        }
+    };
+
+    const sdCtx = document.getElementById('scoreDistributionChart');
+    if (sdCtx && charts.score_distribution) {
+        new Chart(sdCtx, {
+            type: 'bar',
+            data: {
+                labels: charts.score_distribution.labels,
+                datasets: [{
+                    label: 'Number of senators',
+                    data: charts.score_distribution.counts,
+                    backgroundColor: 'rgba(220, 38, 38, 0.7)',
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0 } }
+                }
+            }
+        });
+    }
+
+    const frontierCtx = document.getElementById('frontierScoreChart');
+    if (frontierCtx && charts.frontier_scores) {
+        new Chart(frontierCtx, {
+            type: 'bar',
+            data: {
+                labels: charts.frontier_scores.labels,
+                datasets: [{
+                    label: 'Average score',
+                    data: charts.frontier_scores.scores,
+                    backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, max: 100 }
+                }
+            }
+        });
+    }
+
+    const billsCtx = document.getElementById('billsChart');
+    if (billsCtx && charts.bills_sponsored_vs_passed) {
+        const d = charts.bills_sponsored_vs_passed;
+        new Chart(billsCtx, {
+            type: 'bar',
+            data: {
+                labels: d.labels.map(n => n.length > 20 ? n.substring(0, 18) + '…' : n),
+                datasets: [
+                    { label: 'Sponsored', data: d.sponsored, backgroundColor: 'rgba(185, 28, 28, 0.8)' },
+                    { label: 'Passed', data: d.passed, backgroundColor: 'rgba(16, 185, 129, 0.8)' }
+                ]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: { legend: { display: true, position: 'top' } },
+                scales: {
+                    x: { stacked: false, beginAtZero: true, ticks: { precision: 0 } }
+                }
+            }
+        });
+    }
+
+    const asCtx = document.getElementById('attendanceScoreChart');
+    if (asCtx && charts.attendance_vs_score) {
+        new Chart(asCtx, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Senators',
+                    data: charts.attendance_vs_score.scores.map((score, idx) => ({
+                        x: charts.attendance_vs_score.attendance[idx],
+                        y: score
+                    })),
+                    backgroundColor: 'rgba(185, 28, 28, 0.8)',
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                animation: { duration: 2000 },
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Attendance rate (%)' },
+                        min: 0,
+                        max: 100
+                    },
+                    y: {
+                        title: { display: true, text: 'Overall score' },
+                        min: 0,
+                        max: 100
+                    }
+                }
+            }
+        });
+    }
+
+    (function() {
+        var chartCanvasIds = [
+            'scoreDistributionChart', 'frontierScoreChart', 'attendanceScoreChart', 'billsChart',
+            'countyPerformanceChart', 'committeeLeadershipChart', 'partyPerformanceChart', 'gradeDistributionChart', 'committeeRoleChart',
+            'nomVsElecScoreChart', 'nomVsElecAttChart', 'speechesScoreChart', 'wordsScoreChart', 'amendmentsPassedChart',
+            'frontierMetricChart', 'structuralDebateChart', 'gradeTierChart'
+        ];
+        chartCanvasIds.forEach(function(id) {
+            var canvas = document.getElementById(id);
+            if (!canvas || typeof Chart === 'undefined') return;
+            canvas.addEventListener('mouseenter', function() {
+                var chart = Chart.getChart(canvas);
+                if (chart) {
+                    chart.reset();
+                    chart.update();
+                }
+            });
+        });
+    })();
+
+    if (charts.county_performance) {
+        const ctx = document.getElementById('countyPerformanceChart');
+        if (ctx) new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: charts.county_performance.labels,
+                datasets: [
+                    { label: 'Avg score', data: charts.county_performance.avg_scores, backgroundColor: 'rgba(220, 38, 38, 0.7)' },
+                    { label: 'Avg attendance %', data: charts.county_performance.avg_attendance, backgroundColor: 'rgba(16, 185, 129, 0.7)' },
+                    { label: 'Avg bills', data: charts.county_performance.avg_bills, backgroundColor: 'rgba(245, 158, 11, 0.7)' }
+                ]
+            },
+            options: { animation: chartAnimationStagger, responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
+        });
+    }
+    if (charts.committee_leadership) {
+        const ctx = document.getElementById('committeeLeadershipChart');
+        if (ctx) new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: charts.committee_leadership.labels,
+                datasets: [{ label: 'Avg score', data: charts.committee_leadership.avg_scores, backgroundColor: ['rgba(220, 38, 38, 0.8)', 'rgba(34, 197, 94, 0.8)'] }]
+            },
+            options: { animation: chartAnimationStagger, responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
+        });
+    }
+    if (charts.party_performance) {
+        const ctx = document.getElementById('partyPerformanceChart');
+        if (ctx) new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: charts.party_performance.labels,
+                datasets: [{
+                    label: 'Avg score',
+                    data: charts.party_performance.avg_scores,
+                    backgroundColor: 'rgba(220, 38, 38, 0.7)',
+                }]
+            },
+            options: { animation: chartAnimationStagger, indexAxis: 'y', responsive: true, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, max: 100 } } }
+        });
+    }
+    if (charts.grade_distribution) {
+        const ctx = document.getElementById('gradeDistributionChart');
+        if (ctx) new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: charts.grade_distribution.labels,
+                datasets: [{ data: charts.grade_distribution.counts, backgroundColor: ['#22c55e','#84cc16','#eab308','#f97316','#ef4444','#dc2626'] }]
+            },
+            options: { animation: chartAnimation, responsive: true, plugins: { legend: { position: 'right' } } }
+        });
+    }
+    if (charts.committee_role_chart) {
+        const ctx = document.getElementById('committeeRoleChart');
+        if (ctx) new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: charts.committee_role_chart.labels,
+                datasets: [{ label: 'Senators', data: charts.committee_role_chart.counts, backgroundColor: 'rgba(185, 28, 28, 0.7)' }]
+            },
+            options: { animation: chartAnimationStagger, indexAxis: 'y', responsive: true, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } }
+        });
+    }
+    if (charts.nominated_vs_elected) {
+        const d = charts.nominated_vs_elected;
+        const ctx1 = document.getElementById('nomVsElecScoreChart');
+        if (ctx1) new Chart(ctx1, {
+            type: 'bar',
+            data: { labels: d.labels, datasets: [{ label: 'Avg score', data: d.avg_scores, backgroundColor: ['rgba(168,85,247,0.8)','rgba(34,197,94,0.8)'] }] },
+            options: { animation: chartAnimationStagger, responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
+        });
+        const ctx2 = document.getElementById('nomVsElecAttChart');
+        if (ctx2) new Chart(ctx2, {
+            type: 'bar',
+            data: { labels: d.labels, datasets: [{ label: 'Avg attendance %', data: d.avg_attendance, backgroundColor: ['rgba(168,85,247,0.8)','rgba(34,197,94,0.8)'] }] },
+            options: { animation: chartAnimationStagger, responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
+        });
+    }
+    if (charts.speeches_vs_score) {
+        const ctx = document.getElementById('speechesScoreChart');
+        if (ctx) new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Senators',
+                    data: charts.speeches_vs_score.scores.map((y, i) => ({ x: charts.speeches_vs_score.speeches[i], y })),
+                    backgroundColor: 'rgba(185, 28, 28, 0.8)'
+                }]
+            },
+            options: { animation: chartAnimation, responsive: true, plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Speeches' } }, y: { title: { display: true, text: 'Score' }, min: 0, max: 100 } } }
+        });
+    }
+    if (charts.words_vs_score) {
+        const ctx = document.getElementById('wordsScoreChart');
+        if (ctx) new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Senators',
+                    data: charts.words_vs_score.scores.map((y, i) => ({ x: charts.words_vs_score.words[i], y })),
+                    backgroundColor: 'rgba(220, 38, 38, 0.8)'
+                }]
+            },
+            options: { animation: chartAnimation, responsive: true, plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Words spoken' } }, y: { title: { display: true, text: 'Score' }, min: 0, max: 100 } } }
+        });
+    }
+    if (charts.structural_vs_debate) {
+        const d = charts.structural_vs_debate;
+        const ctx = document.getElementById('structuralDebateChart');
+        if (ctx) new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: d.labels,
+                datasets: [
+                    { label: 'Structural (55 pts)', data: d.structural, backgroundColor: 'rgba(220, 38, 38, 0.8)' },
+                    { label: 'Debate (45 pts)', data: d.debate, backgroundColor: 'rgba(16, 185, 129, 0.8)' }
+                ]
+            },
+            options: { animation: chartAnimationStagger, responsive: true, plugins: { legend: { position: 'top' } }, scales: { x: { stacked: false }, y: { stacked: false, beginAtZero: true, max: 60 } } }
+        });
+    }
+    if (charts.amendments_vs_passed) {
+        const ctx = document.getElementById('amendmentsPassedChart');
+        if (ctx) new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Senators',
+                    data: charts.amendments_vs_passed.passed.map((y, i) => ({ x: charts.amendments_vs_passed.amendments[i], y })),
+                    backgroundColor: 'rgba(236, 72, 153, 0.8)'
+                }]
+            },
+            options: { animation: chartAnimation, responsive: true, plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Amendments' } }, y: { title: { display: true, text: 'Bills passed' } } } }
+        });
+    }
+    if (charts.grade_tier_stats) {
+        const d = charts.grade_tier_stats;
+        const ctx = document.getElementById('gradeTierChart');
+        if (ctx) new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: d.labels,
+                datasets: [
+                    { label: 'Avg words', data: d.avg_words, backgroundColor: 'rgba(220, 38, 38, 0.7)' },
+                    { label: 'Avg speeches', data: d.avg_speeches, backgroundColor: 'rgba(16, 185, 129, 0.7)' },
+                    { label: 'Avg motions', data: d.avg_motions, backgroundColor: 'rgba(245, 158, 11, 0.7)' },
+                    { label: 'Avg structural', data: d.avg_structural, backgroundColor: 'rgba(220, 38, 38, 0.7)' },
+                    { label: 'Avg debate', data: d.avg_debate, backgroundColor: 'rgba(34, 197, 94, 0.7)' }
+                ]
+            },
+            options: { animation: chartAnimationStagger, responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
+        });
+    }
+    if (charts.frontier_by_metric) {
+        const d = charts.frontier_by_metric;
+        const ctx = document.getElementById('frontierMetricChart');
+        const datasets = [
+            { label: 'Avg score', data: d.avg_scores, backgroundColor: 'rgba(220, 38, 38, 0.7)' },
+            { label: 'Avg attendance %', data: d.avg_attendance, backgroundColor: 'rgba(16, 185, 129, 0.7)' },
+            { label: 'Avg bills', data: d.avg_bills, backgroundColor: 'rgba(245, 158, 11, 0.7)' },
+            { label: 'Avg speeches', data: d.avg_speeches, backgroundColor: 'rgba(168, 85, 247, 0.7)' }
+        ];
+        if (d.avg_words) datasets.push({ label: 'Avg words', data: d.avg_words, backgroundColor: 'rgba(220, 38, 38, 0.7)' });
+        if (ctx) new Chart(ctx, {
+            type: 'bar',
+            data: { labels: d.labels, datasets: datasets },
+            options: { animation: chartAnimationStagger, responsive: true, plugins: { legend: { display: true, position: 'top' } }, scales: { y: { beginAtZero: true } } }
+        });
+    }
+</script>
+{% endblock %}
+

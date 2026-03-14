@@ -3,7 +3,16 @@ from . import views
 
 urlpatterns = [
     # Main Dashboard & Discovery
-    path('', views.senator_list, name='index'),
+    path('', views.home, name='home'),
+    path('senators/', views.senator_list, name='senator-list'),
+    path('compare/', views.compare_senators, name='compare-senators'),
+    path('insights/', views.data_insights, name='data-insights'),
+    path('frontier/', views.frontier_insights, name='frontier-insights'),
+    path('frontier/map/', views.frontier_map, name='frontier-map'),
+    path('frontier/map/data/', views.frontier_map_data, name='frontier-map-data'),
+    path('about/', views.about, name='about'),
+    path('counties/', views.county_list, name='county-list'),
+    path('county/<slug:slug>/', views.county_detail, name='county-detail'),
     path('senator/<str:senator_id>/', views.senator_detail, name='senator-detail'),
     
     # HTMX Partial Endpoints (The "Engines")

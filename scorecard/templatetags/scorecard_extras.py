@@ -1,0 +1,47 @@
+from django import template
+
+register = template.Library()
+
+# Grade -> (bar color hex, badge bg hex, badge text hex)
+GRADE_STYLES = {
+    "A": ("#14532d", "#dcfce7", "#14532d"),
+    "A-": ("#16a34a", "#bbf7d0", "#15803d"),
+    "B+": ("#1d4ed8", "#dbeafe", "#1d4ed8"),
+    "B": ("#3b82f6", "#bfdbfe", "#2563eb"),
+    "B-": ("#0ea5e9", "#e0f2fe", "#0369a1"),
+    "C+": ("#c2410c", "#ffedd5", "#c2410c"),
+    "C": ("#ea580c", "#fed7aa", "#c2410c"),
+    "C-": ("#fb923c", "#fde8c8", "#9a3412"),
+    "D+": ("#1F0954", "#ede9fe", "#1F0954"),
+    "D": ("#6F00FE", "#ede9fe", "#6F00FE"),
+    "D-": ("#32127A", "#f5f3ff", "#32127A"),
+    "E": ("#dc2626", "#fee2e2", "#dc2626"),
+    "NEW": ("#94a3b8", "#f1f5f9", "#475569"),
+}
+
+
+@register.filter
+def get_item(d, key):
+    """Look up key in a dict (e.g. for variable key in template)."""
+    if not isinstance(d, dict):
+        return None
+    return d.get(key)
+
+
+@register.filter
+def replace_underscore(value):
+    """Replace underscores with spaces and title-case. For region display."""
+    return (value or "").replace("_", " ").title()
+
+
+@register.simple_tag
+def grade_bar_color(grade):
+    """Return the bar color hex for a grade."""
+    return GRADE_STYLES.get(grade, ("#e2e8f0", "#f1f5f9", "#64748b"))[0]
+
+
+@register.simple_tag
+def grade_badge_style(grade):
+    """Return inline style string for grade badge (background and color)."""
+    styles = GRADE_STYLES.get(grade, ("#e2e8f0", "#f1f5f9", "#64748b"))
+    return f"background:{styles[1]};color:{styles[2]};"

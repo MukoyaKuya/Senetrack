@@ -1,0 +1,351 @@
+{% extends "scorecard/base_light.html" %}
+{% load static scorecard_extras %}
+
+{% block title %}Frontier Analytics{% endblock %}
+{% block meta_description %}Compare Senate performance across Kenya's frontiers (regions).{% endblock %}
+{% block og_title %}Frontier Analytics | Kenya Senate Scorecard{% endblock %}
+{% block og_description %}Compare Senate performance across Kenya's frontiers (regions).{% endblock %}
+
+{% block nav %}
+{% include "partials/nav_light.html" with nav_active="frontier" %}
+{% endblock %}
+
+{% block extra_head %}
+<script src="{% static 'scorecard/vendor/chart.min.js' %}" defer></script>
+<style>
+    .card-hover:hover { box-shadow: 0 8px 24px rgba(15,23,42,0.12); border-color: #94a3b8; transform: translateY(-1px); }
+    .frontier-chart-wrap, .frontier-overview { cursor: pointer; }
+    .frontier-overview-bar {
+        width: 0%;
+        transition: width 1.4s ease-out;
+        transform-origin: left center;
+    }
+    /* Best Performed Senators per Frontier - enhanced cards */
+    .frontier-card {
+        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+    .frontier-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px -12px rgba(0,0,0,0.15), 0 0 0 2px rgba(217, 119, 6, 0.2);
+    }
+    .frontier-card .img-wrap {
+        position: relative;
+    }
+    .frontier-card .img-wrap::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 50%);
+        pointer-events: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<header class="bg-amber-900/90 text-white border-b border-amber-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <h1 class="font-brutal text-3xl md:text-4xl font-black tracking-tight uppercase">Frontier Analytics</h1>
+            <p class="text-amber-100 mt-2 text-sm md:text-base font-medium max-w-xl">
+                Compare Senate performance across Kenya's frontiers (regions): Coast, Eastern, Central, Rift Valley, Nyanza, Western, North Eastern.
+            </p>
+        </div>
+    </div>
+</header>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 pb-20 space-y-8">
+    <!-- Frontier filter -->
+    <section class="bg-white border border-slate-200 rounded-lg p-4">
+        <form method="get" action="{% url 'frontier-insights' %}" class="flex flex-wrap items-end gap-3">
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Frontier</label>
+                <select name="frontier" class="text-sm border border-slate-300 rounded px-2 py-1.5 bg-white min-w-[180px]">
+                    <option value="">All frontiers</option>
+                    {% for f in filters.frontiers %}
+                    <option value="{{ f }}" {% if filters.frontier == f %}selected{% endif %}>{{ f|replace_underscore }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="px-4 py-1.5 bg-amber-700 text-white text-sm font-semibold rounded hover:bg-amber-600">Apply</button>
+            {% if filters.frontier %}
+            <a href="{% url 'frontier-insights' %}" class="px-4 py-1.5 text-slate-600 text-sm font-medium hover:text-slate-900">Clear</a>
+            {% endif %}
+        </form>
+    </section>
+
+    <!-- KPI cards (frontier context) -->
+    <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-[0.18em] mb-1">Senators in View</p>
+            <p class="text-3xl font-black text-slate-900">{{ total_active }}</p>
+        </div>
+        <a href="{% url 'frontier-map' %}" class="bg-white border border-slate-200 rounded-lg p-4 card-hover block hover:border-amber-300 hover:shadow-md transition-all group">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-[0.18em] mb-1">Frontiers</p>
+            <p class="text-3xl font-black text-amber-700 group-hover:text-amber-600">{{ frontier_stats|length }}</p>
+            <p class="text-xs text-slate-500 mt-1 group-hover:text-amber-600">View map →</p>
+        </a>
+        <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-[0.18em] mb-1">Avg. Overall Score</p>
+            <p class="text-3xl font-black text-slate-900">{{ avg_overall }}<span class="text-base text-slate-500 font-semibold ml-1">/ 100</span></p>
+        </div>
+    </section>
+
+    <!-- Best Performed Senators per Frontier / Senators in selected frontier -->
+    <section>
+        <div class="mb-5">
+            {% if filter_frontier %}
+            <h2 class="text-lg font-black text-slate-900 uppercase tracking-tight">Senators in {{ filter_frontier|replace_underscore }}</h2>
+            <p class="text-sm text-slate-500 mt-1">All senators from this region — sorted by score, click to view profile</p>
+            {% else %}
+            <h2 class="text-lg font-black text-slate-900 uppercase tracking-tight">Best Performed Senators per Frontier Year 2025</h2>
+            <p class="text-sm text-slate-500 mt-1">Top performer in each region — click to view full profile</p>
+            {% endif %}
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5 pb-2">
+            {% for s in senators_display %}
+            <a href="{% url 'senator-detail' s.senator_id %}" class="block group">
+                <div class="bg-white border-2 border-slate-100 rounded-xl overflow-hidden frontier-card flex flex-col shadow-sm hover:border-amber-200">
+                    <div class="img-wrap aspect-[4/5] w-full bg-gradient-to-b from-slate-100 to-slate-200 relative overflow-hidden">
+                        {% if s.image_url %}
+                        <img src="{{ s.image_url }}" alt="{{ s.name }}" class="w-full h-full object-cover object-[center_25%] group-hover:scale-105 transition-transform duration-500"
+                             loading="lazy" decoding="async" width="480" height="600"
+                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                        <div class="absolute inset-0 hidden items-center justify-center bg-slate-200 text-slate-500 font-black text-3xl">
+                            {{ s.name|slice:":1" }}
+                        </div>
+                        {% else %}
+                        <div class="absolute inset-0 flex items-center justify-center bg-slate-200 text-slate-500 font-black text-3xl">
+                            {{ s.name|slice:":1" }}
+                        </div>
+                        {% endif %}
+                        <div class="absolute bottom-2 left-2 right-2 z-10">
+                            <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/95 text-white shadow-sm">
+                                {{ s.frontier|title }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="p-3 sm:p-4 flex flex-col flex-1">
+                        <p class="font-bold text-slate-800 text-sm leading-tight line-clamp-2 group-hover:text-amber-700 transition-colors" title="{{ s.name }}">{{ s.name }}</p>
+                        {% if s.county or s.nomination %}
+                        <p class="text-xs text-slate-500 mt-1 truncate" title="{% if s.nomination %}{{ s.nomination }}{% else %}{{ s.county }}{% endif %}">{% if s.nomination %}{{ s.nomination }}{% else %}{{ s.county }}{% if s.county and 'County' not in s.county and 'City' not in s.county %} County{% endif %}{% endif %}</p>
+                        {% endif %}
+                        <div class="mt-3 flex items-center justify-between gap-2">
+                            {% if s.overall_score %}
+                            <span class="text-2xl font-black text-emerald-600 tabular-nums">{{ s.overall_score|floatformat:0 }}</span>
+                            <span class="text-xs font-semibold text-slate-400">/100</span>
+                            <div class="ml-auto h-1.5 flex-1 max-w-[4rem] rounded-full bg-slate-100 overflow-hidden">
+                                <div class="h-full bg-emerald-500 rounded-full transition-all duration-300" style="width: {{ s.overall_score|floatformat:0 }}%;"></div>
+                            </div>
+                            {% else %}
+                            <span class="text-xs font-bold text-amber-600 uppercase tracking-wider">Still competing</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </a>
+            {% empty %}
+            <p class="col-span-full text-sm text-slate-500 py-8">No data available. Try adjusting filters.</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Charts -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover frontier-chart-wrap" id="frontierScoreChartWrap">
+            <h2 class="text-sm font-bold text-slate-800 mb-3">Average Score by Frontier</h2>
+            <canvas id="frontierScoreChart" class="w-full h-64"></canvas>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover frontier-overview">
+            <h2 class="text-sm font-bold text-slate-800 mb-3">Frontier Overview (Senators per Frontier)</h2>
+            <div class="space-y-2">
+                {% for fs in frontier_stats %}
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-sm font-medium text-slate-700">{{ fs.frontier|title }}</span>
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs text-slate-500">{{ fs.count }} senator{{ fs.count|pluralize }}</span>
+                        <span class="font-bold text-amber-700 min-w-[3rem]">{{ fs.avg_score }}/100</span>
+                    </div>
+                </div>
+                <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div class="h-full bg-amber-500 rounded-full frontier-overview-bar" data-width="{{ fs.avg_score }}%" style="width: {{ fs.avg_score }}%;"></div>
+                </div>
+                {% empty %}
+                <p class="text-sm text-slate-500">No frontier data available.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Frontier breakdown by metric -->
+    <section>
+        <h2 class="text-lg font-black text-slate-900 uppercase tracking-tight mb-4">Frontier Breakdown by Metric</h2>
+        <div class="bg-white border border-slate-200 rounded-lg p-4 card-hover overflow-x-auto frontier-chart-wrap" id="frontierMetricChartWrap">
+            <canvas id="frontierMetricChart" class="w-full min-h-64"></canvas>
+        </div>
+    </section>
+
+    <!-- Frontier stats table -->
+    <section>
+        <h2 class="text-lg font-black text-slate-900 uppercase tracking-tight mb-4">Frontier Summary</h2>
+        <div class="bg-white border border-slate-200 rounded-lg overflow-hidden">
+            <table class="w-full text-sm">
+                <thead class="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                        <th class="text-left py-3 px-4 font-semibold text-slate-700">Frontier</th>
+                        <th class="text-right py-3 px-4 font-semibold text-slate-700">Senators</th>
+                        <th class="text-right py-3 px-4 font-semibold text-slate-700">Avg Score</th>
+                        <th class="text-right py-3 px-4 font-semibold text-slate-700">Avg Attendance</th>
+                        <th class="text-right py-3 px-4 font-semibold text-slate-700">Avg Bills</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fb in frontier_by_metric %}
+                    <tr class="border-b border-slate-100 hover:bg-slate-50">
+                        <td class="py-3 px-4 font-medium text-slate-800">{{ fb.frontier|title }}</td>
+                        <td class="py-3 px-4 text-right text-slate-600">{{ fb.scores|length }}</td>
+                        <td class="py-3 px-4 text-right font-bold text-amber-700">{{ fb.avg_score }}</td>
+                        <td class="py-3 px-4 text-right text-slate-600">{{ fb.avg_attendance }}%</td>
+                        <td class="py-3 px-4 text-right text-slate-600">{{ fb.avg_bills|floatformat:1 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="py-6 px-4 text-center text-slate-500">No frontier data available.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="application/json" id="frontier-charts-data">{{ charts_json|safe }}</script>
+<script>
+(function() {
+    var charts = {};
+    var playOverviewAnimation = null;
+    try {
+        var el = document.getElementById('frontier-charts-data');
+        if (el && el.textContent) charts = JSON.parse(el.textContent);
+    } catch (e) { console.warn('Frontier charts data parse failed', e); }
+
+    function initCharts() {
+        if (typeof Chart === 'undefined') { setTimeout(initCharts, 30); return; }
+
+        var frontierCtx = document.getElementById('frontierScoreChart');
+        var fs = charts.frontier_scores;
+        if (frontierCtx && fs && Array.isArray(fs.labels) && Array.isArray(fs.scores)) {
+            try {
+                new Chart(frontierCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: fs.labels,
+                        datasets: [{ label: 'Average score', data: fs.scores, backgroundColor: 'rgba(217, 119, 6, 0.8)' }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        animation: { duration: 2000 },
+                        scales: {
+                            x: { beginAtZero: true, max: 100 },
+                            y: { barThickness: 14, maxBarThickness: 24 }
+                        }
+                    }
+                });
+                var wrap = document.getElementById('frontierScoreChartWrap');
+                if (wrap) {
+                    wrap.addEventListener('mouseenter', function() {
+                        var ch = Chart.getChart(frontierCtx);
+                        if (ch) { ch.reset(); ch.update(); }
+                        if (typeof playOverviewAnimation === 'function') {
+                            playOverviewAnimation();
+                        }
+                    });
+                }
+            } catch (e) { console.warn('Frontier score chart failed', e); }
+        }
+
+        var d = charts.frontier_by_metric;
+        var ctx = document.getElementById('frontierMetricChart');
+        if (ctx && d && Array.isArray(d.labels)) {
+            try {
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: d.labels,
+                        datasets: [
+                            { label: 'Avg score', data: d.avg_scores || [], backgroundColor: 'rgba(217, 119, 6, 0.7)' },
+                            { label: 'Avg attendance %', data: d.avg_attendance || [], backgroundColor: 'rgba(16, 185, 129, 0.7)' },
+                            { label: 'Avg bills', data: d.avg_bills || [], backgroundColor: 'rgba(59, 130, 246, 0.7)' },
+                            { label: 'Avg speeches', data: d.avg_speeches || [], backgroundColor: 'rgba(168, 85, 247, 0.7)' }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        animation: { duration: 2000 },
+                        plugins: { legend: { display: true, position: 'top' } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+                var metricWrap = document.getElementById('frontierMetricChartWrap');
+                if (metricWrap) {
+                    metricWrap.addEventListener('mouseenter', function() {
+                        var ch = Chart.getChart(ctx);
+                        if (ch) { ch.reset(); ch.update(); }
+                    });
+                }
+            } catch (e) { console.warn('Frontier metric chart failed', e); }
+        }
+    }
+
+    function initOverviewHover() {
+        var overview = document.querySelector('.frontier-overview');
+        if (!overview) return;
+        var bars = overview.querySelectorAll('.frontier-overview-bar');
+        if (!bars.length) return;
+
+        playOverviewAnimation = function() {
+            // order: highest score first, then lower (by data-width %)
+            var ordered = Array.prototype.slice.call(bars).sort(function(a, b) {
+                var av = parseFloat((a.getAttribute('data-width') || '0').replace('%', '')) || 0;
+                var bv = parseFloat((b.getAttribute('data-width') || '0').replace('%', '')) || 0;
+                return bv - av;
+            });
+            for (var i = 0; i < bars.length; i++) {
+                bars[i].style.width = '0%';
+            }
+            void overview.offsetWidth;
+            // same transition duration for all; stagger start so highest fills first
+            for (var j = 0; j < ordered.length; j++) {
+                (function(bar, delay) {
+                    var target = bar.getAttribute('data-width') || bar.style.width || '0%';
+                    setTimeout(function() { bar.style.width = target; }, delay);
+                })(ordered[j], j * 120);
+            }
+        };
+
+        // capture targets once on init
+        for (var i = 0; i < bars.length; i++) {
+            var bar = bars[i];
+            var target = bar.getAttribute('data-width') || bar.style.width || '0%';
+            bar.setAttribute('data-width', target);
+            bar.style.width = '0%';
+        }
+        // initial play on load
+        setTimeout(playOverviewAnimation, 250);
+        // replay on hover
+        overview.addEventListener('mouseenter', playOverviewAnimation);
+    }
+
+    function run() {
+        initCharts();
+        initOverviewHover();
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', run);
+    } else {
+        run();
+    }
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,38 @@
+<style>.nav-gradient { background: linear-gradient(to right, #b91c1c 0%, #7f1d1d 40%, #1f2937 100%); }</style>
+<header class="nav-gradient text-white px-6 py-3 flex flex-col lg:flex-row items-center justify-between gap-4 sticky top-0 z-50">
+    <div class="flex items-center gap-4 shrink-0">
+        <a href="{% url 'home' %}" class="flex items-center gap-3 hover:opacity-90 transition-opacity">
+            <i data-lucide="landmark" class="w-8 h-8 text-white"></i>
+            <div>
+                <h1 class="font-brutal text-xl font-bold tracking-tight">SENETRACK</h1>
+                <p class="text-xs text-slate-200">Kenya Senate Performance Tracking</p>
+            </div>
+        </a>
+    </div>
+    <nav class="hidden md:flex items-center gap-4 lg:gap-6 text-sm font-medium flex-wrap justify-start md:ml-6">
+        <a href="{% url 'frontier-insights' %}" class="text-slate-200 hover:text-white transition-colors {% if nav_active == 'frontier' %}text-white{% endif %}">Frontiers</a>
+        <a href="{% url 'county-list' %}" class="text-slate-200 hover:text-white transition-colors {% if nav_active == 'counties' %}text-white{% endif %}">Counties</a>
+        <a href="{% url 'data-insights' %}" class="text-slate-200 hover:text-white transition-colors {% if nav_active == 'insights' %}text-white{% endif %}">Data Insights</a>
+        <a href="{% url 'senator-list' %}" class="text-slate-200 hover:text-white transition-colors {% if nav_active == 'senators' %}text-white{% endif %}">Senators</a>
+        <a href="{% url 'about' %}" class="text-slate-200 hover:text-white transition-colors {% if nav_active == 'about' %}text-white{% endif %}">SPM</a>
+    </nav>
+    <nav class="md:hidden flex items-center gap-2 flex-wrap text-sm font-medium">
+        <a href="{% url 'frontier-insights' %}" class="py-2 px-2 rounded-md transition-colors text-slate-200 hover:text-white {% if nav_active == 'frontier' %}text-white bg-white/10{% endif %}">Frontiers</a>
+        <a href="{% url 'county-list' %}" class="py-2 px-2 rounded-md transition-colors text-slate-200 hover:text-white {% if nav_active == 'counties' %}text-white bg-white/10{% endif %}">Counties</a>
+        <a href="{% url 'data-insights' %}" class="py-2 px-2 rounded-md transition-colors text-slate-200 hover:text-white {% if nav_active == 'insights' %}text-white bg-white/10{% endif %}">Insights</a>
+        <a href="{% url 'senator-list' %}" class="py-2 px-2 rounded-md transition-colors text-slate-200 hover:text-white {% if nav_active == 'senators' %}text-white bg-white/10{% endif %}">Senators</a>
+        <a href="{% url 'about' %}" class="py-2 px-2 rounded-md transition-colors text-slate-200 hover:text-white {% if nav_active == 'about' %}text-white bg-white/10{% endif %}">SPM</a>
+    </nav>
+    <div class="flex items-center gap-3 shrink-0">
+        <a href="{% url 'compare-senators' %}" class="inline-flex items-center gap-2 bg-slate-800/80 hover:bg-slate-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors border border-slate-600">
+            <i data-lucide="git-compare" class="w-4 h-4"></i>
+            Compare Senators
+        </a>
+        {% if nav_show_back %}
+        <a href="{% url 'senator-list' %}" class="flex items-center gap-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            Back to list
+        </a>
+        {% endif %}
+    </div>
+</header>
