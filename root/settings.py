@@ -14,6 +14,9 @@ import os
 from pathlib import Path
 
 import dj_database_url
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,15 +29,21 @@ REDIS_URL = os.environ.get('REDIS_URL', '').strip() or None
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
-    'DJANGO_SECRET_KEY',
-    'django-insecure-nslt8yi9h@q!dqv(6%0g*j3zm(wad39#c@&l$$*^uzc#0l^vx@'
-)
+_DEFAULT_SECRET = 'django-insecure-nslt8yi9h@q!dqv(6%0g*j3zm(wad39#c@&l$$*^uzc#0l^vx@'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', _DEFAULT_SECRET)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'true').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+# Require a non-default SECRET_KEY in production
+if not DEBUG and SECRET_KEY == _DEFAULT_SECRET:
+    raise ValueError(
+        'Set DJANGO_SECRET_KEY in production. Do not use the default insecure key.'
+    )
+
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
+if not DEBUG and not ALLOWED_HOSTS:
+    raise ValueError('Set ALLOWED_HOSTS in production (e.g. your domain).')
 
 
 # Application definition
@@ -179,3 +188,20 @@ try:
     ACTIVE_DEBATES = int(os.environ.get('ACTIVE_DEBATES', 12))
 except (TypeError, ValueError):
     ACTIVE_DEBATES = 12
+
+# --- Security hardening ---
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_HTTPONLY = False  # False so JS can read for AJAX if needed; set True if no JS CSRF usage
+
+if not DEBUG:
+    SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'true').lower() in ('true', '1', 'yes')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True

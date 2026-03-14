@@ -1,9 +1,11 @@
 from django.db import connection
+from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.cache import cache_page
 
 from scorecard.engine import get_engine_result, perf_to_engine_data
 from scorecard.models import ParliamentaryPerformance, Senator, Party, VotingRecord
+from scorecard.security import sanitize_engine_type, sanitize_senator_id, sanitize_senator_ids
 from scorecard.services.senators import build_senator_display
 
 
@@ -299,7 +301,10 @@ def _get_voting_history_for_senator(senator):
 @cache_page(60 * 2)
 def senator_detail(request, senator_id):
     """Main dashboard page."""
-    senator = get_object_or_404(Senator.objects.select_related("perf"), senator_id=senator_id)
+    clean_id = sanitize_senator_id(senator_id)
+    if clean_id is None:
+        raise Http404("Invalid senator identifier")
+    senator = get_object_or_404(Senator.objects.select_related("perf"), senator_id=clean_id)
     perf = getattr(senator, "perf", None)
     results = get_engine_result(perf)
     if not results:
@@ -421,7 +426,11 @@ def senator_detail(request, senator_id):
 
 def get_engine_partial(request, senator_id, engine_type):
     """HTMX fragment endpoint."""
-    senator = get_object_or_404(Senator, senator_id=senator_id)
+    clean_id = sanitize_senator_id(senator_id)
+    if clean_id is None:
+        raise Http404("Invalid senator identifier")
+    senator = get_object_or_404(Senator, senator_id=clean_id)
+    engine_type = sanitize_engine_type(engine_type)
     if engine_type == "parliamentary":
         perf = get_object_or_404(ParliamentaryPerformance, senator=senator)
         results = get_engine_result(perf) or {}
@@ -432,7 +441,7 @@ def get_engine_partial(request, senator_id, engine_type):
             "dash_array": f"{(results.get('pillars', {}).get('committee', 0) / 25) * 251.2} 251.2",
         }
         return render(request, "partials/parliamentary_engine.html", context)
-    return render(request, "partials/placeholder.html", {"type": engine_type})
+    return render(request, "partials/placeholder.html", {"type": engine_type})  # engine_type sanitized
 
 
 def compare_senators(request):
@@ -440,9 +449,9 @@ def compare_senators(request):
     ids_list = request.GET.getlist("ids")
     ids_param = request.GET.get("ids", "")
     if ids_list:
-        senator_ids = [x.strip() for x in ids_list if x.strip()][:5]
+        senator_ids = sanitize_senator_ids(ids_list, max_count=5)
     else:
-        senator_ids = [x.strip() for x in ids_param.split(",") if x.strip()][:5]
+        senator_ids = sanitize_senator_ids([x for x in ids_param.split(",") if x], max_count=5)
     senators = []
     if senator_ids:
         senators = list(Senator.objects.filter(senator_id__in=senator_ids).select_related("perf"))

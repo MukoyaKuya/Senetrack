@@ -1,7 +1,9 @@
+from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 
 from scorecard.engine import get_engine_result, perf_to_engine_data
 from scorecard.models import County, Senator
+from scorecard.security import sanitize_county_slug
 
 
 def county_list(request):
@@ -13,9 +15,12 @@ def county_list(request):
 
 def county_detail(request, slug):
     """County profile page with senator(s) and county info."""
+    clean_slug = sanitize_county_slug(slug)
+    if clean_slug is None:
+        raise Http404("Invalid county identifier")
     county = get_object_or_404(
         County.objects.prefetch_related("images", "senators__perf"),
-        slug=slug,
+        slug=clean_slug,
     )
 
     matched = list(county.senators.select_related("perf").order_by("name"))

@@ -398,6 +398,28 @@ class AnalyticsTest(TestCase):
         self.assertEqual(row["frontier"], "central")
 
 
+class SecurityValidationTest(TestCase):
+    """Sanitization and validation for URL/GET params."""
+
+    def test_sanitize_senator_id_accepts_valid(self):
+        from scorecard.security import sanitize_senator_id
+        self.assertEqual(sanitize_senator_id("cheruiyot-aaron"), "cheruiyot-aaron")
+        self.assertEqual(sanitize_senator_id("john_doe"), "john_doe")
+
+    def test_sanitize_senator_id_rejects_invalid(self):
+        from scorecard.security import sanitize_senator_id
+        self.assertIsNone(sanitize_senator_id(""))
+        self.assertIsNone(sanitize_senator_id("id/../admin"))
+        self.assertIsNone(sanitize_senator_id("<script>"))
+        self.assertIsNone(sanitize_senator_id("a" * 51))
+
+    def test_sanitize_senator_ids_caps_count(self):
+        from scorecard.security import sanitize_senator_ids
+        ids = ["a", "b", "c", "d", "e", "f"]
+        out = sanitize_senator_ids(ids, max_count=5)
+        self.assertEqual(len(out), 5)
+
+
 class CountyFrontierTest(TestCase):
     """Tests for county/frontier normalization service."""
 

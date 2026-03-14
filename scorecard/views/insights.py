@@ -8,6 +8,7 @@ from django.views.decorators.cache import cache_page
 from scorecard.engine import perf_to_engine_data
 from scorecard.services.analytics import get_senator_rows, normalize_frontier
 from scorecard.services.insights_charts import build_insights_charts
+from scorecard.security import sanitize_county_slug, sanitize_filter_string
 
 INSIGHTS_CACHE_TIMEOUT = 300  # 5 minutes
 
@@ -28,8 +29,8 @@ def frontier_insights(request):
                 filter_frontiers.append(key)
     filter_frontiers = sorted(filter_frontiers)
 
-    # Apply frontier filter (case-insensitive)
-    filter_frontier_raw = (request.GET.get("frontier") or "").strip()
+    # Apply frontier filter (case-insensitive); sanitize GET input
+    filter_frontier_raw = sanitize_filter_string(request.GET.get("frontier") or "")
     filter_frontier = normalize_frontier(filter_frontier_raw) if filter_frontier_raw else ""
     rows = (
         [r for r in all_rows if normalize_frontier(r.get("frontier") or "") == filter_frontier]
@@ -256,10 +257,11 @@ def data_insights(request):
     filter_counties = list(County.objects.values_list("slug", "name").order_by("name"))
     party_logos = {p.name.strip(): p.logo.url for p in Party.objects.all() if p.logo}
 
-    # Apply filters from GET params
-    filter_party = (request.GET.get("party") or "").strip()
-    filter_frontier = (request.GET.get("frontier") or "").strip().replace(" ", "_")
-    filter_county = (request.GET.get("county") or "").strip().lower()
+    # Apply filters from GET params (sanitized to prevent injection/abuse)
+    filter_party = sanitize_filter_string(request.GET.get("party") or "")
+    filter_frontier = sanitize_filter_string(request.GET.get("frontier") or "").replace(" ", "_")
+    raw_county = (request.GET.get("county") or "").strip().lower()
+    filter_county = (sanitize_county_slug(raw_county) or "") if raw_county else ""
     if filter_party:
         rows = [r for r in rows if r["party"] == filter_party]
     if filter_frontier:

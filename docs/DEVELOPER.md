@@ -73,6 +73,26 @@ Create `Party` records from distinct senator party names:
 python manage.py create_parties_from_senators
 ```
 
+### Apply senator updates (unified ETL)
+
+Single place for updating senator and/or performance data (replaces one-off `update_<name>.py` scripts):
+
+**Bulk from config (JSON):**
+
+```bash
+python manage.py apply_senator_updates --config docs/updates_example.json
+python manage.py apply_senator_updates --config my_updates.json --dry-run
+```
+
+Config format: array of `{ "senator_id": "..." }` or `{ "name": "Partial Name" }` plus optional `"senator": { ... }` and `"perf": { ... }`. See `docs/updates_example.json`.
+
+**Single senator from CLI:**
+
+```bash
+python manage.py apply_senator_updates --id cheruiyot-aaron --speeches 945 --party "UDA"
+python manage.py apply_senator_updates --name "Sifuna" --words-spoken 86034 --overall-score 89 --grade A
+```
+
 ---
 
 ## Frontier Map (static GeoJSON)
@@ -94,11 +114,19 @@ Output: `scorecard/static/scorecard/kenya_counties.geojson` (or path shown in co
 
 ---
 
+## Database: SQLite and Neon (Postgres)
+
+- **Local:** Uses SQLite (`db.sqlite3`) by default.
+- **Neon / Postgres:** Set `DATABASE_URL` to your Neon (or any Postgres) connection string. The app uses `dj-database-url`, so no code changes are needed. Example (Neon):
+  - In Neon dashboard: copy the connection string (e.g. `postgresql://user:pass@ep-xxx.region.aws.neon.tech/neondb?sslmode=require`).
+  - Set in env or `.env`: `DATABASE_URL=postgresql://...`
+  - Run `python manage.py migrate` against the new DB. Use `python manage.py dumpdata` / `loaddata` or pg_restore if migrating data from SQLite.
+
 ## Environment Variables
 
 | Variable | Purpose |
 |--------|---------|
-| `DATABASE_URL` | PostgreSQL connection (optional; default SQLite) |
+| `DATABASE_URL` | PostgreSQL connection (e.g. Neon); optional, default SQLite |
 | `REDIS_URL` | Redis for cache and sessions (optional) |
 | `DJANGO_SECRET_KEY` | Secret key (required in production) |
 | `DJANGO_DEBUG` | `true` / `false` (default `true`) |
@@ -116,8 +144,8 @@ Output: `scorecard/static/scorecard/kenya_counties.geojson` (or path shown in co
 - **`scorecard/services/`** — `analytics` (senator rows, cache), `senators` (frontier, display), `county_frontier` (region/slug maps), `insights_charts` (chart data for insights).
 - **`scorecard/management/commands/`** — Management commands (import, recalc, backfill, build_frontier_map_data, etc.).
 - **`root/`** — Project settings, URLs, WSGI/ASGI.
-- **`docs/`** — Documentation (this file).
-- **`scripts/`** — Utility scripts; see `scripts/README.md`. One-off senator updates (e.g. `update_*.py`) may live in project root; prefer management commands or `scripts/` for new automation.
+- **`docs/`** — Documentation (this file, `ASSETS.md`, `SECURITY.md` for deployment and hardening, `updates_example.json` for ETL config).
+- **`scripts/`** — Utility scripts; see `scripts/README.md`. Prefer **`apply_senator_updates`** (management command) over one-off `update_*.py` scripts.
 
 ---
 

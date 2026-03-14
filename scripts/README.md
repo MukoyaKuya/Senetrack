@@ -2,32 +2,34 @@
 
 Utility scripts for the Kenya Senate Scorecard project.
 
-## In this directory
+## Preferred: management commands (scalable ETL)
 
-- **`update_senator.py`** — Update a single senator’s `ParliamentaryPerformance` by name or `senator_id`.  
-  Run from project root:  
-  `python scripts/update_senator.py --name "Cheruiyot" --speeches 2834 --sponsored-bills 18`  
-  Or: `python scripts/update_senator.py --id cheruiyot-aaron --attendance 100`
+Use these from project root instead of one-off scripts:
 
-## Management commands (preferred for repeatable tasks)
-
-Use Django management commands from project root:
-
+- **`python manage.py apply_senator_updates`** — **Unified senator/perf updates** (config-driven or CLI).  
+  - Bulk: `--config updates.json` (see `docs/updates_example.json`).  
+  - Single: `--id <senator_id>` or `--name "Partial"` plus `--speeches`, `--party`, `--words-spoken`, etc.  
+  Replaces the need for many `update_<name>.py` scripts.
 - `python manage.py import_performance <json_file>`
 - `python manage.py import_statements_2025 ...`
 - `python manage.py recalculate_hansard_grades`
 - `python manage.py backfill_county_fk`
 - `python manage.py create_parties_from_senators`
 - `python manage.py build_frontier_map_data`
-- `python manage.py update_senator ...` (if available in `scorecard/management/commands/`)
+- `python manage.py update_senator <id> --party "X"` — Senator profile-only updates (name, party, image_url, county, etc.).
 
 See **`docs/DEVELOPER.md`** for full usage.
 
-## Root-level one-off scripts
+## In this directory
 
-The project root may contain one-off scripts such as:
+- **`update_senator.py`** — Standalone script to update one senator’s **performance** by `--id` or `--name`.  
+  Prefer **`manage.py apply_senator_updates --id X --speeches 100`** for consistency and to avoid maintaining duplicate logic.
 
-- `update_<name>.py` — Senator-specific data fixes (e.g. after manual research).
-- `recalc.py`, `mzalendo_importer.py`, `analyze_senators.py`, `check_shakilla.py`, etc.
+## Root-level one-off scripts (legacy)
 
-These are legacy/convenience scripts. For new automation, prefer adding a **management command** under `scorecard/management/commands/` or a script here in `scripts/` with a short note in this README.
+The project root may contain:
+
+- `update_<name>.py` — One-off senator fixes. Prefer **`apply_senator_updates --config <file>`** or CLI for new updates.
+- `recalc.py`, `mzalendo_importer.py`, `analyze_senators.py`, etc.
+
+For new automation, use **management commands** or add a script here and document it in this README.

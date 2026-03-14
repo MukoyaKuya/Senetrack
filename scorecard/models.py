@@ -1,3 +1,15 @@
+"""
+Scorecard models: County, Party, Senator, performance, and related data.
+
+Asset optimization (images):
+  ImageFields (County.logo, governor_image, women_rep_image; Party.logo; Senator.image;
+  CountyImage.image) use default local media storage. For higher traffic or global users:
+  - Switch to remote storage: set DEFAULT_FILE_STORAGE (e.g. django-storages S3 or
+    Cloudinary) in settings; no model changes required.
+  - Add thumbnails: use django-imagekit ImageSpecField on the same ImageField, then
+    use the spec URL in templates for cards/lists; keep full image for detail pages.
+  See docs/ASSETS.md for options and examples.
+"""
 from django.db import models
 
 
@@ -80,6 +92,13 @@ class Senator(models.Model):
         default=False,
         help_text="Mark if this senator is newly added and performance data is still being computed.",
     )
+
+    @property
+    def display_image_url(self):
+        """Preferred image URL for cards/lists. Override point for thumbnails or CDN later."""
+        if self.image:
+            return self.image.url
+        return self.image_url or ""
 
     def __str__(self):
         return self.name
