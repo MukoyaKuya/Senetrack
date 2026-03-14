@@ -9,7 +9,7 @@ from scorecard.security import sanitize_county_slug
 def county_list(request):
     """Counties browse page with 47 county cards."""
     # Hide the synthetic "Nominated (Nationwide)" county from the public list
-    counties = County.objects.exclude(slug="nominated").order_by("order", "name")
+    counties = County.objects.exclude(slug="nominated").only("name", "slug", "region", "logo", "order").order_by("order", "name")
     return render(request, "scorecard/counties.html", {"counties": counties})
 
 

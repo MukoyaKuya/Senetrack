@@ -8,3 +8,5 @@ redis>=5.0
 gunicorn>=22.0
 whitenoise>=6.6
 dj-database-url>=2.1
+django-cloudinary-storage>=0.3.0
+cloudinary>=1.41.0

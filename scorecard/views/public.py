@@ -40,8 +40,8 @@ def home(request):
 
 def senator_list(request):
     """List of all senators with pagination."""
-    senators_qs = Senator.objects.select_related("perf").order_by("name")
-    party_logos = {p.name.strip(): p.logo.url for p in Party.objects.all() if p.logo}
+    senators_qs = Senator.objects.select_related("perf", "county_fk").order_by("name")
+    party_logos = {p.name.strip(): p.logo.url for p in Party.objects.filter(logo__isnull=False).only("name", "logo")}
     PLACEHOLDER_NAME = "{{ senator.name }}"
     senator_list_data = []
     for s in senators_qs:

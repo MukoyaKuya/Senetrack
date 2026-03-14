@@ -1,11 +1,11 @@
 <style>.nav-gradient { background: linear-gradient(to right, #b91c1c 0%, #7f1d1d 40%, #1f2937 100%); }</style>
-<header class="nav-gradient text-white px-6 py-3 flex flex-col lg:flex-row items-center justify-between gap-4 sticky top-0 z-50">
-    <div class="flex items-center gap-4 shrink-0">
-        <a href="{% url 'home' %}" class="flex items-center gap-3 hover:opacity-90 transition-opacity">
-            <i data-lucide="landmark" class="w-8 h-8 text-white"></i>
-            <div>
-                <h1 class="font-brutal text-xl font-bold tracking-tight">SENETRACK</h1>
-                <p class="text-xs text-slate-200">Kenya Senate Performance Tracking</p>
+<header class="nav-gradient text-white px-4 sm:px-6 py-3 flex flex-row items-center justify-between gap-3 sticky top-0 z-50">
+    <div class="flex items-center gap-3 sm:gap-4 shrink-0 min-w-0">
+        <a href="{% url 'home' %}" class="flex items-center gap-2 sm:gap-3 hover:opacity-90 transition-opacity min-w-0">
+            <i data-lucide="landmark" class="w-7 h-7 sm:w-8 sm:h-8 text-white shrink-0"></i>
+            <div class="min-w-0">
+                <h1 class="font-brutal text-lg sm:text-xl font-bold tracking-tight truncate">SENETRACK</h1>
+                <p class="text-xs text-slate-200 hidden sm:block">Kenya Senate Performance Tracking</p>
             </div>
         </a>
     </div>
@@ -16,23 +16,65 @@
         <a href="{% url 'senator-list' %}" class="text-slate-200 hover:text-white transition-colors {% if nav_active == 'senators' %}text-white{% endif %}">Senators</a>
         <a href="{% url 'about' %}" class="text-slate-200 hover:text-white transition-colors {% if nav_active == 'about' %}text-white{% endif %}">SPM</a>
     </nav>
-    <nav class="md:hidden flex items-center gap-2 flex-wrap text-sm font-medium">
-        <a href="{% url 'frontier-insights' %}" class="py-2 px-2 rounded-md transition-colors text-slate-200 hover:text-white {% if nav_active == 'frontier' %}text-white bg-white/10{% endif %}">Frontiers</a>
-        <a href="{% url 'county-list' %}" class="py-2 px-2 rounded-md transition-colors text-slate-200 hover:text-white {% if nav_active == 'counties' %}text-white bg-white/10{% endif %}">Counties</a>
-        <a href="{% url 'data-insights' %}" class="py-2 px-2 rounded-md transition-colors text-slate-200 hover:text-white {% if nav_active == 'insights' %}text-white bg-white/10{% endif %}">Insights</a>
-        <a href="{% url 'senator-list' %}" class="py-2 px-2 rounded-md transition-colors text-slate-200 hover:text-white {% if nav_active == 'senators' %}text-white bg-white/10{% endif %}">Senators</a>
-        <a href="{% url 'about' %}" class="py-2 px-2 rounded-md transition-colors text-slate-200 hover:text-white {% if nav_active == 'about' %}text-white bg-white/10{% endif %}">SPM</a>
-    </nav>
-    <div class="flex items-center gap-3 shrink-0">
-        <a href="{% url 'compare-senators' %}" class="inline-flex items-center gap-2 bg-slate-800/80 hover:bg-slate-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors border border-slate-600">
-            <i data-lucide="git-compare" class="w-4 h-4"></i>
-            Compare Senators
-        </a>
+    <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+        <button type="button" id="navMobileMenuBtn" class="md:hidden flex items-center justify-center w-10 h-10 rounded-lg text-slate-200 hover:text-white hover:bg-white/10 transition-colors aria-label="Open menu" aria-expanded="false" aria-controls="navMobileMenu">
+            <i data-lucide="menu" id="navMobileMenuIcon" class="w-6 h-6" aria-hidden="true"></i>
+        </button>
         {% if nav_show_back %}
-        <a href="{% url 'senator-list' %}" class="flex items-center gap-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">
+        <a href="{% url 'senator-list' %}" class="hidden sm:flex items-center gap-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">
             <i data-lucide="arrow-left" class="w-4 h-4"></i>
             Back to list
         </a>
         {% endif %}
     </div>
 </header>
+<div id="navMobileMenu" class="md:hidden fixed inset-x-0 top-[var(--nav-height,65px)] bottom-0 z-40 bg-slate-950 text-white transform -translate-x-full transition-transform duration-200 ease-out overflow-y-auto" aria-hidden="true" style="--nav-height: 65px;">
+    <nav class="flex flex-col py-4 px-4 text-sm font-medium">
+        <a href="{% url 'frontier-insights' %}" class="nav-mobile-link py-3 px-4 rounded-lg text-slate-200 hover:text-white hover:bg-white/10 transition-colors {% if nav_active == 'frontier' %}text-white bg-white/10{% endif %}">Frontiers</a>
+        <a href="{% url 'county-list' %}" class="nav-mobile-link py-3 px-4 rounded-lg text-slate-200 hover:text-white hover:bg-white/10 transition-colors {% if nav_active == 'counties' %}text-white bg-white/10{% endif %}">Counties</a>
+        <a href="{% url 'data-insights' %}" class="nav-mobile-link py-3 px-4 rounded-lg text-slate-200 hover:text-white hover:bg-white/10 transition-colors {% if nav_active == 'insights' %}text-white bg-white/10{% endif %}">Data Insights</a>
+        <a href="{% url 'senator-list' %}" class="nav-mobile-link py-3 px-4 rounded-lg text-slate-200 hover:text-white hover:bg-white/10 transition-colors {% if nav_active == 'senators' %}text-white bg-white/10{% endif %}">Senators</a>
+        <a href="{% url 'about' %}" class="nav-mobile-link py-3 px-4 rounded-lg text-slate-200 hover:text-white hover:bg-white/10 transition-colors {% if nav_active == 'about' %}text-white bg-white/10{% endif %}">SPM</a>
+        {% if nav_show_back %}
+        <a href="{% url 'senator-list' %}" class="nav-mobile-link sm:hidden flex items-center gap-2 py-3 px-4 rounded-lg text-slate-300 hover:text-white hover:bg-white/10">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            Back to list
+        </a>
+        {% endif %}
+    </nav>
+</div>
+<div id="navMobileMenuBackdrop" class="md:hidden fixed inset-0 bg-black/40 z-30 opacity-0 pointer-events-none transition-opacity duration-200" aria-hidden="true"></div>
+<script>
+(function() {
+    var btn = document.getElementById('navMobileMenuBtn');
+    var menu = document.getElementById('navMobileMenu');
+    var backdrop = document.getElementById('navMobileMenuBackdrop');
+    var icon = document.getElementById('navMobileMenuIcon');
+    if (!btn || !menu || !backdrop) return;
+    function openMenu() {
+        menu.classList.remove('-translate-x-full');
+        menu.setAttribute('aria-hidden', 'false');
+        backdrop.classList.remove('opacity-0', 'pointer-events-none');
+        btn.setAttribute('aria-expanded', 'true');
+        btn.setAttribute('aria-label', 'Close menu');
+        if (icon) { icon.setAttribute('data-lucide', 'x'); if (typeof lucide !== 'undefined') lucide.createIcons(); }
+        document.body.style.overflow = 'hidden';
+    }
+    function closeMenu() {
+        menu.classList.add('-translate-x-full');
+        menu.setAttribute('aria-hidden', 'true');
+        backdrop.classList.add('opacity-0', 'pointer-events-none');
+        btn.setAttribute('aria-expanded', 'false');
+        btn.setAttribute('aria-label', 'Open menu');
+        if (icon) { icon.setAttribute('data-lucide', 'menu'); if (typeof lucide !== 'undefined') lucide.createIcons(); }
+        document.body.style.overflow = '';
+    }
+    function toggle() {
+        if (menu.classList.contains('-translate-x-full')) openMenu(); else closeMenu();
+    }
+    btn.addEventListener('click', toggle);
+    backdrop.addEventListener('click', closeMenu);
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && !menu.classList.contains('-translate-x-full')) closeMenu(); });
+    menu.querySelectorAll('.nav-mobile-link').forEach(function(link) { link.addEventListener('click', closeMenu); });
+})();
+</script>

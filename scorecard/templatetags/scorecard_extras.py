@@ -45,3 +45,26 @@ def grade_badge_style(grade):
     """Return inline style string for grade badge (background and color)."""
     styles = GRADE_STYLES.get(grade, ("#e2e8f0", "#f1f5f9", "#64748b"))
     return f"background:{styles[1]};color:{styles[2]};"
+
+
+@register.filter
+def thumb(url, params):
+    """
+    Append Cloudinary transformation parameters to a URL.
+    Usage: {{ image.url|thumb:"w_128,h_128,c_fill" }}
+    """
+    if not url or not isinstance(url, str):
+        return url
+    
+    # Check if this is a Cloudinary URL
+    if "res.cloudinary.com" in url:
+        # Standard transformations for speed and size
+        base_params = "f_auto,q_auto"
+        # Combine with user params
+        all_params = f"{base_params},{params}"
+        
+        # Inject params after /upload/
+        if "/upload/" in url:
+            return url.replace("/upload/", f"/upload/{all_params}/")
+            
+    return url

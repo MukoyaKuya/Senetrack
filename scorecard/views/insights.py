@@ -255,7 +255,7 @@ def data_insights(request):
     filter_frontiers = sorted(set(r["frontier"] for r in rows))
     from scorecard.models import County, Party
     filter_counties = list(County.objects.values_list("slug", "name").order_by("name"))
-    party_logos = {p.name.strip(): p.logo.url for p in Party.objects.all() if p.logo}
+    party_logos = {p.name.strip(): p.logo.url for p in Party.objects.filter(logo__isnull=False).only("name", "logo")}
 
     # Apply filters from GET params (sanitized to prevent injection/abuse)
     filter_party = sanitize_filter_string(request.GET.get("party") or "")
