@@ -109,7 +109,7 @@
                         {% if s.image_url %}
                         <div class="w-full h-full bg-slate-100 bg-cover bg-center" style="background-image: url('{{ s.image_url|thumb:'w_10,e_blur:300' }}');">
                             <img src="{{ s.image_url|thumb:'w_480,h_600,c_fill,g_face' }}" alt="{{ s.name }}" class="w-full h-full object-cover object-[center_25%] group-hover:scale-105 transition-transform duration-500"
-                                 loading="lazy" decoding="async" width="240" height="300"
+                                 {% if forloop.counter <= 4 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async" width="240" height="300"
                                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
                             <div class="absolute inset-0 hidden items-center justify-center bg-slate-200 text-slate-500 font-black text-3xl">
                                 {{ s.name|slice:":1" }}

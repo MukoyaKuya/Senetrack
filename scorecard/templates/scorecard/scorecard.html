@@ -186,9 +186,11 @@
                             class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 max-w-full"
                             id="party-chip">
                             {% if senator.party_logo_url %}
-                            <img src="{{ senator.party_logo_url|thumb:'w_64,h_64,c_pad' }}" alt="{{ senator.party }}"
-                                class="w-7 h-7 rounded object-contain bg-white border border-slate-200 flex-shrink-0"
-                                loading="lazy" decoding="async" width="28" height="28" />
+                            <div class="w-7 h-7 rounded overflow hidden border border-slate-200 bg-white flex-shrink-0 bg-cover bg-center" style="background-image: url('{{ senator.party_logo_url|thumb:'w_10,e_blur:300' }}');">
+                                <img src="{{ senator.party_logo_url|thumb:'w_64,h_64,c_pad' }}" alt="{{ senator.party }}"
+                                    class="w-full h-full object-contain"
+                                    loading="eager" fetchpriority="high" decoding="async" width="28" height="28" />
+                            </div>
                             {% else %}
                             {% if "Orange" in senator.party %}
                             <span class="w-4 h-2 bg-orange-500 rounded-lg flex-shrink-0"></span>
@@ -260,9 +262,9 @@
                         <div class="flex items-center gap-3">
                             {% if party_info.logo_url %}
                             <div
-                                class="w-11 h-11 rounded-xl bg-white/95 border border-slate-200 shadow-sm flex items-center justify-center">
+                                class="w-11 h-11 rounded-xl bg-white/95 border border-slate-200 shadow-sm flex items-center justify-center bg-cover bg-center" style="background-image: url('{{ party_info.logo_url|thumb:'w_10,e_blur:300' }}');">
                                 <img src="{{ party_info.logo_url|thumb:'w_120,h_120,c_pad' }}" alt="{{ party_info.name }}"
-                                    class="w-9 h-9 object-contain" loading="lazy" decoding="async" width="36" height="36" />
+                                    class="w-9 h-9 object-contain" loading="eager" decoding="async" width="36" height="36" />
                             </div>
                             {% endif %}
                             <div class="text-white">

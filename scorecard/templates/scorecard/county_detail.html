@@ -90,8 +90,8 @@
             <div class="county-card rounded-2xl p-5 flex flex-col items-center gap-3 min-w-0">
                 <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">County Seal</p>
                 {% if county.logo %}
-                <div class="county-card-img w-full rounded-xl overflow-hidden flex items-center justify-center bg-slate-50/80 ring-1 ring-slate-100">
-                    <img src="{{ county.logo.url|thumb:'w_320,h_240,c_pad' }}" alt="{{ county.name }} seal" class="w-full h-full object-contain" loading="lazy" decoding="async" width="160" height="120">
+                <div class="county-card-img w-full rounded-xl overflow-hidden flex items-center justify-center bg-slate-50/80 ring-1 ring-slate-100 bg-cover bg-center" style="background-image: url('{{ county.logo.url|thumb:'w_10,e_blur:300' }}');">
+                    <img src="{{ county.logo.url|thumb:'w_320,h_240,c_pad' }}" alt="{{ county.name }} seal" class="w-full h-full object-contain" loading="eager" fetchpriority="high" decoding="async" width="160" height="120">
                 </div>
                 {% else %}
                 <div class="county-card-img w-full rounded-xl bg-slate-100 flex items-center justify-center ring-1 ring-slate-100">
@@ -101,9 +101,9 @@
             </div>
             <div class="county-card rounded-2xl p-5 flex flex-col items-center gap-3 min-w-0">
                 <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Governor</p>
-                <div class="county-card-img w-full rounded-xl overflow-hidden flex items-center justify-center ring-1 ring-slate-100 bg-slate-50">
+                <div class="county-card-img w-full rounded-xl overflow-hidden flex items-center justify-center ring-1 ring-slate-100 bg-slate-50 bg-cover bg-center" {% if county.governor_image %}style="background-image: url('{{ county.governor_image.url|thumb:'w_10,e_blur:300' }}');"{% endif %}>
                     {% if county.governor_image %}
-                    <img src="{{ county.governor_image.url|thumb:'w_400,h_400,c_fill,g_face' }}" alt="{{ county.governor_name|default:county.name }}" class="w-full h-full object-cover" loading="lazy" decoding="async" width="200" height="200">
+                    <img src="{{ county.governor_image.url|thumb:'w_400,h_400,c_fill,g_face' }}" alt="{{ county.governor_name|default:county.name }}" class="w-full h-full object-cover" loading="eager" decoding="async" width="200" height="200">
                     {% else %}
                     <i data-lucide="user-round" class="w-24 h-24 text-slate-400"></i>
                     {% endif %}
@@ -138,9 +138,9 @@
             {% endif %}
             <div class="county-card rounded-2xl p-5 flex flex-col items-center gap-3 min-w-0">
                 <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Women Rep</p>
-                <div class="county-card-img w-full rounded-xl overflow-hidden flex items-center justify-center ring-1 ring-slate-100 bg-slate-50">
+                <div class="county-card-img w-full rounded-xl overflow-hidden flex items-center justify-center ring-1 ring-slate-100 bg-slate-50 bg-cover bg-center" {% if county.women_rep_image %}style="background-image: url('{{ county.women_rep_image.url|thumb:'w_10,e_blur:300' }}');"{% endif %}>
                     {% if county.women_rep_image %}
-                    <img src="{{ county.women_rep_image.url|thumb:'w_400,h_400,c_fill' }}" alt="{{ county.women_rep_name|default:county.name }}" class="w-full h-full object-cover" loading="lazy" decoding="async" width="200" height="200">
+                    <img src="{{ county.women_rep_image.url|thumb:'w_400,h_400,c_fill' }}" alt="{{ county.women_rep_name|default:county.name }}" class="w-full h-full object-cover" loading="eager" decoding="async" width="200" height="200">
                     {% else %}
                     <i data-lucide="user-round" class="w-24 h-24 text-slate-400"></i>
                     {% endif %}
@@ -158,7 +158,7 @@
         <h2 class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-4">Gallery</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {% for img in county.images.all %}
-            <div class="gallery-card rounded-xl overflow-hidden bg-white border border-slate-200 shadow-sm">
+            <div class="gallery-card rounded-xl overflow-hidden bg-white border border-slate-200 shadow-sm bg-cover bg-center" style="background-image: url('{{ img.image.url|thumb:'w_10,e_blur:300' }}');">
                 <img src="{{ img.image.url|thumb:'w_800,h_560,c_fill' }}" alt="{{ img.caption|default:county.name }}" class="w-full h-48 sm:h-56 object-cover" loading="lazy" decoding="async" width="400" height="280">
                 {% if img.caption %}
                 <p class="p-4 text-sm text-slate-600 border-t border-slate-100">{{ img.caption }}</p>

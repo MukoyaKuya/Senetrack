@@ -80,9 +80,9 @@
         <a href="{% url 'county-detail' county.slug %}" class="county-card county-card-wrapper block" data-region="{{ county.region }}" data-name="{{ county.name|lower }}" style="animation-delay:{{ forloop.counter0 }}0ms">
             <div class="rounded-xl border border-slate-200 bg-white overflow-hidden h-full flex flex-col">
                 <div class="p-5 flex flex-col items-center text-center flex-grow">
-                    <div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border border-slate-200 bg-slate-100 mb-3 flex items-center justify-center">
+                    <div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border border-slate-200 bg-slate-100 mb-3 flex items-center justify-center bg-cover bg-center" {% if county.logo %}style="background-image: url('{{ county.logo.url|thumb:'w_10,e_blur:300' }}');"{% endif %}>
                         {% if county.logo %}
-                        <img src="{{ county.logo.url|thumb:'w_128,h_128,c_pad' }}" alt="{{ county.name }}" class="w-full h-full object-contain p-1" loading="lazy" decoding="async" width="64" height="64">
+                        <img src="{{ county.logo.url|thumb:'w_128,h_128,c_pad' }}" alt="{{ county.name }}" class="w-full h-full object-contain p-1" {% if forloop.counter <= 8 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async" width="64" height="64">
                         {% else %}
                         <i data-lucide="map-pin" class="w-8 h-8 text-slate-400"></i>
                         {% endif %}

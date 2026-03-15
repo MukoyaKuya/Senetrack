@@ -198,7 +198,7 @@
                 <div class="senator-card-img-wrap absolute inset-0 senator-card-bg bg-cover bg-center" style="background-image: url('{{ senator.image_url|thumb:'w_10,e_blur:300' }}');">
                     <img src="{{ senator.image_url|thumb:'w_400,h_533,c_fill,g_face' }}" alt="{{ senator.name }}"
                         class="absolute inset-0 w-full h-full object-cover" style="object-position:center 20%;"
-                        loading="lazy" decoding="async" width="400" height="533"
+                        {% if forloop.counter <= 6 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async" width="400" height="533"
                         onerror="this.closest('.senator-card').classList.add('fallback-initials');">
                 </div>
                 <div class="senator-card-initials absolute inset-0 senator-card-bg-initials">
@@ -223,8 +223,8 @@
                     <div class="senator-card-info flex items-end gap-1.5 sm:gap-2 rounded-lg bg-black/50 sm:bg-transparent py-1.5 px-1.5 sm:py-0 sm:px-0 sm:rounded-none">
                         <div class="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
                             {% if senator.party_logo_url %}
-                            <div class="w-6 h-6 sm:w-9 sm:h-9 rounded-full overflow-hidden border border-white/90 bg-white flex-shrink-0 flex items-center justify-center p-0.5 shadow-md">
-                                <img src="{{ senator.party_logo_url|thumb:'w_128,h_128,c_pad' }}" alt="{{ senator.party }}" class="w-full h-full object-contain" loading="lazy" decoding="async" width="36" height="36" />
+                            <div class="w-6 h-6 sm:w-9 sm:h-9 rounded-full overflow-hidden border border-white/90 bg-white flex-shrink-0 flex items-center justify-center p-0.5 shadow-md bg-cover bg-center" style="background-image: url('{{ senator.party_logo_url|thumb:'w_10,e_blur:300' }}');">
+                                <img src="{{ senator.party_logo_url|thumb:'w_128,h_128,c_pad' }}" alt="{{ senator.party }}" class="w-full h-full object-contain" {% if forloop.counter <= 6 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async" width="36" height="36" />
                             </div>
                             {% endif %}
                             <div class="min-w-0 flex-1 overflow-hidden">
