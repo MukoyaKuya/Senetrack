@@ -195,10 +195,10 @@
             style="animation-delay:{{ forloop.counter0 }}0ms">
             <div class="senator-card-inner rounded-2xl overflow-hidden flex flex-col h-full relative active:scale-[0.98] transition-transform {% if senator.is_deceased %}blur-sm{% endif %}">
                 {% if senator.image_url %}
-                <div class="senator-card-img-wrap absolute inset-0 senator-card-bg">
+                <div class="senator-card-img-wrap absolute inset-0 senator-card-bg bg-cover bg-center" style="background-image: url('{{ senator.image_url|thumb:'w_10,e_blur:300' }}');">
                     <img src="{{ senator.image_url|thumb:'w_400,h_533,c_fill,g_face' }}" alt="{{ senator.name }}"
                         class="absolute inset-0 w-full h-full object-cover" style="object-position:center 20%;"
-                        loading="lazy" decoding="async"
+                        loading="lazy" decoding="async" width="400" height="533"
                         onerror="this.closest('.senator-card').classList.add('fallback-initials');">
                 </div>
                 <div class="senator-card-initials absolute inset-0 senator-card-bg-initials">

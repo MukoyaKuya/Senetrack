@@ -127,21 +127,25 @@
                     <div
                         class="w-32 h-32 md:w-40 md:h-40 rounded-lg border border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center">
                         {% if senator.image %}
-                        <img src="{{ senator.image.url }}" alt="{{ senator.name }}" class="w-full h-full object-cover"
-                            style="object-position: center 20%;"
-                            loading="eager" fetchpriority="high" decoding="async" width="160" height="160"
-                            onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-                        <div
-                            class="w-full h-full bg-gradient-to-br from-red-500 to-red-600 text-white font-black text-4xl flex items-center justify-center hidden">
-                            {{ senator.name|slice:":1" }}</div>
+                        <div class="w-full h-full bg-slate-100 bg-cover bg-center" style="background-image: url('{{ senator.image.url|thumb:'w_10,e_blur:300' }}');">
+                            <img src="{{ senator.image.url|thumb:'w_400,h_400,c_fill,g_face' }}" alt="{{ senator.name }}" class="w-full h-full object-cover"
+                                style="object-position: center 20%;"
+                                fetchpriority="high" decoding="async" width="160" height="160"
+                                onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                            <div
+                                class="w-full h-full bg-gradient-to-br from-red-500 to-red-600 text-white font-black text-4xl flex items-center justify-center hidden">
+                                {{ senator.name|slice:":1" }}</div>
+                        </div>
                         {% elif senator.image_url %}
-                        <img src="{{ senator.image_url }}" alt="{{ senator.name }}" class="w-full h-full object-cover"
-                            style="object-position: center 20%;"
-                            loading="eager" fetchpriority="high" decoding="async" width="160" height="160"
-                            onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-                        <div
-                            class="w-full h-full bg-gradient-to-br from-red-500 to-red-600 text-white font-black text-4xl flex items-center justify-center hidden">
-                            {{ senator.name|slice:":1" }}</div>
+                        <div class="w-full h-full bg-slate-100 bg-cover bg-center" style="background-image: url('{{ senator.image_url|thumb:'w_10,e_blur:300' }}');">
+                            <img src="{{ senator.image_url|thumb:'w_400,h_400,c_fill,g_face' }}" alt="{{ senator.name }}" class="w-full h-full object-cover"
+                                style="object-position: center 20%;"
+                                fetchpriority="high" decoding="async" width="160" height="160"
+                                onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                            <div
+                                class="w-full h-full bg-gradient-to-br from-red-500 to-red-600 text-white font-black text-4xl flex items-center justify-center hidden">
+                                {{ senator.name|slice:":1" }}</div>
+                        </div>
                         {% else %}
                         <div
                             class="w-full h-full bg-gradient-to-br from-red-500 to-red-600 text-white font-black text-4xl flex items-center justify-center">
@@ -182,8 +186,9 @@
                             class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 max-w-full"
                             id="party-chip">
                             {% if senator.party_logo_url %}
-                            <img src="{{ senator.party_logo_url }}" alt="{{ senator.party }}"
-                                class="w-7 h-7 rounded object-contain bg-white border border-slate-200 flex-shrink-0" />
+                            <img src="{{ senator.party_logo_url|thumb:'w_64,h_64,c_pad' }}" alt="{{ senator.party }}"
+                                class="w-7 h-7 rounded object-contain bg-white border border-slate-200 flex-shrink-0"
+                                loading="lazy" decoding="async" width="28" height="28" />
                             {% else %}
                             {% if "Orange" in senator.party %}
                             <span class="w-4 h-2 bg-orange-500 rounded-lg flex-shrink-0"></span>
@@ -256,8 +261,8 @@
                             {% if party_info.logo_url %}
                             <div
                                 class="w-11 h-11 rounded-xl bg-white/95 border border-slate-200 shadow-sm flex items-center justify-center">
-                                <img src="{{ party_info.logo_url }}" alt="{{ party_info.name }}"
-                                    class="w-9 h-9 object-contain" />
+                                <img src="{{ party_info.logo_url|thumb:'w_120,h_120,c_pad' }}" alt="{{ party_info.name }}"
+                                    class="w-9 h-9 object-contain" loading="lazy" decoding="async" width="36" height="36" />
                             </div>
                             {% endif %}
                             <div class="text-white">

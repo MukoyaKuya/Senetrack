@@ -41,7 +41,7 @@
                     <span id="partyTriggerContent">
                         {% if filters.party %}
                         {% with party_logo=filters.party_logos|get_item:filters.party %}
-                        {% if party_logo %}<img src="{{ party_logo }}" alt="" class="w-5 h-5 object-contain flex-shrink-0">{% endif %}
+                        {% if party_logo %}<img src="{{ party_logo|thumb:'w_40,h_40,c_pad' }}" alt="" class="w-5 h-5 object-contain flex-shrink-0" loading="lazy" decoding="async" width="20" height="20">{% endif %}
                         {% endwith %}
                         <span>{{ filters.party }}</span>
                         {% else %}
@@ -57,8 +57,8 @@
                     </button>
                     {% for p in filters.parties %}
                     {% with party_logo=filters.party_logos|get_item:p %}
-                    <button type="button" class="party-option w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-slate-50 focus:bg-slate-50 focus:outline-none" data-party-value="{{ p }}" data-party-name="{{ p }}" data-party-logo="{{ party_logo|default:'' }}">
-                        {% if party_logo %}<img src="{{ party_logo }}" alt="" class="w-5 h-5 object-contain flex-shrink-0">{% else %}<span class="w-5 h-5 flex-shrink-0 block"></span>{% endif %}
+                    <button type="button" class="party-option w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-slate-50 focus:bg-slate-50 focus:outline-none" data-party-value="{{ p }}" data-party-name="{{ p }}" data-party-logo="{{ party_logo|thumb:'w_40,h_40,c_pad'|default:'' }}">
+                        {% if party_logo %}<img src="{{ party_logo|thumb:'w_40,h_40,c_pad' }}" alt="" class="w-5 h-5 object-contain flex-shrink-0" loading="lazy" decoding="async" width="20" height="20">{% else %}<span class="w-5 h-5 flex-shrink-0 block"></span>{% endif %}
                         <span>{{ p }}</span>
                     </button>
                     {% endwith %}
@@ -115,12 +115,12 @@
             <a href="{% url 'senator-detail' s.senator_id %}" class="block group" data-senator-card="1">
                 <div class="bg-white border border-slate-200 rounded-xl overflow-hidden card-hover flex flex-col h-full shadow-sm hover:border-slate-400">
                     <div class="aspect-[3/4] w-full bg-slate-100 relative overflow-hidden">
-                        {% if s.image_url %}
-                        <img src="{{ s.image_url }}" alt="{{ s.name }}" class="w-full h-full object-cover object-[center_25%] group-hover:scale-105 transition-transform duration-300"
-                             loading="lazy" decoding="async" width="200" height="267"
-                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-                        <div class="absolute inset-0 hidden items-center justify-center bg-slate-200 text-slate-500 font-black text-2xl">{{ s.name|slice:":1" }}</div>
-                        {% else %}
+                        <div class="w-full h-full bg-slate-100 bg-cover bg-center" style="background-image: url('{{ s.image_url|thumb:'w_10,e_blur:300' }}');">
+                            <img src="{{ s.image_url|thumb:'w_200,h_267,c_fill,g_face' }}" alt="{{ s.name }}" class="w-full h-full object-cover object-[center_25%] group-hover:scale-105 transition-transform duration-300"
+                                 loading="lazy" decoding="async" width="200" height="267"
+                                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                            <div class="absolute inset-0 hidden items-center justify-center bg-slate-200 text-slate-500 font-black text-2xl">{{ s.name|slice:":1" }}</div>
+                        </div>
                         <div class="absolute inset-0 flex items-center justify-center bg-slate-200 text-slate-500 font-black text-2xl">{{ s.name|slice:":1" }}</div>
                         {% endif %}
                     </div>
