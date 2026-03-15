@@ -359,12 +359,12 @@ def senator_detail(request, senator_id):
     attendance_rank = None
     national_avg_attendance = round(sum(r[2] for r in ranking_data) / total_senators, 1) if ranking_data else None
 
-    for i, (sid, _, _) in enumerate(ranking_data, 1):
+    for i, (sid, *_rest) in enumerate(ranking_data, 1):
         if sid == clean_id:
             national_rank = i
             break
     by_attendance = sorted(ranking_data, key=lambda r: -r[2])
-    for i, (sid, _, _) in enumerate(by_attendance, 1):
+    for i, (sid, *_rest) in enumerate(by_attendance, 1):
         if sid == clean_id:
             attendance_rank = i
             break

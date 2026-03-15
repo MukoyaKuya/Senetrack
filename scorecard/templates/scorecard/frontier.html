@@ -106,6 +106,7 @@
             <a href="{% url 'senator-detail' s.senator_id %}" class="block group">
                 <div class="bg-white border-2 border-slate-100 rounded-xl overflow-hidden frontier-card flex flex-col shadow-sm hover:border-amber-200">
                     <div class="img-wrap aspect-[4/5] w-full bg-gradient-to-b from-slate-100 to-slate-200 relative overflow-hidden">
+                        {% if s.image_url %}
                         <div class="w-full h-full bg-slate-100 bg-cover bg-center" style="background-image: url('{{ s.image_url|thumb:'w_10,e_blur:300' }}');">
                             <img src="{{ s.image_url|thumb:'w_480,h_600,c_fill,g_face' }}" alt="{{ s.name }}" class="w-full h-full object-cover object-[center_25%] group-hover:scale-105 transition-transform duration-500"
                                  loading="lazy" decoding="async" width="240" height="300"
@@ -114,6 +115,7 @@
                                 {{ s.name|slice:":1" }}
                             </div>
                         </div>
+                        {% else %}
                         <div class="absolute inset-0 flex items-center justify-center bg-slate-200 text-slate-500 font-black text-3xl">
                             {{ s.name|slice:":1" }}
                         </div>

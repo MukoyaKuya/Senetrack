@@ -6,6 +6,7 @@ from django.shortcuts import render
 from django.views.decorators.cache import cache_page
 
 from scorecard.engine import perf_to_engine_data
+from scorecard.models import Senator
 from scorecard.services.analytics import get_senator_rows, normalize_frontier
 from scorecard.services.insights_charts import build_insights_charts
 from scorecard.security import sanitize_county_slug, sanitize_filter_string
@@ -13,7 +14,7 @@ from scorecard.security import sanitize_county_slug, sanitize_filter_string
 INSIGHTS_CACHE_TIMEOUT = 300  # 5 minutes
 
 
-@cache_page(INSIGHTS_CACHE_TIMEOUT)
+@cache_page(INSIGHTS_CACHE_TIMEOUT, key_prefix="frontier_v2")
 def frontier_insights(request):
     """Frontier-focused analytics: compare performance across different frontiers (regions)."""
     all_rows = get_senator_rows()
@@ -107,6 +108,23 @@ def frontier_insights(request):
     }
 
     charts_json = json.dumps(charts).replace("</", "<\\/")
+
+    # Always load image URLs from DB so frontier cards show photos (avoid stale/empty cache)
+    if senators_display:
+        ids = [r["senator_id"] for r in senators_display]
+        url_by_id = {}
+        for sen in Senator.objects.filter(senator_id__in=ids):
+            try:
+                # Same logic as senator list: prefer uploaded image, else image_url field
+                url = (sen.image.url if sen.image else (sen.image_url or "")) or ""
+            except Exception:
+                url = getattr(sen, "image_url", None) or ""
+            url_by_id[sen.senator_id] = url
+        senators_display = [
+            {**r, "image_url": url_by_id.get(r["senator_id"], r.get("image_url") or "")}
+            for r in senators_display
+        ]
+
     return render(
         request,
         "scorecard/frontier.html",

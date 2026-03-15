@@ -8,7 +8,7 @@ from scorecard.engine import get_engine_result
 from scorecard.models import Senator
 from scorecard.services.senators import get_frontier
 
-SENATOR_ROWS_CACHE_KEY = "scorecard:senator_rows"
+SENATOR_ROWS_CACHE_KEY = "scorecard:senator_rows:v2"  # bump to invalidate stale image_url cache
 SENATOR_ROWS_CACHE_TIMEOUT = 300  # 5 minutes
 
 
@@ -55,7 +55,10 @@ def build_senator_rows() -> List[Dict[str, Any]]:
         committee_role = (getattr(s.perf, "committee_role", "Member") or "Member").strip() or "Member"
         trend_data = getattr(s.perf, "trend_data", None) or []
 
-        image_url = s.image.url if s.image else (s.image_url or "")
+        try:
+            image_url = s.display_image_url or ""
+        except Exception:
+            image_url = getattr(s, "image_url", None) or ""
 
         # Use sessions-based attendance when Hansard data exists (sessions_attended)
         sessions_att = getattr(s.perf, "sessions_attended", 0) or 0
