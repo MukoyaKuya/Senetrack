@@ -22,7 +22,7 @@ def _get_ranking_data():
     rows = list(
         ParliamentaryPerformance.objects.select_related("senator")
         .order_by("-overall_score", "-attendance_rate")
-        .values_list("senator_id", "overall_score", "attendance_rate", "senator__name")
+        .values_list("senator__senator_id", "overall_score", "attendance_rate", "senator__name")
     )
     cache.set(RANKING_CACHE_KEY, rows, RANKING_CACHE_TIMEOUT)
     return rows
@@ -378,7 +378,7 @@ def senator_detail(request, senator_id):
             "name": name,
             "is_current": sid == clean_id,
         }
-        for sid, _, rate, name in by_attendance
+        for sid, _score, rate, name in by_attendance
     ]
 
     quotes_prefetched = list(senator.quotes.all())
