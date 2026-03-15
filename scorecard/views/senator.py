@@ -10,7 +10,7 @@ from scorecard.models import ParliamentaryPerformance, Senator, Party, SenatorQu
 from scorecard.security import sanitize_engine_type, sanitize_senator_id, sanitize_senator_ids
 from scorecard.services.senators import build_senator_display
 
-RANKING_CACHE_KEY = "senator_ranking_data"
+RANKING_CACHE_KEY = "senator_ranking_data_v3"
 RANKING_CACHE_TIMEOUT = 300  # 5 min
 
 
@@ -360,12 +360,12 @@ def senator_detail(request, senator_id):
     national_avg_attendance = round(sum(r[2] for r in ranking_data) / total_senators, 1) if ranking_data else None
 
     for i, (sid, *_rest) in enumerate(ranking_data, 1):
-        if sid == clean_id:
+        if str(sid).lower() == str(clean_id).lower():
             national_rank = i
             break
     by_attendance = sorted(ranking_data, key=lambda r: -r[2])
     for i, (sid, *_rest) in enumerate(by_attendance, 1):
-        if sid == clean_id:
+        if str(sid).lower() == str(clean_id).lower():
             attendance_rank = i
             break
 
