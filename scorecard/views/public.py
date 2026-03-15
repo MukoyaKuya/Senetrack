@@ -1,30 +1,31 @@
-from django.conf import settings
-from django.shortcuts import render
+from pathlib import Path
 
-from scorecard.engine import get_engine_result, perf_to_engine_data
-from scorecard.models import Senator, Party
+from django.conf import settings
+from django.db.models import Avg, Count, F, Sum
+from django.http import HttpResponse
+from django.shortcuts import render
+from django.views.decorators.cache import cache_page
+
+from scorecard.models import ParliamentaryPerformance, Senator, Party
 from scorecard.services.senators import get_frontier
 
 
 ACTIVE_DEBATES_DEFAULT = 12
+CACHE_PAGE_SENATORS = 180  # 3 min
+CACHE_PAGE_HOME = 300      # 5 min
 
 
+@cache_page(CACHE_PAGE_HOME)
 def home(request):
     """Landing/home page with action buttons."""
-    senators_with_perf = Senator.objects.filter(perf__isnull=False).select_related("perf")
     total_senators = Senator.objects.count()
-    total_bills = 0
-    avg_attendance = 0
-    if senators_with_perf.exists():
-        perf_list = list(senators_with_perf)
-        total_bills = sum(
-            getattr(p.perf, "sponsored_bills", 0)
-            + getattr(p.perf, "passed_bills", 0)
-            + getattr(p.perf, "amendments", 0)
-            for p in perf_list
-        )
-        rates = [p.perf.attendance_rate for p in perf_list]
-        avg_attendance = round(sum(rates) / len(rates), 0) if rates else 0
+    agg = ParliamentaryPerformance.objects.aggregate(
+        total_bills=Sum(F("sponsored_bills") + F("passed_bills") + F("amendments")),
+        avg_att=Avg("attendance_rate"),
+        cnt=Count("id"),
+    )
+    total_bills = agg["total_bills"] or 0
+    avg_attendance = round(agg["avg_att"] or 0, 0) if agg["cnt"] else 0
     active_debates = getattr(settings, "ACTIVE_DEBATES", ACTIVE_DEBATES_DEFAULT)
     return render(
         request,
@@ -38,6 +39,7 @@ def home(request):
     )
 
 
+@cache_page(CACHE_PAGE_SENATORS)
 def senator_list(request):
     """List of all senators with pagination."""
     senators_qs = Senator.objects.select_related("perf", "county_fk").order_by("name")
@@ -48,8 +50,9 @@ def senator_list(request):
         name = s.senator_id.replace("-", " ").title() if s.name == PLACEHOLDER_NAME else s.name
         county = getattr(getattr(s, "county_fk", None), "name", "—")
         image_url = s.image.url if s.image else (s.image_url or "")
-        res = get_engine_result(getattr(s, "perf", None))
-        overall_score = res["overall_score"] if res else 0
+        perf = getattr(s, "perf", None)
+        overall_score = (perf.overall_score or 0) if perf else 0
+        grade = (perf.grade or "—") if perf else "—"
         frontier = get_frontier(s)
         party_name = (s.party or "").strip()
         party_logo_url = party_logos.get(party_name) if party_name else None
@@ -63,6 +66,7 @@ def senator_list(request):
                 "party_logo_url": party_logo_url,
                 "image_url": image_url,
                 "overall_score": overall_score,
+                "grade": grade,
                 "is_deceased": getattr(s, "is_deceased", False),
                 "is_still_computing": getattr(s, "is_still_computing", False),
                 "frontier": frontier,
@@ -81,4 +85,12 @@ def senator_list(request):
 def about(request):
     """About page with performance engine documentation."""
     return render(request, "scorecard/about.html")
+
+
+def service_worker(request):
+    """Serve the service worker at /sw.js for PWA scope (root)."""
+    path = Path(settings.BASE_DIR) / "scorecard" / "static" / "scorecard" / "sw.js"
+    if not path.exists():
+        return HttpResponse("", status=404)
+    return HttpResponse(path.read_bytes(), content_type="application/javascript")
 

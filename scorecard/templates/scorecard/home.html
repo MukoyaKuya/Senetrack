@@ -3,7 +3,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="{% static 'scorecard/manifest.json' %}">
+    <link rel="apple-touch-icon" href="{% static 'scorecard/images/hero-parliament.png' %}">
     <title>SENETRACK | Kenya Senate Performance Tracking</title>
     <meta name="description" content="Track and assess the performance of Kenyan Senators.">
     <meta property="og:type" content="website">
@@ -142,5 +147,6 @@
     <footer class="text-center py-6 text-xs text-slate-500 font-medium">SENETRACK &mdash; Assessing Senators' Performance in the Kenyan Senate</footer>
 
     <script>try { if (typeof lucide !== 'undefined') lucide.createIcons(); } catch(e) {}</script>
+    <script>if ('serviceWorker' in navigator) { window.addEventListener('load', function() { navigator.serviceWorker.register('/sw.js').catch(function() {}); }); }</script>
 </body>
 </html>

@@ -1,11 +1,12 @@
 from django.http import Http404
 from django.shortcuts import get_object_or_404, render
+from django.views.decorators.cache import cache_page
 
-from scorecard.engine import get_engine_result, perf_to_engine_data
 from scorecard.models import County, Senator
 from scorecard.security import sanitize_county_slug
 
 
+@cache_page(300)
 def county_list(request):
     """Counties browse page with 47 county cards."""
     # Hide the synthetic "Nominated (Nationwide)" county from the public list
@@ -13,6 +14,7 @@ def county_list(request):
     return render(request, "scorecard/counties.html", {"counties": counties})
 
 
+@cache_page(300)
 def county_detail(request, slug):
     """County profile page with senator(s) and county info."""
     clean_slug = sanitize_county_slug(slug)
@@ -26,13 +28,9 @@ def county_detail(request, slug):
     matched = list(county.senators.select_related("perf").order_by("name"))
     senator_list_data = []
     for s in matched:
-        res = get_engine_result(getattr(s, "perf", None))
-        if res:
-            grade = res["grade"]
-            overall_score = res["overall_score"]
-        else:
-            grade = "—"
-            overall_score = 0
+        p = getattr(s, "perf", None)
+        grade = (p.grade or "—") if p else "—"
+        overall_score = (p.overall_score or 0) if p else 0
         senator_list_data.append(
             {
                 "senator_id": s.senator_id,

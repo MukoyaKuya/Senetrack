@@ -2,6 +2,8 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # PWA
+    path("sw.js", views.service_worker, name="service-worker"),
     # Main Dashboard & Discovery
     path('', views.home, name='home'),
     path('senators/', views.senator_list, name='senator-list'),

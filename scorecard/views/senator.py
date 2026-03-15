@@ -1,12 +1,31 @@
+from django.core.cache import cache
 from django.db import connection
+from django.db.models import Prefetch
 from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.cache import cache_page
 
 from scorecard.engine import get_engine_result, perf_to_engine_data
-from scorecard.models import ParliamentaryPerformance, Senator, Party, VotingRecord
+from scorecard.models import ParliamentaryPerformance, Senator, Party, SenatorQuote, VotingRecord
 from scorecard.security import sanitize_engine_type, sanitize_senator_id, sanitize_senator_ids
 from scorecard.services.senators import build_senator_display
+
+RANKING_CACHE_KEY = "senator_ranking_data"
+RANKING_CACHE_TIMEOUT = 300  # 5 min
+
+
+def _get_ranking_data():
+    """Cached list of (senator_id, overall_score, attendance_rate, name) ordered by score then attendance."""
+    data = cache.get(RANKING_CACHE_KEY)
+    if data is not None:
+        return data
+    rows = list(
+        ParliamentaryPerformance.objects.select_related("senator")
+        .order_by("-overall_score", "-attendance_rate")
+        .values_list("senator_id", "overall_score", "attendance_rate", "senator__name")
+    )
+    cache.set(RANKING_CACHE_KEY, rows, RANKING_CACHE_TIMEOUT)
+    return rows
 
 
 # Static voting history records from public sources (Mzalendo / Parliament)
@@ -304,7 +323,12 @@ def senator_detail(request, senator_id):
     clean_id = sanitize_senator_id(senator_id)
     if clean_id is None:
         raise Http404("Invalid senator identifier")
-    senator = get_object_or_404(Senator.objects.select_related("perf"), senator_id=clean_id)
+    senator = get_object_or_404(
+        Senator.objects.select_related("perf").prefetch_related(
+            Prefetch("quotes", queryset=SenatorQuote.objects.order_by("-date"))
+        ),
+        senator_id=clean_id,
+    )
     perf = getattr(senator, "perf", None)
     results = get_engine_result(perf)
     if not results:
@@ -329,52 +353,36 @@ def senator_detail(request, senator_id):
             "insights": {"strengths": ["Performance data not yet available"], "improvements": []},
         }
 
-    senators_with_perf = Senator.objects.filter(perf__isnull=False).select_related("perf")
-    total_senators = senators_with_perf.count()
+    ranking_data = _get_ranking_data()
+    total_senators = len(ranking_data)
     national_rank = None
     attendance_rank = None
-    national_avg_attendance = None
+    national_avg_attendance = round(sum(r[2] for r in ranking_data) / total_senators, 1) if ranking_data else None
 
-    if total_senators > 0:
-        rates = [s.perf.attendance_rate for s in senators_with_perf]
-        national_avg_attendance = round(sum(rates) / len(rates), 1)
-
-    if perf and total_senators > 0:
-        scores = []
-        for s in senators_with_perf:
-            r = get_engine_result(s.perf)
-            if r:
-                scores.append((s.senator_id, r["overall_score"], getattr(s.perf, "attendance_rate", 0)))
-        scores_by_overall = sorted(scores, key=lambda x: (-x[1], -x[2]))
-        scores_by_attendance = sorted(scores, key=lambda x: -x[2])
-        for i, (sid, _, _) in enumerate(scores_by_overall, 1):
-            if sid == senator_id:
-                national_rank = i
-                break
-        for i, (sid, _, _) in enumerate(scores_by_attendance, 1):
-            if sid == senator_id:
-                attendance_rank = i
-                break
+    for i, (sid, _, _) in enumerate(ranking_data, 1):
+        if sid == clean_id:
+            national_rank = i
+            break
+    by_attendance = sorted(ranking_data, key=lambda r: -r[2])
+    for i, (sid, _, _) in enumerate(by_attendance, 1):
+        if sid == clean_id:
+            attendance_rank = i
+            break
 
     bills_in_committee = max(0, perf.sponsored_bills - perf.passed_bills) if perf else 0
 
-    attendance_heatmap = []
-    if total_senators > 0:
-        sorted_by_attendance = sorted(
-            [(s.senator_id, s.perf.attendance_rate, s.name) for s in senators_with_perf],
-            key=lambda x: -x[1],
-        )
-        for sid, rate, name in sorted_by_attendance:
-            attendance_heatmap.append(
-                {
-                    "senator_id": sid,
-                    "rate": round(rate, 1),
-                    "name": name,
-                    "is_current": sid == senator_id,
-                }
-            )
+    attendance_heatmap = [
+        {
+            "senator_id": sid,
+            "rate": round(rate, 1),
+            "name": name,
+            "is_current": sid == clean_id,
+        }
+        for sid, _, rate, name in by_attendance
+    ]
 
-    latest_quote = senator.quotes.order_by("-date").first()
+    quotes_prefetched = list(senator.quotes.all())
+    latest_quote = quotes_prefetched[0] if quotes_prefetched else None
     if latest_quote:
         m = latest_quote.date.month
         y = latest_quote.date.year
@@ -444,6 +452,7 @@ def get_engine_partial(request, senator_id, engine_type):
     return render(request, "partials/placeholder.html", {"type": engine_type})  # engine_type sanitized
 
 
+@cache_page(120)
 def compare_senators(request):
     """Compare two or more senators side by side."""
     ids_list = request.GET.getlist("ids")
