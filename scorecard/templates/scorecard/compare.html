@@ -130,7 +130,7 @@
                     <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
                         <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden flex-shrink-0 mx-auto sm:mx-0 bg-slate-100 border-2 border-slate-100">
                             {% if item.image_url %}
-                            <div class="w-full h-full bg-slate-100 bg-cover bg-center" style="background-image: url('{{ item.image_url|thumb:'w_10,e_blur:300' }}');">
+                            <div class="w-full h-full bg-slate-100 bg-cover bg-center">
                                 <img src="{{ item.image_url|thumb:'w_300,h_300,c_fill,g_face' }}" alt="{{ item.senator.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" style="object-position:center 20%;" loading="eager" fetchpriority="high" decoding="async" width="96" height="96" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
                                 <div class="avatar-initials w-full h-full hidden items-center justify-center text-white font-black text-2xl">{{ item.senator.name|slice:":1" }}</div>
                             </div>

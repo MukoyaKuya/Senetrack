@@ -80,11 +80,11 @@
         <a href="{% url 'county-detail' county.slug %}" class="county-card county-card-wrapper block" data-region="{{ county.region }}" data-name="{{ county.name|lower }}" style="animation-delay:{{ forloop.counter0 }}0ms">
             <div class="rounded-xl border border-slate-200 bg-white overflow-hidden h-full flex flex-col">
                 <div class="p-5 flex flex-col items-center text-center flex-grow">
-                    <div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border border-slate-200 bg-slate-100 mb-3 flex items-center justify-center bg-cover bg-center" {% if county.logo %}style="background-image: url('{{ county.logo.url|thumb:'w_10,e_blur:300' }}');"{% endif %}>
+                    <div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border border-slate-200 bg-slate-100 mb-3 flex items-center justify-center">
                         {% if county.logo %}
                         <img src="{{ county.logo.url|thumb:'w_128,h_128,c_pad' }}" alt="{{ county.name }}" class="w-full h-full object-contain p-1" {% if forloop.counter <= 8 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async" width="64" height="64">
                         {% else %}
-                        <i data-lucide="map-pin" class="w-8 h-8 text-slate-400"></i>
+                        <svg class="w-8 h-8 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                         {% endif %}
                     </div>
                     <h2 class="text-base font-extrabold text-slate-800 leading-tight">{{ county.name }}</h2>

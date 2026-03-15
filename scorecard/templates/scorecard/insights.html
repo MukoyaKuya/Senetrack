@@ -116,7 +116,7 @@
                 <div class="bg-white border border-slate-200 rounded-xl overflow-hidden card-hover flex flex-col h-full shadow-sm hover:border-slate-400">
                     <div class="aspect-[3/4] w-full bg-slate-100 relative overflow-hidden">
                         {% if s.image_url %}
-                        <div class="w-full h-full bg-slate-100 bg-cover bg-center" style="background-image: url('{{ s.image_url|thumb:'w_10,e_blur:300' }}');">
+                        <div class="w-full h-full bg-slate-100 bg-cover bg-center">
                             <img src="{{ s.image_url|thumb:'w_200,h_267,c_fill,g_face' }}" alt="{{ s.name }}" class="w-full h-full object-cover object-[center_25%] group-hover:scale-105 transition-transform duration-300"
                                  {% if forloop.counter <= 6 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async" width="200" height="267"
                                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
