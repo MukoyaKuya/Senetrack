@@ -207,6 +207,8 @@ try:
 except (TypeError, ValueError):
     ACTIVE_DEBATES = 12
 
+LOGIN_REDIRECT_URL = '/admin/'
+
 # --- Security hardening ---
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
