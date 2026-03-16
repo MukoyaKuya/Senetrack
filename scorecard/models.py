@@ -10,6 +10,7 @@ Asset optimization (images):
     use the spec URL in templates for cards/lists; keep full image for detail pages.
   See docs/ASSETS.md for options and examples.
 """
+import os
 from django.db import models
 
 
@@ -38,6 +39,32 @@ class County(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def display_governor_image_url(self):
+        """Standardized URL resolution for governor photos."""
+        from django.conf import settings
+        url = self.governor_image.url if self.governor_image else ""
+        if url.startswith('/media/'):
+            is_cloud = os.environ.get('K_SERVICE') is not None
+            if not settings.DEBUG or is_cloud:
+                cloud_name = settings.CLOUDINARY_STORAGE.get('CLOUD_NAME', 'dlj4gpozf')
+                relative_path = url.replace('/media/', '')
+                return f"https://res.cloudinary.com/{cloud_name}/image/upload/{relative_path}"
+        return url
+
+    @property
+    def display_women_rep_image_url(self):
+        """Standardized URL resolution for women rep photos."""
+        from django.conf import settings
+        url = self.women_rep_image.url if self.women_rep_image else ""
+        if url.startswith('/media/'):
+            is_cloud = os.environ.get('K_SERVICE') is not None
+            if not settings.DEBUG or is_cloud:
+                cloud_name = settings.CLOUDINARY_STORAGE.get('CLOUD_NAME', 'dlj4gpozf')
+                relative_path = url.replace('/media/', '')
+                return f"https://res.cloudinary.com/{cloud_name}/image/upload/{relative_path}"
+        return url
 
 
 class CountyImage(models.Model):
@@ -69,6 +96,19 @@ class Party(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def display_logo_url(self):
+        """Standardized URL resolution for party logos."""
+        from django.conf import settings
+        url = self.logo.url if self.logo else ""
+        if url.startswith('/media/'):
+            is_cloud = os.environ.get('K_SERVICE') is not None
+            if not settings.DEBUG or is_cloud:
+                cloud_name = settings.CLOUDINARY_STORAGE.get('CLOUD_NAME', 'dlj4gpozf')
+                relative_path = url.replace('/media/', '')
+                return f"https://res.cloudinary.com/{cloud_name}/image/upload/{relative_path}"
+        return url
 
 
 class Senator(models.Model):
@@ -105,7 +145,7 @@ class Senator(models.Model):
             
         if url.startswith('/media/'):
             # On Cloud Run, always resolve to Cloudinary even in DEBUG mode because local storage is ephemeral
-            is_cloud = any('.run.app' in h for h in settings.ALLOWED_HOSTS)
+            is_cloud = os.environ.get('K_SERVICE') is not None
             if not settings.DEBUG or is_cloud:
                 cloud_name = settings.CLOUDINARY_STORAGE.get('CLOUD_NAME', 'dlj4gpozf')
                 relative_path = url.replace('/media/', '')
