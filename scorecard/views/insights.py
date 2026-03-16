@@ -115,13 +115,17 @@ def frontier_insights(request):
         url_by_id = {}
         for sen in Senator.objects.filter(senator_id__in=ids):
             try:
-                # Same logic as senator list: prefer uploaded image, else image_url field
-                url = (sen.image.url if sen.image else (sen.image_url or "")) or ""
+                # Use the Senator.display_image_url helper for consistent media/Cloudinary handling
+                url = sen.display_image_url or ""
             except Exception:
                 url = getattr(sen, "image_url", None) or ""
             url_by_id[sen.senator_id] = url
         senators_display = [
-            {**r, "image_url": url_by_id.get(r["senator_id"], r.get("image_url") or "")}
+            {
+                **r,
+                "image_url": url_by_id.get(r["senator_id"], r.get("image_url") or ""),
+                "display_image_url": url_by_id.get(r["senator_id"], r.get("image_url") or ""),
+            }
             for r in senators_display
         ]
 
@@ -286,6 +290,21 @@ def data_insights(request):
         rows = [r for r in rows if (r["frontier"] or "").replace(" ", "_") == filter_frontier]
     if filter_county:
         rows = [r for r in rows if (r.get("county_slug") or "").lower() == filter_county]
+
+    # Enrich filtered rows with live image URLs from the Senator model so cards can render photos.
+    if rows:
+        senator_ids = [r["senator_id"] for r in rows]
+        image_by_id = {}
+        for sen in Senator.objects.filter(senator_id__in=senator_ids):
+            try:
+                url = sen.display_image_url or ""
+            except Exception:
+                url = getattr(sen, "image_url", None) or ""
+            image_by_id[sen.senator_id] = url
+        for r in rows:
+            url = image_by_id.get(r["senator_id"], r.get("image_url") or "")
+            r["image_url"] = url
+            r["display_image_url"] = url
 
     # Best performed senator per frontier (top by overall_score)
     frontier_best = {}

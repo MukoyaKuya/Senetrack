@@ -37,7 +37,9 @@ def county_detail(request, slug):
                 "name": s.name,
                 "county": county.name,
                 "party": s.party,
-                "image_url": s.image.url if s.image else (s.image_url or ""),
+                # Use model helper so local media / Cloudinary URLs are resolved consistently
+                "image_url": s.display_image_url,
+                "display_image_url": s.display_image_url,
                 "grade": grade,
                 "overall_score": overall_score,
             }

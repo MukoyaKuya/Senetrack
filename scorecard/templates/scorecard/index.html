@@ -189,12 +189,12 @@
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 max-w-4xl mx-auto" id="senatorGrid">
         {% for senator in senators %}
         <a href="{% if senator.is_deceased or senator.is_still_computing %}#{% else %}{% url 'senator-detail' senator.senator_id %}{% endif %}"
-            class="senator-card card-hover block senator-card-wrapper group aspect-[3/4] {% if senator.is_deceased %}opacity-50{% endif %} {% if not senator.image_url %}fallback-initials{% endif %}"
+            class="senator-card card-hover block senator-card-wrapper group aspect-[3/4] {% if senator.is_deceased %}opacity-50{% endif %} {% if not senator.display_image_url %}fallback-initials{% endif %}"
             data-frontier="{{ senator.frontier }}"
             {% if senator.is_deceased %}onclick="showDeceasedNotice('{{ senator.name }}'); return false;"{% elif senator.is_still_computing %}onclick="showComputingNotice('{{ senator.name }}'); return false;"{% endif %}
             style="animation-delay:{{ forloop.counter0 }}0ms">
             <div class="senator-card-inner rounded-2xl overflow-hidden flex flex-col h-full relative active:scale-[0.98] transition-transform {% if senator.is_deceased %}blur-sm{% endif %}">
-                {% if senator.image_url %}
+                {% if senator.display_image_url %}
                 <div class="senator-card-img-wrap absolute inset-0 senator-card-bg bg-cover bg-center">
                     <img src="{{ senator.display_image_url|thumb:'w_400,h_533,c_fill,g_face' }}" alt="{{ senator.name }}"
                         class="absolute inset-0 w-full h-full object-cover" style="object-position:center 20%;"

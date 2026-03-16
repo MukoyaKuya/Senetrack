@@ -49,7 +49,8 @@ def senator_list(request):
     for s in senators_qs:
         name = s.senator_id.replace("-", " ").title() if s.name == PLACEHOLDER_NAME else s.name
         county = getattr(getattr(s, "county_fk", None), "name", "—")
-        image_url = s.image.url if s.image else (s.image_url or "")
+        # Prefer the model's display_image_url helper so local media/Cloudinary work consistently
+        image_url = s.display_image_url
         perf = getattr(s, "perf", None)
         overall_score = (perf.overall_score or 0) if perf else 0
         grade = (perf.grade or "—") if perf else "—"
@@ -65,6 +66,7 @@ def senator_list(request):
                 "party": s.party,
                 "party_logo_url": party_logo_url,
                 "image_url": image_url,
+                "display_image_url": image_url,
                 "overall_score": overall_score,
                 "grade": grade,
                 "is_deceased": getattr(s, "is_deceased", False),

@@ -64,7 +64,12 @@ def thumb(url, params):
     if url_str.startswith('/media/') and not settings.DEBUG:
         cloud_name = settings.CLOUDINARY_STORAGE.get('CLOUD_NAME', 'dlj4gpozf')
         relative_path = url_str.replace('/media/', '')
-        url_str = f"https://res.cloudinary.com/{cloud_name}/image/upload/{relative_path}"
+        resolved_url = f"https://res.cloudinary.com/{cloud_name}/image/upload/{relative_path}"
+        # print(f"DEBUG: Resolved {url_str} to {resolved_url}")
+        url_str = resolved_url
+    else:
+        # print(f"DEBUG: Skipping resolution for {url_str}. DEBUG={settings.DEBUG}")
+        pass
     
     # Check if this is a Cloudinary URL
     if "res.cloudinary.com" in url_str:
