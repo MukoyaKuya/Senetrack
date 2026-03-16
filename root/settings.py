@@ -41,7 +41,7 @@ if not DEBUG and SECRET_KEY == _DEFAULT_SECRET:
         'Set DJANGO_SECRET_KEY in production. Do not use the default insecure key.'
     )
 
-ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,senetrack-1073897174388.europe-west1.run.app').split(',') if h.strip()]
 if not DEBUG and not ALLOWED_HOSTS:
     raise ValueError('Set ALLOWED_HOSTS in production (e.g. your domain).')
 
