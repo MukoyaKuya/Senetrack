@@ -52,19 +52,29 @@ def thumb(url, params):
     """
     Append Cloudinary transformation parameters to a URL.
     Usage: {{ image.url|thumb:"w_128,h_128,c_fill" }}
+    Resolves local media URLs to Cloudinary when in production (DEBUG=False).
     """
-    if not url or not isinstance(url, str):
-        return url
+    if not url:
+        return ""
+        
+    url_str = str(url)
+    from django.conf import settings
+    
+    # In production, if it's a local media URL, resolve to Cloudinary
+    if url_str.startswith('/media/') and not settings.DEBUG:
+        cloud_name = settings.CLOUDINARY_STORAGE.get('CLOUD_NAME', 'dlj4gpozf')
+        relative_path = url_str.replace('/media/', '')
+        url_str = f"https://res.cloudinary.com/{cloud_name}/image/upload/{relative_path}"
     
     # Check if this is a Cloudinary URL
-    if "res.cloudinary.com" in url:
+    if "res.cloudinary.com" in url_str:
         # Standard transformations for speed and size
         base_params = "f_auto,q_auto"
         # Combine with user params
         all_params = f"{base_params},{params}"
         
         # Inject params after /upload/
-        if "/upload/" in url:
-            return url.replace("/upload/", f"/upload/{all_params}/")
+        if "/upload/" in url_str:
+            return url_str.replace("/upload/", f"/upload/{all_params}/")
             
-    return url
+    return url_str

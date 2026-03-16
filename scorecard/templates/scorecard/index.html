@@ -196,7 +196,7 @@
             <div class="senator-card-inner rounded-2xl overflow-hidden flex flex-col h-full relative active:scale-[0.98] transition-transform {% if senator.is_deceased %}blur-sm{% endif %}">
                 {% if senator.image_url %}
                 <div class="senator-card-img-wrap absolute inset-0 senator-card-bg bg-cover bg-center">
-                    <img src="{{ senator.image_url|thumb:'w_400,h_533,c_fill,g_face' }}" alt="{{ senator.name }}"
+                    <img src="{{ senator.display_image_url|thumb:'w_400,h_533,c_fill,g_face' }}" alt="{{ senator.name }}"
                         class="absolute inset-0 w-full h-full object-cover" style="object-position:center 20%;"
                         {% if forloop.counter <= 6 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async" width="400" height="533"
                         onerror="this.closest('.senator-card').classList.add('fallback-initials');">

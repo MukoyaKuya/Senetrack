@@ -95,10 +95,20 @@ class Senator(models.Model):
 
     @property
     def display_image_url(self):
-        """Preferred image URL for cards/lists. Override point for thumbnails or CDN later."""
+        """Preferred image URL for cards/lists. Resolves local media to Cloudinary in production."""
+        from django.conf import settings
+        url = ""
         if self.image:
-            return self.image.url
-        return self.image_url or ""
+            url = self.image.url
+        else:
+            url = self.image_url or ""
+            
+        if url.startswith('/media/') and not settings.DEBUG:
+            cloud_name = settings.CLOUDINARY_STORAGE.get('CLOUD_NAME', 'dlj4gpozf')
+            relative_path = url.replace('/media/', '')
+            return f"https://res.cloudinary.com/{cloud_name}/image/upload/{relative_path}"
+            
+        return url
 
     def __str__(self):
         return self.name

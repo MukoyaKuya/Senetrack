@@ -138,9 +138,9 @@
                                 class="w-full h-full bg-gradient-to-br from-red-500 to-red-600 text-white font-black text-4xl flex items-center justify-center hidden">
                                 {{ senator.name|slice:":1" }}</div>
                         </div>
-                        {% elif senator.image_url %}
+                        {% elif senator.display_image_url %}
                         <div class="w-full h-full bg-slate-100 bg-cover bg-center">
-                            <img src="{{ senator.image_url|thumb:'w_400,h_400,c_fill,g_face' }}" alt="{{ senator.name }}" class="w-full h-full object-cover"
+                            <img src="{{ senator.display_image_url|thumb:'w_800,h_1000,c_fill,g_face' }}" alt="{{ senator.name }}" class="w-full h-full object-cover"
                                 style="object-position: center 20%;"
                                 fetchpriority="high" decoding="async" width="160" height="160"
                                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
