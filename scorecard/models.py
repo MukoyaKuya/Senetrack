@@ -103,10 +103,13 @@ class Senator(models.Model):
         else:
             url = self.image_url or ""
             
-        if url.startswith('/media/') and not settings.DEBUG:
-            cloud_name = settings.CLOUDINARY_STORAGE.get('CLOUD_NAME', 'dlj4gpozf')
-            relative_path = url.replace('/media/', '')
-            return f"https://res.cloudinary.com/{cloud_name}/image/upload/{relative_path}"
+        if url.startswith('/media/'):
+            # On Cloud Run, always resolve to Cloudinary even in DEBUG mode because local storage is ephemeral
+            is_cloud = any('.run.app' in h for h in settings.ALLOWED_HOSTS)
+            if not settings.DEBUG or is_cloud:
+                cloud_name = settings.CLOUDINARY_STORAGE.get('CLOUD_NAME', 'dlj4gpozf')
+                relative_path = url.replace('/media/', '')
+                return f"https://res.cloudinary.com/{cloud_name}/image/upload/{relative_path}"
             
         return url
 

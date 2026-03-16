@@ -61,15 +61,18 @@ def thumb(url, params):
     from django.conf import settings
     
     # In production, if it's a local media URL, resolve to Cloudinary
-    if url_str.startswith('/media/') and not settings.DEBUG:
-        cloud_name = settings.CLOUDINARY_STORAGE.get('CLOUD_NAME', 'dlj4gpozf')
-        relative_path = url_str.replace('/media/', '')
-        resolved_url = f"https://res.cloudinary.com/{cloud_name}/image/upload/{relative_path}"
-        # print(f"DEBUG: Resolved {url_str} to {resolved_url}")
-        url_str = resolved_url
-    else:
-        # print(f"DEBUG: Skipping resolution for {url_str}. DEBUG={settings.DEBUG}")
-        pass
+    if url_str.startswith('/media/'):
+        # On Cloud Run, always resolve to Cloudinary even in DEBUG mode because local storage is ephemeral
+        is_cloud = any('.run.app' in h for h in settings.ALLOWED_HOSTS)
+        if not settings.DEBUG or is_cloud:
+            cloud_name = settings.CLOUDINARY_STORAGE.get('CLOUD_NAME', 'dlj4gpozf')
+            relative_path = url_str.replace('/media/', '')
+            resolved_url = f"https://res.cloudinary.com/{cloud_name}/image/upload/{relative_path}"
+            # print(f"DEBUG: Resolved {url_str} to {resolved_url}")
+            url_str = resolved_url
+        else:
+            # print(f"DEBUG: Skipping resolution for {url_str}. DEBUG={settings.DEBUG}")
+            pass
     
     # Check if this is a Cloudinary URL
     if "res.cloudinary.com" in url_str:

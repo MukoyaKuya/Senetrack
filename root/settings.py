@@ -184,7 +184,9 @@ CLOUDINARY_STORAGE = {
 }
 
 # Use Cloudinary for media storage in production (Cloud Run)
-if not DEBUG or os.environ.get('USE_CLOUDINARY', 'false').lower() == 'true':
+# Force Cloudinary on Cloud Run even in DEBUG mode for persistence
+_IS_CLOUD = any('.run.app' in h for h in ALLOWED_HOSTS)
+if not DEBUG or _IS_CLOUD or os.environ.get('USE_CLOUDINARY', 'false').lower() == 'true':
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # Default primary key field type

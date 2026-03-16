@@ -1,0 +1,17 @@
+.git
+.gitignore
+.gcloudignore
+.agents
+.agent
+.gemini
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.db.sqlite3
+.vscode/
+.idea/
+media/
+static_root/
