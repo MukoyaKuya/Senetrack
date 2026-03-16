@@ -116,7 +116,7 @@
                 <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Senator</p>
                 <div class="county-card-img w-full rounded-xl overflow-hidden flex items-center justify-center ring-1 ring-slate-100 bg-slate-50">
                     {% if first_senator.image_url %}
-                    <div class="w-full h-full bg-slate-100 bg-cover bg-center" style="background-image: url('{{ first_senator.image_url|thumb:'w_10,e_blur:300' }}');">
+                    <div class="w-full h-full bg-slate-100">
                         <img src="{{ first_senator.image_url|thumb:'w_400,h_400,c_fill,g_face' }}" alt="{{ first_senator.name }}" class="w-full h-full object-cover" style="object-position:center 20%;" loading="lazy" decoding="async" width="200" height="200" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
                         <div class="w-full h-full hidden items-center justify-center text-white font-bold text-3xl bg-gradient-to-br from-red-500 to-red-700">{{ first_senator.name|slice:":1" }}</div>
                     </div>
@@ -158,7 +158,7 @@
         <h2 class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-4">Gallery</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {% for img in county.images.all %}
-            <div class="gallery-card rounded-xl overflow-hidden bg-white border border-slate-200 shadow-sm bg-cover bg-center" style="background-image: url('{{ img.image.url|thumb:'w_10,e_blur:300' }}');">
+            <div class="gallery-card rounded-xl overflow-hidden bg-white border border-slate-200 shadow-sm bg-slate-100">
                 <img src="{{ img.image.url|thumb:'w_800,h_560,c_fill' }}" alt="{{ img.caption|default:county.name }}" class="w-full h-48 sm:h-56 object-cover" loading="lazy" decoding="async" width="400" height="280">
                 {% if img.caption %}
                 <p class="p-4 text-sm text-slate-600 border-t border-slate-100">{{ img.caption }}</p>
