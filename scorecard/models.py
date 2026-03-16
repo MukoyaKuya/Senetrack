@@ -45,6 +45,8 @@ class County(models.Model):
         """Standardized URL resolution for governor photos."""
         from django.conf import settings
         url = self.governor_image.url if self.governor_image else ""
+        if "res.cloudinary.com" in url:
+            return url
         if url.startswith('/media/'):
             is_cloud = os.environ.get('K_SERVICE') is not None
             if not settings.DEBUG or is_cloud:
@@ -58,6 +60,8 @@ class County(models.Model):
         """Standardized URL resolution for women rep photos."""
         from django.conf import settings
         url = self.women_rep_image.url if self.women_rep_image else ""
+        if "res.cloudinary.com" in url:
+            return url
         if url.startswith('/media/'):
             is_cloud = os.environ.get('K_SERVICE') is not None
             if not settings.DEBUG or is_cloud:
@@ -102,6 +106,8 @@ class Party(models.Model):
         """Standardized URL resolution for party logos."""
         from django.conf import settings
         url = self.logo.url if self.logo else ""
+        if "res.cloudinary.com" in url:
+            return url
         if url.startswith('/media/'):
             is_cloud = os.environ.get('K_SERVICE') is not None
             if not settings.DEBUG or is_cloud:
@@ -143,6 +149,9 @@ class Senator(models.Model):
         else:
             url = self.image_url or ""
             
+        if "res.cloudinary.com" in url:
+            return url
+
         if url.startswith('/media/'):
             # On Cloud Run, always resolve to Cloudinary even in DEBUG mode because local storage is ephemeral
             is_cloud = os.environ.get('K_SERVICE') is not None

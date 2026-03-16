@@ -77,6 +77,14 @@ def thumb(url, params):
     
     # Check if this is a Cloudinary URL
     if "res.cloudinary.com" in url_str:
+        # Hardening: strip redundant 'media/' prefix often added by storage backends if it's not in our actual Cloudinary public_ids
+        if "/upload/" in url_str and "/media/" in url_str:
+             # Find parts after /upload/ and remove /media/ if it follows a version or is the first part
+             url_str = url_str.replace("/upload/media/", "/upload/")
+             # Also handle v1/media/
+             import re
+             url_str = re.sub(r"/upload/(v\d+/)?media/", r"/upload/\1", url_str)
+
         # Standard transformations for speed and size
         base_params = "f_auto,q_auto"
         # Combine with user params
