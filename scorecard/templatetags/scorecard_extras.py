@@ -86,7 +86,7 @@ def thumb(url, params):
              url_str = re.sub(r"/upload/(v\d+/)?media/", r"/upload/\1", url_str)
 
         # Standard transformations for speed and size
-        base_params = "f_auto,q_auto"
+        base_params = "f_auto,q_auto:best"
         # Combine with user params
         all_params = f"{base_params},{params}"
         

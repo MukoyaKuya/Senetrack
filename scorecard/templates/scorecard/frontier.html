@@ -108,7 +108,7 @@
                     <div class="img-wrap aspect-[4/5] w-full bg-gradient-to-b from-slate-100 to-slate-200 relative overflow-hidden">
                         {% if s.display_image_url %}
                         <div class="w-full h-full bg-slate-100 bg-cover bg-center">
-                            <img src="{{ s.display_image_url|thumb:'w_400,h_533,c_fill,g_face' }}" alt="{{ s.name }}" class="w-full h-full object-cover object-[center_25%] group-hover:scale-105 transition-transform duration-500"
+                            <img src="{{ s.display_image_url|thumb:'w_600,h_800,c_fill,g_face' }}" alt="{{ s.name }}" class="w-full h-full object-cover object-[center_25%] group-hover:scale-105 transition-transform duration-500"
                                  {% if forloop.counter <= 4 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async" width="240" height="300"
                                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
                             <div class="absolute inset-0 hidden items-center justify-center bg-slate-200 text-slate-500 font-black text-3xl">
@@ -131,10 +131,13 @@
                         {% if s.county or s.nomination %}
                         <p class="text-xs text-slate-500 mt-1 truncate" title="{% if s.nomination %}{{ s.nomination }}{% else %}{{ s.county }}{% endif %}">{% if s.nomination %}{{ s.nomination }}{% else %}{{ s.county }}{% if s.county and 'County' not in s.county and 'City' not in s.county %} County{% endif %}{% endif %}</p>
                         {% endif %}
-                        <div class="mt-3 flex items-center justify-between gap-2">
+                        <div class="mt-3 flex items-center gap-2">
                             {% if s.overall_score %}
-                            <span class="text-2xl font-black text-emerald-600 tabular-nums">{{ s.overall_score|floatformat:0 }}</span>
-                            <span class="text-xs font-semibold text-slate-400">/100</span>
+                            <span class="inline-flex items-baseline gap-0.5 shrink-0">
+                                <span class="text-2xl font-black text-emerald-600 tabular-nums">{{ s.overall_score|floatformat:0 }}</span>
+                                <span class="text-xs font-semibold text-slate-400">/100</span>
+                            </span>
+                            {% if s.grade %}<span class="text-sm font-extrabold rounded px-1.5 py-0.5 shrink-0 leading-none" style="{% grade_badge_style s.grade %}">{{ s.grade }}</span>{% endif %}
                             <div class="ml-auto h-1.5 flex-1 max-w-[4rem] rounded-full bg-slate-100 overflow-hidden">
                                 <div class="h-full bg-emerald-500 rounded-full transition-all duration-300" style="width: {{ s.overall_score|floatformat:0 }}%;"></div>
                             </div>

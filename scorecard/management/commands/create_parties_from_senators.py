@@ -1,4 +1,4 @@
-"""Create Party records for each distinct party name used by senators. Run once, then upload logos in admin."""
+"""This creates Party records for each distinct party name used by senators. Run once, then upload logos in admin."""
 from django.core.management.base import BaseCommand
 
 from scorecard.models import Senator, Party

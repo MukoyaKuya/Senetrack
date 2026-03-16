@@ -1,5 +1,5 @@
 """
-Import senators' formal statements from a CSV exported from the official
+Imports senators' formal statements from a CSV exported from the official
 Statements Tracker PDF (e.g. "Statements Tracker - Updated as at 20.11.2025").
 
 Usage:

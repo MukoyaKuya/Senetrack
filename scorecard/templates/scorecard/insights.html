@@ -129,9 +129,12 @@
                     <div class="p-3 flex flex-col flex-1 min-w-0">
                         <p class="font-bold text-slate-800 text-sm leading-tight line-clamp-2 group-hover:text-slate-600" title="{{ s.name }}">{{ s.name }}</p>
                         <p class="text-xs text-slate-500 mt-0.5 truncate">{% if s.nomination %}{{ s.nomination }}{% else %}{{ s.county }}{% if s.county and 'County' not in s.county and 'City' not in s.county %} County{% endif %}{% endif %}</p>
-                        <div class="mt-2 flex items-center justify-between gap-1">
-                            <span class="text-lg font-black text-emerald-600 tabular-nums">{{ s.overall_score|floatformat:0 }}</span>
-                            <span class="text-xs font-semibold text-slate-400">/100</span>
+                        <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <span class="inline-flex items-baseline gap-0.5 shrink-0">
+                                <span class="text-lg font-black text-emerald-600 tabular-nums">{{ s.overall_score|floatformat:0 }}</span>
+                                <span class="text-xs font-semibold text-slate-400">/100</span>
+                            </span>
+                            {% if s.grade %}<span class="text-sm font-extrabold rounded px-1.5 py-0.5 shrink-0 leading-none" style="{% grade_badge_style s.grade %}">{{ s.grade }}</span>{% endif %}
                         </div>
                     </div>
                 </div>
