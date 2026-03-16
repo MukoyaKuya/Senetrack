@@ -6,7 +6,7 @@ from scorecard.models import County, Senator
 from scorecard.security import sanitize_county_slug
 
 
-@cache_page(300)
+@cache_page(60)
 def county_list(request):
     """Counties browse page with 47 county cards."""
     # Hide the synthetic "Nominated (Nationwide)" county from the public list
@@ -14,7 +14,6 @@ def county_list(request):
     return render(request, "scorecard/counties.html", {"counties": counties})
 
 
-@cache_page(300)
 def county_detail(request, slug):
     """County profile page with senator(s) and county info."""
     clean_slug = sanitize_county_slug(slug)

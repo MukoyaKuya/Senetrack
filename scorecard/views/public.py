@@ -11,8 +11,8 @@ from scorecard.services.senators import get_frontier
 
 
 ACTIVE_DEBATES_DEFAULT = 12
-CACHE_PAGE_SENATORS = 180  # 3 min
-CACHE_PAGE_HOME = 300      # 5 min
+CACHE_PAGE_SENATORS = 60
+CACHE_PAGE_HOME = 60
 
 
 @cache_page(CACHE_PAGE_HOME)

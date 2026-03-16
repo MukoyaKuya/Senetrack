@@ -317,7 +317,6 @@ def _get_voting_history_for_senator(senator):
     return VOTING_HISTORY.get(senator.senator_id, [])
 
 
-@cache_page(60 * 2)
 def senator_detail(request, senator_id):
     """Main dashboard page."""
     clean_id = sanitize_senator_id(senator_id)
