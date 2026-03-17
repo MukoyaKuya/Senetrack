@@ -46,6 +46,21 @@ def _log_score(val: float, max_val: float, pts: float) -> float:
     return (log(1 + val) / log(1 + max_val)) * pts
 
 
+def score_to_grade(score: float) -> str:
+    """
+    Single source of truth: map numeric score to letter grade.
+    Uses the displayed (rounded) score so grade always matches what users see (e.g. 60 → one grade).
+    Uses HansardEngine thresholds.
+    """
+    if score is None or (isinstance(score, float) and (score != score or score < 0)):
+        return "E"
+    pct = round(float(score), 0)
+    for min_pct, grade, _ in HansardEngine.GRADE_TABLE:
+        if pct >= min_pct:
+            return grade
+    return "E"
+
+
 # Hansard 2025 max values (from report)
 HANSARD_2025_MAX = {
     "words": 133_532,
@@ -130,14 +145,8 @@ class HansardEngine:
 
         overall = round(structural_score + debate_score + county_pts + statements_bonus, 2)
         pct = overall  # 0-100
-
-        grade = "E"
-        grade_points = 1
-        for min_pct, g, gp in cls.GRADE_TABLE:
-            if pct >= min_pct:
-                grade = g
-                grade_points = gp
-                break
+        grade = score_to_grade(overall)
+        grade_points = dict((g, gp) for _, g, gp in cls.GRADE_TABLE).get(grade, 1)
 
         return {
             "overall_score": overall,
@@ -209,12 +218,13 @@ def get_engine_result(perf) -> Optional[Dict[str, Any]]:
     if perf and getattr(perf, "overall_score", None) and getattr(perf, "grade", None):
         stored = float(perf.overall_score or 0)
         if stored > 0 and has_hansard_data:
-            # Compute pillars from Hansard data for display
+            # Compute pillars from Hansard data for display.
+            # Grade is derived from rounded score so displayed "60" always gets the same grade.
             res = HansardEngine.calculate(data)
             pillars = _hansard_to_template_pillars(res.get("pillars", {}))
             return {
                 "overall_score": stored,
-                "grade": perf.grade or "—",
+                "grade": score_to_grade(stored),
                 "grade_text": "",
                 "pillars": pillars,
                 "percentages": {},
@@ -301,18 +311,20 @@ class SenatorPerformanceEngine:
         if (data.get("committee_role") or "Member") in leadership_roles:
             total = min(total + 2, 100)
 
-        if total >= 90: grade, text = "A", "OUTSTANDING"
-        elif total >= 85: grade, text = "A-", "EXCELLENT"
-        elif total >= 80: grade, text = "B+", "VERY GOOD"
-        elif total >= 75: grade, text = "B", "GOOD"
-        elif total >= 70: grade, text = "B-", "ABOVE AVERAGE"
-        elif total >= 65: grade, text = "C+", "FAIRLY GOOD"
-        elif total >= 60: grade, text = "C", "AVERAGE"
-        elif total >= 55: grade, text = "C-", "BELOW AVERAGE"
-        elif total >= 50: grade, text = "D+", "MARGINAL"
-        elif total >= 45: grade, text = "D", "POOR"
-        elif total >= 40: grade, text = "D-", "VERY POOR"
-        else: grade, text = "E", "FAIL"
+        # Use canonical score_to_grade so displayed score and grade always match (e.g. 60 → one grade).
+        grade = score_to_grade(total)
+        if total >= 90: text = "OUTSTANDING"
+        elif total >= 85: text = "EXCELLENT"
+        elif total >= 80: text = "VERY GOOD"
+        elif total >= 75: text = "GOOD"
+        elif total >= 70: text = "ABOVE AVERAGE"
+        elif total >= 65: text = "FAIRLY GOOD"
+        elif total >= 60: text = "AVERAGE"
+        elif total >= 55: text = "BELOW AVERAGE"
+        elif total >= 50: text = "MARGINAL"
+        elif total >= 45: text = "POOR"
+        elif total >= 40: text = "VERY POOR"
+        else: text = "FAIL"
 
         return {
             "overall_score": total,

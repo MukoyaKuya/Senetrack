@@ -351,6 +351,20 @@ def senator_detail(request, senator_id):
             },
             "insights": {"strengths": ["Performance data not yet available"], "improvements": []},
         }
+    else:
+        # Ensure every senator profile has meaningful insights (Hansard engine doesn't generate text insights).
+        try:
+            from scorecard.services.analytics import get_senator_rows
+            from scorecard.services.senator_insights import build_profile_insights
+
+            rows = get_senator_rows()
+            current_row = next((r for r in rows if str(r.get("senator_id")).lower() == str(clean_id).lower()), None)
+            if current_row:
+                results["insights"] = build_profile_insights(current_row, rows)
+            else:
+                results.setdefault("insights", {"strengths": [], "improvements": []})
+        except Exception:
+            results.setdefault("insights", {"strengths": [], "improvements": []})
 
     ranking_data = _get_ranking_data()
     total_senators = len(ranking_data)

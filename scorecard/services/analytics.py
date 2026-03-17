@@ -8,7 +8,7 @@ from scorecard.engine import get_engine_result
 from scorecard.models import Senator
 from scorecard.services.senators import get_frontier
 
-SENATOR_ROWS_CACHE_KEY = "scorecard:senator_rows:v2"  # bump to invalidate stale image_url cache
+SENATOR_ROWS_CACHE_KEY = "scorecard:senator_rows:v3"  # bump to invalidate stale cache
 SENATOR_ROWS_CACHE_TIMEOUT = 300  # 5 minutes
 
 
