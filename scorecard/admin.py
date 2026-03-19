@@ -16,7 +16,6 @@ class CountyAdmin(ModelAdmin):
     inlines = [CountyImageInline]
     list_display = ('name', 'region', 'logo_preview', 'order')
     list_filter = ('region',)
-    search_fields = ('name',)
     prepopulated_fields = {'slug': ('name',)}
     fieldsets = (
         ('Basic Info', {
@@ -68,7 +67,6 @@ class SenatorQuoteInline(admin.StackedInline):
 class SenatorAdmin(ModelAdmin):
     inlines = [SenatorQuoteInline]
     list_display = ('name', 'county_name', 'nomination', 'party', 'photo_preview', 'image_url')
-    search_fields = ('name', 'county_fk__name', 'nomination', 'party')
     list_filter = ('party', 'county_fk')
 
     # Group fields logically in the edit form
@@ -142,7 +140,6 @@ class SenatorAdmin(ModelAdmin):
 class SenatorQuoteAdmin(ModelAdmin):
     list_display = ("senator", "quote_preview", "date", "order")
     list_filter = ("senator",)
-    search_fields = ("quote", "senator__name")
     ordering = ("senator", "order", "-date")
 
     def quote_preview(self, obj):
@@ -153,7 +150,6 @@ class SenatorQuoteAdmin(ModelAdmin):
 @admin.register(Party)
 class PartyAdmin(ModelAdmin):
     list_display = ('name', 'founded_year', 'leader_name', 'logo_preview')
-    search_fields = ('name', 'leader_name')
     fieldsets = (
         (None, {
             'fields': ('name', 'logo', 'logo_preview'),
@@ -178,4 +174,3 @@ class PartyAdmin(ModelAdmin):
 @admin.register(ParliamentaryPerformance)
 class ParliamentaryPerformanceAdmin(ModelAdmin):
     list_display = ('senator', 'speeches', 'attendance_rate', 'sponsored_bills', 'committee_role')
-    search_fields = ('senator__name',)
