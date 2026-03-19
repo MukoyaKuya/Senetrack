@@ -250,7 +250,7 @@ UNFOLD = {
         "search_models": False,
     },
     "STYLES": [
-        lambda request: "scorecard/css/custom_admin.css",
+        lambda request: "/static/scorecard/css/custom_admin.css",
     ],
 }
 
