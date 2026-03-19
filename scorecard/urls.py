@@ -12,6 +12,7 @@ urlpatterns = [
     path('frontier/', views.frontier_insights, name='frontier-insights'),
     path('frontier/map/', views.frontier_map, name='frontier-map'),
     path('frontier/map/data/', views.frontier_map_data, name='frontier-map-data'),
+    path('insights/export/csv/', views.export_insights_csv, name='insights-export-csv'),
     path('about/', views.about, name='about'),
     path('counties/', views.county_list, name='county-list'),
     path('county/<slug:slug>/', views.county_detail, name='county-detail'),

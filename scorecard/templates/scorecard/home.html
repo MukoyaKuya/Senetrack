@@ -1,4 +1,4 @@
-{% load static %}
+{% load static scorecard_extras %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -144,7 +144,53 @@
         </aside>
     </main>
 
-    <footer class="text-center py-6 text-xs text-slate-500 font-medium">SENETRACK &mdash; Assessing Senators' Performance in the Kenyan Senate</footer>
+    {% if top_performers %}
+    <section class="bg-slate-950 border-t border-slate-800 py-10 px-4 sm:px-6 lg:px-16">
+        <div class="max-w-5xl mx-auto">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-white font-brutal text-lg sm:text-xl font-black uppercase tracking-tight">Top Performers</h2>
+                    <p class="text-slate-400 text-xs sm:text-sm mt-1">Highest overall SPM scores in 2025</p>
+                </div>
+                <a href="{% url 'data-insights' %}" class="text-sm text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1 transition-colors">
+                    Full insights
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                {% for senator in top_performers %}
+                <a href="{% url 'senator-detail' senator.senator_id %}" class="group relative block rounded-xl overflow-hidden bg-slate-800 hover:-translate-y-1 transition-transform duration-200 shadow-md hover:shadow-xl" style="aspect-ratio:3/4">
+                    {% if senator.display_image_url %}
+                    <img src="{{ senator.display_image_url|thumb:'w_400,h_533,c_fill,g_face' }}" alt="{{ senator.name }}" class="absolute inset-0 w-full h-full object-cover" style="object-position:center 15%;" loading="lazy" decoding="async" width="200" height="267">
+                    {% else %}
+                    <div class="absolute inset-0 bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+                        <span class="text-5xl font-black text-white/20">{{ senator.name|slice:":1" }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent"></div>
+                    <span class="absolute top-2 left-2 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-emerald-500 text-white text-[9px] sm:text-[10px] font-black flex items-center justify-center shadow-sm z-10">#{{ forloop.counter }}</span>
+                    {% if senator.grade and senator.grade != '—' %}
+                    <span class="absolute top-2 right-2 w-6 h-6 sm:w-7 sm:h-7 rounded-full text-[9px] sm:text-xs font-black flex items-center justify-center shadow-sm leading-none z-10" style="{% grade_badge_style senator.grade %}">{{ senator.grade }}</span>
+                    {% endif %}
+                    <div class="absolute bottom-0 left-0 right-0 p-2.5 sm:p-3 z-10">
+                        <p class="text-white text-[10px] sm:text-xs font-bold leading-tight line-clamp-2">{{ senator.name }}</p>
+                        <p class="text-slate-300 text-[9px] sm:text-[10px] mt-0.5 truncate">{{ senator.county }}{% if senator.county and 'County' not in senator.county %} Co.{% endif %}</p>
+                        <p class="text-emerald-400 text-sm sm:text-base font-black mt-1 leading-none">{{ senator.overall_score|floatformat:0 }}<span class="text-slate-500 text-[9px] font-normal">/100</span></p>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            <div class="mt-6 text-center">
+                <a href="{% url 'senator-list' %}" class="inline-flex items-center gap-2 text-slate-400 hover:text-white text-xs font-medium transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    View all {{ total_senators }} senators
+                </a>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <footer class="text-center py-6 text-xs text-slate-500 font-medium bg-slate-950">SENETRACK &mdash; Assessing Senators' Performance in the Kenyan Senate</footer>
 
     <script>try { if (typeof lucide !== 'undefined') lucide.createIcons(); } catch(e) {}</script>
     <script>if ('serviceWorker' in navigator) { window.addEventListener('load', function() { navigator.serviceWorker.register('/sw.js').catch(function() {}); }); }</script>

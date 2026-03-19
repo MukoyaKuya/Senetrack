@@ -27,6 +27,27 @@ def home(request):
     total_bills = agg["total_bills"] or 0
     avg_attendance = round(agg["avg_att"] or 0, 0) if agg["cnt"] else 0
     active_debates = getattr(settings, "ACTIVE_DEBATES", ACTIVE_DEBATES_DEFAULT)
+
+    top_performers = []
+    top_perf_qs = (
+        ParliamentaryPerformance.objects
+        .select_related("senator__county_fk")
+        .filter(senator__is_deceased=False, senator__is_still_computing=False, overall_score__gt=0)
+        .order_by("-overall_score")[:5]
+    )
+    for perf in top_perf_qs:
+        s = perf.senator
+        county_fk = getattr(s, "county_fk", None)
+        top_performers.append({
+            "senator_id": s.senator_id,
+            "name": s.name,
+            "county": getattr(county_fk, "name", "—"),
+            "party": s.party or "",
+            "grade": perf.grade or "—",
+            "overall_score": perf.overall_score or 0,
+            "display_image_url": s.display_image_url,
+        })
+
     return render(
         request,
         "scorecard/home.html",
@@ -35,6 +56,7 @@ def home(request):
             "total_bills": total_bills,
             "avg_attendance": avg_attendance,
             "active_debates": active_debates,
+            "top_performers": top_performers,
         },
     )
 

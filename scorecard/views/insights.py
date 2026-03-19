@@ -1,7 +1,9 @@
+import csv
 import json
 
 from django.conf import settings
 from django.core.cache import cache
+from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.decorators.cache import cache_page
 
@@ -779,4 +781,43 @@ def data_insights(request):
             "filtered_senators": filtered_senators,
         },
     )
+
+
+_CSV_FIELDS = [
+    ("name", "Senator"),
+    ("county", "County"),
+    ("party", "Party"),
+    ("frontier", "Region"),
+    ("overall_score", "Overall Score"),
+    ("grade", "Grade"),
+    ("attendance_rate", "Attendance Rate (%)"),
+    ("sessions_attended", "Sessions Attended"),
+    ("speeches", "Speeches"),
+    ("words_spoken", "Words Spoken"),
+    ("motions_sponsored", "Motions Sponsored"),
+    ("sponsored_bills", "Bills Sponsored"),
+    ("passed_bills", "Bills Passed"),
+    ("amendments", "Amendments"),
+    ("committee_role", "Committee Role"),
+    ("committee_attendance", "Committee Attendance"),
+    ("vote_rate", "Vote Rate (%)"),
+    ("county_representation", "County Rep. Score"),
+    ("oversight_actions", "Oversight Actions"),
+]
+
+
+def export_insights_csv(request):
+    """Download all senator performance data as a CSV file."""
+    rows = get_senator_rows()
+    rows = sorted(rows, key=lambda r: r.get("overall_score", 0), reverse=True)
+
+    response = HttpResponse(content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = 'attachment; filename="senetrack_performance_2025.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow([label for _, label in _CSV_FIELDS])
+    for r in rows:
+        writer.writerow([r.get(key, "") for key, _ in _CSV_FIELDS])
+
+    return response
 
