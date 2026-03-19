@@ -249,6 +249,9 @@ UNFOLD = {
         "show_history": False,
         "search_models": False,
     },
+    "STYLES": [
+        lambda request: "scorecard/css/custom_admin.css",
+    ],
 }
 
 # --- Security hardening ---
