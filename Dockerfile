@@ -22,6 +22,9 @@ RUN pip install --upgrade pip && \
 # Copy project
 COPY . /app/
 
+# Create dummy source map to satisfy WhiteNoise collectstatic check
+RUN mkdir -p /app/scorecard/static/scorecard/vendor/ && touch /app/scorecard/static/scorecard/vendor/chart.umd.js.map
+
 # Collect static files during build (speeds up container startup)
 # Using a dummy secret key for the build process
 RUN DJANGO_SECRET_KEY=build-time-insecure-key python manage.py collectstatic --noinput --clear
