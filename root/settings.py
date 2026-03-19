@@ -245,6 +245,7 @@ UNFOLD = {
     "SIDEBAR": {
         "show_search": False,
     },
+    "COMMAND": False,
 }
 
 # --- Security hardening ---
