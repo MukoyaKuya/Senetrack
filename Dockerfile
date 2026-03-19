@@ -22,8 +22,10 @@ RUN pip install --upgrade pip && \
 # Copy project
 COPY . /app/
 
-# Create dummy source map to satisfy WhiteNoise collectstatic check
-RUN mkdir -p /app/scorecard/static/scorecard/vendor/ && touch /app/scorecard/static/scorecard/vendor/chart.umd.js.map
+# Create dummy source maps to satisfy WhiteNoise collectstatic checks for vendor JS
+RUN find /app/scorecard/static/scorecard/vendor/ -name "*.js" -exec sh -c 'touch "${1}.map"' _ {} \;
+# And specific ones if names don't match exactly (like chart.min.js -> chart.umd.js.map)
+RUN touch /app/scorecard/static/scorecard/vendor/chart.umd.js.map
 
 # Collect static files during build (speeds up container startup)
 # Using a dummy secret key for the build process
