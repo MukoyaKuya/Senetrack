@@ -23,6 +23,7 @@
     <meta name="twitter:description" content="Track and assess the performance of Kenyan Senators.">
     <meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'scorecard/images/hero-parliament.png' %}">
     <script src="{% static 'scorecard/vendor/tailwind.js' %}"></script>
+    <link href="{% static 'scorecard/vendor/flowbite.min.css' %}" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" onerror="this.remove()">
     <script src="{% static 'scorecard/vendor/lucide.min.js' %}"></script>
     <style>
@@ -192,6 +193,7 @@
 
     <footer class="text-center py-6 text-xs text-slate-500 font-medium bg-slate-950">SENETRACK &mdash; Assessing Senators' Performance in the Kenyan Senate</footer>
 
+    <script src="{% static 'scorecard/vendor/flowbite.min.js' %}"></script>
     <script>try { if (typeof lucide !== 'undefined') lucide.createIcons(); } catch(e) {}</script>
     <script>if ('serviceWorker' in navigator) { window.addEventListener('load', function() { navigator.serviceWorker.register('/sw.js').catch(function() {}); }); }</script>
 </body>

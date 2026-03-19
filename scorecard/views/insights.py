@@ -6,6 +6,7 @@ from django.core.cache import cache
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.decorators.cache import cache_page
+from django.contrib.admin.views.decorators import staff_member_required
 
 from scorecard.engine import perf_to_engine_data
 from scorecard.models import Senator
@@ -806,6 +807,7 @@ _CSV_FIELDS = [
 ]
 
 
+@staff_member_required
 def export_insights_csv(request):
     """Download all senator performance data as a CSV file."""
     rows = get_senator_rows()

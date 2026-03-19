@@ -523,3 +523,33 @@ class InsightsChartsTest(TestCase):
         self.assertEqual(charts["frontier_scores"]["scores"], [75])
         self.assertEqual(charts["nominated_vs_elected"]["avg_scores"], [0.0, 75.0])
         self.assertEqual(len(charts["structural_vs_debate"]["labels"]), 1)
+
+class SecurityHardeningTest(TestCase):
+    """Verify production security hardening configurations."""
+
+    def test_export_csv_requires_staff(self):
+        """Export CSV should redirect to login for unauthenticated users."""
+        url = reverse("insights-export-csv")
+        response = self.client.get(url)
+        # staff_member_required redirects to login with ?next=...
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/login/", response.url)
+
+    def test_robots_txt_publicly_accessible(self):
+        """Robots.txt should be served and contain Disallow rules."""
+        response = self.client.get("/robots.txt")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/plain")
+        content = response.content.decode()
+        self.assertIn("User-agent: *", content)
+        self.assertIn("Disallow:", content)
+
+    def test_security_headers_present_in_production(self):
+        """Basic security headers should be present when DEBUG is False."""
+        # Force DEBUG=False for this test (if not already)
+        with self.settings(DEBUG=False):
+            response = self.client.get(reverse("home"))
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("Content-Security-Policy", response)
+            self.assertEqual(response["X-Frame-Options"], "DENY")
+            self.assertEqual(response["X-Content-Type-Options"], "nosniff")

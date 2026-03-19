@@ -19,7 +19,18 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from django.http import HttpResponse
+
+def robots_txt(request):
+    lines = [
+        "User-agent: *",
+        f"Disallow: /{settings.DJANGO_ADMIN_PATH}/",
+        "Disallow: /insights/export/csv/",
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain")
+
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path(f'{settings.DJANGO_ADMIN_PATH}/', admin.site.urls),
+    path('robots.txt', robots_txt),
     path('', include('scorecard.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

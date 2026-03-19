@@ -33,7 +33,11 @@ _DEFAULT_SECRET = 'django-insecure-nslt8yi9h@q!dqv(6%0g*j3zm(wad39#c@&l$$*^uzc#0
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', _DEFAULT_SECRET)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG', 'true').lower() in ('true', '1', 'yes')
+# Default to False for safety. Set DJANGO_DEBUG=True in .env for local development.
+DEBUG = os.environ.get('DJANGO_DEBUG', 'false').lower() in ('true', '1', 'yes')
+
+# Custom Admin Path (Security by Obscurity - avoids standard path bot scraping)
+DJANGO_ADMIN_PATH = os.environ.get('DJANGO_ADMIN_PATH', 'manage-senetrack').strip('/')
 
 # Require a non-default SECRET_KEY in production
 if not DEBUG and SECRET_KEY == _DEFAULT_SECRET:
@@ -76,6 +80,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'root.middleware.ContentSecurityPolicyMiddleware',
 ]
 
 ROOT_URLCONF = 'root.urls'
@@ -100,9 +105,17 @@ WSGI_APPLICATION = 'root.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-# Set DATABASE_URL (e.g. postgres://user:pass@host:5432/dbname) for PostgreSQL in production.
+# DATABASE_URL is only used in production (Cloud Run) or when USE_REMOTE_DB=true is set.
+# Locally with DEBUG=True the app falls back to SQLite automatically.
 
-_db_config = dj_database_url.config(default=None, conn_max_age=60)
+_IS_CLOUD_RUN = os.environ.get('K_SERVICE') is not None
+_use_remote_db = (
+    _IS_CLOUD_RUN
+    or not DEBUG
+    or os.environ.get('USE_REMOTE_DB', 'false').lower() in ('true', '1', 'yes')
+)
+
+_db_config = dj_database_url.config(default=None, conn_max_age=60) if _use_remote_db else None
 if _db_config:
     DATABASES = {'default': _db_config}
 else:
@@ -199,7 +212,6 @@ if not DEBUG:
     }
 
 # Use Cloudinary for media storage on Cloud Run or when explicitly requested
-_IS_CLOUD_RUN = os.environ.get('K_SERVICE') is not None
 if not DEBUG or _IS_CLOUD_RUN or os.environ.get('USE_CLOUDINARY', 'false').lower() == 'true':
     STORAGES["default"] = {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
@@ -235,6 +247,17 @@ SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_HTTPONLY = False  # False so JS can read for AJAX if needed; set True if no JS CSRF usage
+
+# --- Content Security Policy (CSP) ---
+# Minimal CSP to protect against XSS. Allows images from Cloudinary/Mapbox and scripts from trusted sources.
+# Note: If using inline scripts/styles, 'unsafe-inline' may be needed initially.
+CSP_DEFAULT_SRC = ("'self'",)
+CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://api.mapbox.com")
+CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://api.mapbox.com")
+CSP_IMG_SRC = ("'self'", "data:", "https://res.cloudinary.com", "https://api.mapbox.com", "*.tiles.mapbox.com")
+CSP_FONT_SRC = ("'self'", "https://fonts.gstatic.com")
+CSP_CONNECT_SRC = ("'self'", "https://api.mapbox.com", "https://events.mapbox.com")
+CSP_FRAME_ANCESTORS = ("'none'",)
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'true').lower() in ('true', '1', 'yes')
