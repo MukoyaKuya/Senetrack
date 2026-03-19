@@ -245,8 +245,9 @@ UNFOLD = {
     "SIDEBAR": {
         "show_search": False,
     },
-    "COMMAND_PALETTE": {
-        "show": False,
+    "COMMAND": {
+        "show_history": False,
+        "search_models": False,
     },
 }
 
