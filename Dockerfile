@@ -26,6 +26,13 @@ COPY . /app/
 RUN find /app/scorecard/static/scorecard/vendor/ -name "*.js" -exec sh -c 'touch "${1}.map"' _ {} \;
 # And specific ones if names don't match exactly (like chart.min.js -> chart.umd.js.map)
 RUN touch /app/scorecard/static/scorecard/vendor/chart.umd.js.map
+# And missing Leaflet images referenced in leaflet.css
+RUN mkdir -p /app/scorecard/static/scorecard/vendor/images/ && \
+    touch /app/scorecard/static/scorecard/vendor/images/layers.png \
+          /app/scorecard/static/scorecard/vendor/images/layers-2x.png \
+          /app/scorecard/static/scorecard/vendor/images/marker-icon.png \
+          /app/scorecard/static/scorecard/vendor/images/marker-icon-2x.png \
+          /app/scorecard/static/scorecard/vendor/images/marker-shadow.png
 
 # Collect static files during build (speeds up container startup)
 # Using a dummy secret key for the build process
