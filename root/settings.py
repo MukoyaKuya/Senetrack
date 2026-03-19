@@ -210,6 +210,8 @@ if not DEBUG:
     STORAGES["staticfiles"] = {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     }
+    # Don't fail if source maps or other referenced files are missing
+    WHITENOISE_MANIFEST_STRICT = False
 
 # Use Cloudinary for media storage on Cloud Run or when explicitly requested
 if not DEBUG or _IS_CLOUD_RUN or os.environ.get('USE_CLOUDINARY', 'false').lower() == 'true':
