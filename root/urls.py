@@ -19,7 +19,10 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
-from django.http import HttpResponse
+from pathlib import Path
+
+from django.http import HttpResponse, Http404, FileResponse
+from django.shortcuts import render
 
 def robots_txt(request):
     lines = [
@@ -29,8 +32,29 @@ def robots_txt(request):
     ]
     return HttpResponse("\n".join(lines), content_type="text/plain")
 
+
+def admin_alias_page(request):
+    return render(
+        request,
+        "scorecard/admin_alias.html",
+        {
+            "admin_url": f"/{settings.DJANGO_ADMIN_PATH}/",
+            "image_url": "/admin/image/",
+        },
+    )
+
+
+def admin_alias_image(request):
+    image_path = settings.BASE_DIR / "scorecard" / "static" / "scorecard" / "images" / "admin_alias.png"
+    if not image_path.exists():
+        raise Http404("Admin alias image not found")
+    return FileResponse(image_path.open("rb"), content_type="image/png")
+
 urlpatterns = [
     path(f'{settings.DJANGO_ADMIN_PATH}/', admin.site.urls),
+    path('admin', admin_alias_page, name='admin-alias'),
+    path('admin/', admin_alias_page, name='admin-alias-slash'),
+    path('admin/image/', admin_alias_image, name='admin-alias-image'),
     path('robots.txt', robots_txt),
     path('', include('scorecard.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
