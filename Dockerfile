@@ -22,6 +22,10 @@ RUN pip install --upgrade pip && \
 # Copy project
 COPY . /app/
 
+# Collect static files during build (speeds up container startup)
+# Using a dummy secret key for the build process
+RUN DJANGO_SECRET_KEY=build-time-insecure-key python manage.py collectstatic --noinput --clear
+
 # Make the startup script executable
 RUN chmod +x /app/scripts/start.sh
 
