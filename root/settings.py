@@ -241,6 +241,15 @@ except (TypeError, ValueError):
 
 LOGIN_REDIRECT_URL = '/admin/'
 
+UNFOLD = {
+    "SIDEBAR": {
+        "show_search": False,
+    },
+    "COMMAND_PALETTE": {
+        "show": False,
+    },
+}
+
 # --- Security hardening ---
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
