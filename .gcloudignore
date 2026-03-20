@@ -15,3 +15,5 @@ __pycache__/
 .idea/
 media/
 static_root/
+.env
+.env.*
