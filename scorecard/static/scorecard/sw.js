@@ -1,5 +1,5 @@
 /* SENETRACK Service Worker - basic offline caching */
-const CACHE_NAME = 'senetrack-v1';
+const CACHE_NAME = 'senetrack-v2';
 const STATIC_ASSETS = [
   '/',
   '/static/scorecard/vendor/tailwind.js',
@@ -22,6 +22,11 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // Bypass cross-origin requests (like Cloudinary images, Mapbox API, etc)
+  if (!event.request.url.startsWith(self.location.origin)) {
+    return;
+  }
+
   if (event.request.mode !== 'navigate' && !event.request.url.match(/\.(js|css|png|jpg|jpeg|gif|ico|woff2?)$/)) {
     return;
   }
