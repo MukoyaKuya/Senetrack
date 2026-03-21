@@ -103,17 +103,24 @@ class Party(models.Model):
 
     @property
     def display_logo_url(self):
-        """Standardized URL resolution for party logos."""
+        """Standardized URL resolution for party logos. Fallback to static for repo-managed assets."""
         from django.conf import settings
+        from django.templatetags.static import static
         url = self.logo.url if self.logo else ""
+        if not url:
+            return ""
         if "res.cloudinary.com" in url:
             return url
         if url.startswith('/media/'):
             is_cloud = os.environ.get('K_SERVICE') is not None
             if not settings.DEBUG or is_cloud:
+                # If these are the repo-managed logos, serve from static (handled by WhiteNoise)
+                relative_path = url.replace('/media/parties/', '')
+                if relative_path in ['upa_logo.png', 'kanu_logo.png', 'anc_logo.png']:
+                    return static(f'scorecard/images/parties/{relative_path}')
+                
                 cloud_name = settings.CLOUDINARY_STORAGE.get('CLOUD_NAME', 'dlj4gpozf')
-                relative_path = url.replace('/media/', '')
-                return f"https://res.cloudinary.com/{cloud_name}/image/upload/{relative_path}"
+                return f"https://res.cloudinary.com/{cloud_name}/image/upload/parties/{relative_path}"
         return url
 
 
