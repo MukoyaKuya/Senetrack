@@ -29,16 +29,42 @@ def add_parties(apps, schema_editor):
             'logo': 'parties/favicon.png',
             'history': 'Democratic Action Party of Kenya (DAP-K) is a political party in Kenya.'
         },
+        # Variants found in Mombasa and other counties (typos/abbreviations)
+        {
+            'name': 'Orange Demographic County (ODM)',
+            'logo': 'parties/lumina-enhanced-1773061990814_1.png', # Map to ODM logo
+            'history': 'Variant/Typo for Orange Democratic Movement (ODM).'
+        },
+        {
+            'name': 'Orange Demographic Movement',
+            'logo': 'parties/lumina-enhanced-1773061990814_1.png', # Map to ODM logo
+            'history': 'Variant/Typo for Orange Democratic Movement (ODM).'
+        },
+        {
+            'name': 'Wiper Democratic Movement',
+            'logo': 'parties/wiperlogo.png', # Map to Wiper logo
+            'history': 'Variant for Wiper Democratic Movement - Kenya.'
+        },
+        {
+            'name': 'Wiper Democratic Movement party',
+            'logo': 'parties/wiperlogo.png', # Map to Wiper logo
+            'history': 'Variant for Wiper Democratic Movement - Kenya.'
+        },
+        {
+            'name': 'INDEPENDENT',
+            'logo': 'parties/favicon.png', # Generic placeholder
+            'history': 'Independent candidates not affiliated with any political party.'
+        },
     ]
     
     for party_data in parties_to_add:
-        Party.objects.get_or_create(
-            name=party_data['name'],
-            defaults={
-                'logo': party_data['logo'],
-                'history': party_data['history']
-            }
-        )
+        # Use filter and exists to avoid potential sequence/get_or_create issues on some DBs
+        if not Party.objects.filter(name=party_data['name']).exists():
+            Party.objects.create(
+                name=party_data['name'],
+                logo=party_data['logo'],
+                history=party_data['history']
+            )
 
 def remove_parties(apps, schema_editor):
     Party = apps.get_model('scorecard', 'Party')
@@ -47,7 +73,12 @@ def remove_parties(apps, schema_editor):
         'Kenya Africa National Union',
         'Amani National Congress',
         'Kenya Union Party',
-        'Democratic Action Party of Kenya'
+        'Democratic Action Party of Kenya',
+        'Orange Demographic County (ODM)',
+        'Orange Demographic Movement',
+        'Wiper Democratic Movement',
+        'Wiper Democratic Movement party',
+        'INDEPENDENT'
     ]
     Party.objects.filter(name__in=names).delete()
 
