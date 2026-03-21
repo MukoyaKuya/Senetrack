@@ -1,0 +1,11 @@
+[
+  {
+    "senator_id": "cheruiyot-aaron",
+    "senator": { "party": "UDA" },
+    "perf": { "speeches": 945, "words_spoken": 116604, "sponsored_bills": 18, "overall_score": 87.12, "grade": "A" }
+  },
+  {
+    "name": "Sifuna",
+    "perf": { "overall_score": 89, "grade": "A", "words_spoken": 86034 }
+  }
+]

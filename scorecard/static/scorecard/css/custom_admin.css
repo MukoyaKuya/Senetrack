@@ -1,0 +1,9 @@
+/* Forcefully hide the django-unfold command palette search overlay */
+div[x-data^="searchCommand"],
+#search-input-command,
+.backdrop-blur-xs.bg-base-900\/80.fixed.inset-0 {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+}

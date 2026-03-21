@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Karibu Admin</title>
+    <style>
+        :root {
+            --text: #f8fafc;
+            --muted: #e2e8f0;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--text);
+            font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+            background: #020617;
+            display: grid;
+            place-items: center;
+            padding: 0;
+            overflow: hidden;
+            position: relative;
+        }
+        .bg-image {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            filter: blur(8px) brightness(0.72);
+            transform: scale(1.04);
+            z-index: 0;
+        }
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at 50% 40%, rgba(15, 23, 42, 0.08) 0%, rgba(2, 6, 23, 0.28) 72%);
+            z-index: 1;
+        }
+        .card {
+            position: relative;
+            z-index: 2;
+            width: min(900px, calc(100% - 48px));
+            background: transparent;
+            border: none;
+            border-radius: 24px;
+            backdrop-filter: none;
+            box-shadow: none;
+            padding: clamp(22px, 5vw, 52px);
+        }
+        .top {
+            text-align: center;
+        }
+        .badge {
+            display: inline-block;
+            margin-bottom: 12px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: #e2e8f0;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+        }
+        h1 {
+            margin: 0;
+            font-size: clamp(2rem, 5vw, 3.4rem);
+            line-height: 1.04;
+            letter-spacing: -0.02em;
+            color: #f8fafc;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.42);
+        }
+        .subtitle {
+            margin: 14px auto 0;
+            max-width: 64ch;
+            font-size: clamp(1rem, 2.4vw, 1.2rem);
+            line-height: 1.6;
+            color: var(--muted);
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.38);
+            display: none;
+        }
+        .actions {
+            margin-top: 24px;
+            text-align: center;
+        }
+        .btn-secondary {
+            display: inline-block;
+            padding: 14px 24px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(15, 23, 42, 0.55);
+            color: #f8fafc;
+            text-decoration: none;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            transition: background-color 0.18s ease, transform 0.18s ease;
+        }
+        .btn-secondary:hover {
+            background: rgba(15, 23, 42, 0.75);
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <img class="bg-image" src="{{ image_url }}" alt="">
+    <div class="overlay"></div>
+    <main class="card">
+        <section class="top">
+            <h1>Sasa unataka ku do nini?</h1>
+        </section>
+
+        <section class="actions">
+            <a class="btn-secondary" href="/">Rudi Home</a>
+        </section>
+    </main>
+</body>
+</html>

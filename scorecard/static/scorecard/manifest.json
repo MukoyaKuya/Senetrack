@@ -1,0 +1,25 @@
+{
+  "name": "SENETRACK | Kenya Senate Performance Tracking",
+  "short_name": "SENETRACK",
+  "description": "Track and assess the performance of Kenyan Senators.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#b91c1c",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/scorecard/images/hero-parliament.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/scorecard/images/hero-parliament.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["government", "politics", "education"]
+}

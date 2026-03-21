@@ -1,0 +1,108 @@
+<!-- Partial Fragment: Parliamentary Performance Engine -->
+<div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+    <!-- Overall Grade Quadrant -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="md:col-span-2 bg-white rounded-[2rem] p-8 border border-slate-200 shadow-sm">
+            <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-8">Metric Weight Analysis
+            </h2>
+            <div class="space-y-6">
+                {% for key, val in results.pillars.items %}
+                <div class="space-y-2">
+                    <div class="flex justify-between text-[10px] font-black uppercase text-slate-500 px-1">
+                        <span>{{ key }}</span>
+                        <span>{{ val }} pts</span>
+                    </div>
+                    <div class="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-blue-600 rounded-full transition-all duration-1000 ease-out"
+                            style="width: {{ val|add:val|add:val }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div
+            class="bg-white rounded-[2rem] p-8 border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">
+            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Aggregate Grade</span>
+            <div
+                class="text-9xl font-black {% if results.grade == 'A' %}text-emerald-600{% else %}text-blue-600{% endif %} py-4 tracking-tighter">
+                {{ results.grade }}
+            </div>
+            <p class="px-6 py-2 bg-slate-100 rounded-full text-[10px] font-black uppercase text-slate-500">{{
+                results.grade_text }}</p>
+        </div>
+    </div>
+
+    <!-- Detailed Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white rounded-[2rem] p-8 border border-slate-200 shadow-sm space-y-6">
+            <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                <span class="w-2 h-2 bg-blue-600 rounded-full"></span> Plenary Participation
+            </h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Speeches</p>
+                    <p class="text-3xl font-extrabold text-slate-900">{{ perf.speeches }}</p>
+                </div>
+                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Attendance</p>
+                    <p class="text-3xl font-extrabold text-slate-900">{{ perf.attendance_rate|floatformat:0 }}%</p>
+                </div>
+            </div>
+            <div class="h-16 flex items-end gap-1.5 pt-4">
+                {% for val in perf.trend_data %}
+                <div class="flex-1 bg-blue-600 rounded-t-md opacity-{{ forloop.counter0|add:2 }}0"
+                    style="height: {{ val }}%"></div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="bg-white rounded-[2rem] p-8 border border-slate-200 shadow-sm flex flex-col justify-between">
+            <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                <span class="w-2 h-2 bg-emerald-500 rounded-full"></span> Committee Work
+            </h3>
+            <div class="flex items-center justify-between py-6">
+                <div class="space-y-2">
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Active Role</p>
+                    <p class="text-xl font-extrabold text-slate-800 leading-tight">{{ perf.committee_role }}</p>
+                    <p class="text-xs font-bold text-slate-400 pt-2 uppercase">Performance Index</p>
+                </div>
+                <div class="relative w-24 h-24 flex items-center justify-center">
+                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="40" fill="transparent" stroke="#f1f5f9" stroke-width="12" />
+                        <circle cx="50" cy="50" r="40" fill="transparent" stroke="#10b981" stroke-width="12"
+                            stroke-dasharray="{{ dash_array }}" stroke-linecap="round" />
+                    </svg>
+                    <span class="absolute font-black text-lg text-slate-700">{{ results.pillars.committee|floatformat:0
+                        }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Qualitative Insights -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-emerald-600 rounded-[2rem] p-8 text-white shadow-lg shadow-emerald-100">
+            <h4 class="text-[10px] font-black uppercase tracking-[0.2em] mb-6 opacity-80">Primary Strengths</h4>
+            <ul class="space-y-4">
+                {% for s in results.insights.strengths %}
+                <li class="flex items-start gap-3 text-sm font-bold leading-tight">
+                    <span class="px-1.5 py-0.5 bg-white/20 rounded text-[10px]">✓</span> {{ s }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="bg-white rounded-[2rem] p-8 border border-orange-200 text-slate-900 shadow-sm">
+            <h4 class="text-[10px] font-black text-orange-500 uppercase tracking-[0.2em] mb-6">Growth Areas</h4>
+            <ul class="space-y-4">
+                {% for i in results.insights.improvements %}
+                <li class="flex items-start gap-3 text-sm font-bold text-slate-700 leading-tight">
+                    <span class="px-1.5 py-0.5 bg-orange-100 text-orange-600 rounded text-[10px]">!</span> {{ i }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+</div>
