@@ -58,13 +58,18 @@ def add_parties(apps, schema_editor):
     ]
     
     for party_data in parties_to_add:
-        # Use filter and exists to avoid potential sequence/get_or_create issues on some DBs
-        if not Party.objects.filter(name=party_data['name']).exists():
-            Party.objects.create(
-                name=party_data['name'],
-                logo=party_data['logo'],
-                history=party_data['history']
-            )
+        Party.objects.update_or_create(
+            name=party_data['name'],
+            defaults={
+                'logo': party_data['logo'],
+                'history': party_data['history']
+            }
+        )
+    
+    # Fix potential sequence issue on Postgres (common after manual data imports/migrations)
+    if 'postgres' in schema_editor.connection.vendor.lower():
+        with schema_editor.connection.cursor() as cursor:
+            cursor.execute("SELECT setval(pg_get_serial_sequence('scorecard_party', 'id'), coalesce(max(id), 1), max(id) IS NOT null) FROM scorecard_party;")
 
 def remove_parties(apps, schema_editor):
     Party = apps.get_model('scorecard', 'Party')

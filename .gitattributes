@@ -1,2 +1,3 @@
-# Ensure shell scripts always use LF line endings
+# Enforce LF line endings for shell scripts
 *.sh text eol=lf
+manage.py text eol=lf
