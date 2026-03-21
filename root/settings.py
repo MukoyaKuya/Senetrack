@@ -268,10 +268,11 @@ CSRF_COOKIE_HTTPONLY = False  # False so JS can read for AJAX if needed; set Tru
 # Note: If using inline scripts/styles, 'unsafe-inline' may be needed initially.
 CSP_DEFAULT_SRC = ("'self'",)
 CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://api.mapbox.com")
-CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://api.mapbox.com")
+CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://api.mapbox.com", "blob:")
 CSP_IMG_SRC = ("'self'", "data:", "https://res.cloudinary.com", "https://api.mapbox.com", "*.tiles.mapbox.com")
 CSP_FONT_SRC = ("'self'", "https://fonts.gstatic.com")
 CSP_CONNECT_SRC = ("'self'", "https://api.mapbox.com", "https://events.mapbox.com")
+CSP_WORKER_SRC = ("'self'", "blob:")
 CSP_FRAME_ANCESTORS = ("'none'",)
 
 if not DEBUG:

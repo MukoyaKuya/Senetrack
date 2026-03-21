@@ -25,6 +25,8 @@ class ContentSecurityPolicyMiddleware:
                 policies.append(f"font-src {' '.join(settings.CSP_FONT_SRC)}")
             if hasattr(settings, 'CSP_CONNECT_SRC'):
                 policies.append(f"connect-src {' '.join(settings.CSP_CONNECT_SRC)}")
+            if hasattr(settings, 'CSP_WORKER_SRC'):
+                policies.append(f"worker-src {' '.join(settings.CSP_WORKER_SRC)}")
             if hasattr(settings, 'CSP_FRAME_ANCESTORS'):
                 policies.append(f"frame-ancestors {' '.join(settings.CSP_FRAME_ANCESTORS)}")
             
