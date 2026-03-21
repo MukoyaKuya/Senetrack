@@ -3,6 +3,18 @@ from django.db import migrations
 def add_parties(apps, schema_editor):
     Party = apps.get_model('scorecard', 'Party')
     
+    # Fix potential sequence issue on Postgres (common after manual data imports/migrations)
+    # MUST run this before any .create() calls if the DB was manually populated
+    if 'postgres' in schema_editor.connection.vendor.lower():
+        with schema_editor.connection.cursor() as cursor:
+            # More robust sequence reset that works even if the table has no rows
+            cursor.execute("""
+                SELECT setval(pg_get_serial_sequence('scorecard_party', 'id'), 
+                              coalesce(max(id), 1), 
+                              max(id) IS NOT null) 
+                FROM scorecard_party;
+            """)
+
     parties_to_add = [
         {
             'name': 'United Progressive Alliance',
@@ -65,11 +77,6 @@ def add_parties(apps, schema_editor):
                 'history': party_data['history']
             }
         )
-    
-    # Fix potential sequence issue on Postgres (common after manual data imports/migrations)
-    if 'postgres' in schema_editor.connection.vendor.lower():
-        with schema_editor.connection.cursor() as cursor:
-            cursor.execute("SELECT setval(pg_get_serial_sequence('scorecard_party', 'id'), coalesce(max(id), 1), max(id) IS NOT null) FROM scorecard_party;")
 
 def remove_parties(apps, schema_editor):
     Party = apps.get_model('scorecard', 'Party')
