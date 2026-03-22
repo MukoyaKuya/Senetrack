@@ -423,6 +423,11 @@ def senator_detail(request, senator_id):
             }
 
     voting_history = _get_voting_history_for_senator(senator)
+    voting_history_count = len(voting_history)
+    voting_participated_count = sum(
+        1 for v in voting_history
+        if (v.get("decision") or "").strip().lower() != "absent"
+    )
 
     return render(
         request,
@@ -440,7 +445,8 @@ def senator_detail(request, senator_id):
             "attendance_heatmap": attendance_heatmap,
             "party_info": party_info,
             "voting_history": voting_history,
-            "voting_history_count": len(voting_history),
+            "voting_history_count": voting_history_count,
+            "voting_participated_count": voting_participated_count,
         },
     )
 

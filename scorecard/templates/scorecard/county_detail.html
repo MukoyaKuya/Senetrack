@@ -82,21 +82,59 @@
     }
 
     /* ── Dashboard CTA ───────────────────────────────────── */
+    .dashboard-cta-wrap {
+        position: relative;
+        display: inline-flex;
+    }
+    /* Expanding ping ring */
+    .dashboard-cta-wrap::before {
+        content: '';
+        position: absolute;
+        inset: -3px;
+        border-radius: 12px;
+        background: rgba(16, 185, 129, 0.45);
+        animation: cta-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+        pointer-events: none;
+    }
+    @keyframes cta-ping {
+        0%   { transform: scale(1);   opacity: 0.7; }
+        80%, 100% { transform: scale(1.35); opacity: 0; }
+    }
     .dashboard-cta {
-        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        position: relative;
+        background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
         color: white !important;
-        font-weight: 600;
-        box-shadow: 0 2px 8px rgba(5, 150, 105, 0.35);
-        animation: dashboard-pulse 2s ease-in-out infinite;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+        box-shadow:
+            0 0 0 1px rgba(16, 185, 129, 0.6),
+            0 4px 14px rgba(5, 150, 105, 0.55),
+            0 0 28px rgba(16, 185, 129, 0.35);
+        animation: cta-glow 2.2s ease-in-out infinite;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+    @keyframes cta-glow {
+        0%, 100% {
+            box-shadow:
+                0 0 0 1px rgba(16, 185, 129, 0.6),
+                0 4px 14px rgba(5, 150, 105, 0.55),
+                0 0 28px rgba(16, 185, 129, 0.35);
+        }
+        50% {
+            box-shadow:
+                0 0 0 2px rgba(16, 185, 129, 0.8),
+                0 6px 24px rgba(5, 150, 105, 0.7),
+                0 0 48px rgba(16, 185, 129, 0.5),
+                0 0 8px rgba(255, 255, 255, 0.2) inset;
+        }
     }
     .dashboard-cta:hover {
-        background: linear-gradient(135deg, #047857 0%, #065f46 100%) !important;
-        box-shadow: 0 4px 16px rgba(5, 150, 105, 0.45);
-        transform: scale(1.03);
-    }
-    @keyframes dashboard-pulse {
-        0%, 100% { box-shadow: 0 2px 8px rgba(5, 150, 105, 0.35); }
-        50% { box-shadow: 0 2px 16px rgba(5, 150, 105, 0.5), 0 0 0 2px rgba(5, 150, 105, 0.2); }
+        background: linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%) !important;
+        box-shadow:
+            0 0 0 2px rgba(52, 211, 153, 0.9),
+            0 8px 28px rgba(5, 150, 105, 0.8),
+            0 0 60px rgba(16, 185, 129, 0.6) !important;
+        transform: scale(1.05) translateY(-1px);
     }
 </style>
 {% endblock %}
@@ -123,10 +161,12 @@
                     </a>
                     {% endif %}
                     {% if county.development_dashboard_url %}
-                    <a href="{{ county.development_dashboard_url }}" target="_blank" rel="noopener noreferrer" class="dashboard-cta inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all duration-200">
-                        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
-                        Development dashboard
-                    </a>
+                    <span class="dashboard-cta-wrap">
+                        <a href="{{ county.development_dashboard_url }}" target="_blank" rel="noopener noreferrer" class="dashboard-cta inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm">
+                            <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                            Development dashboard
+                        </a>
+                    </span>
                     {% endif %}
                 </div>
             </div>

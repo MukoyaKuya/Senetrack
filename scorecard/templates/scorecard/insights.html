@@ -1,9 +1,9 @@
 {% extends "scorecard/base_light.html" %}
 {% load static humanize scorecard_extras %}
 
-{% block title %}Data Insights{% endblock %}
+{% block title %}Data Insights 2025/2026{% endblock %}
 {% block meta_description %}Analytics dashboard for Kenya Senate performance data.{% endblock %}
-{% block og_title %}Data Insights | Kenya Senate Scorecard{% endblock %}
+{% block og_title %}Data Insights 2025/2026 | Kenya Senate Scorecard{% endblock %}
 {% block og_description %}Analytics dashboard for Kenya Senate performance data.{% endblock %}
 
 {% block nav %}
@@ -21,7 +21,7 @@
 <header class="bg-black text-white border-b border-slate-800">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-            <h1 class="font-brutal text-3xl md:text-4xl font-black tracking-tight uppercase">Data Insights</h1>
+            <h1 class="font-brutal text-3xl md:text-4xl font-black tracking-tight uppercase">Data Insights 2025/2026</h1>
             <p class="text-slate-300 mt-2 text-sm md:text-base font-medium max-w-xl">
                 Explore attendance, voting, legislative activity, and overall performance across Kenya's Senate.
             </p>
@@ -108,10 +108,12 @@
             </h2>
             <div class="flex items-center gap-2 text-xs sm:text-sm">
                 <span class="text-slate-500 font-semibold uppercase tracking-wide">View</span>
-                <select id="senatorCardView" class="text-xs sm:text-sm border border-slate-300 rounded px-2 py-1 bg-white">
-                    <option value="row">Top row only</option>
-                    <option value="all">All in view</option>
-                </select>
+                <div class="flex rounded border border-slate-300 overflow-hidden text-xs font-semibold">
+                    <button type="button" id="viewBtnRow" onclick="setCardView('row')"
+                        class="px-3 py-1.5 bg-slate-800 text-white transition-colors">Top 6 Senators</button>
+                    <button type="button" id="viewBtnAll" onclick="setCardView('all')"
+                        class="px-3 py-1.5 bg-white text-slate-600 hover:bg-slate-50 transition-colors">All in view</button>
+                </div>
             </div>
         </div>
         <div id="senatorCardsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
@@ -875,22 +877,35 @@
 
     (function() {
         var grid = document.getElementById('senatorCardsGrid');
-        var select = document.getElementById('senatorCardView');
-        if (!grid || !select) return;
+        if (!grid) return;
         var cards = Array.prototype.slice.call(grid.querySelectorAll('[data-senator-card]')) || [];
+        var currentMode = 'row';
 
         function applyMode() {
-            var mode = select.value || 'row';
             cards.forEach(function(card, idx) {
-                if (mode === 'row' && idx >= 6) {
+                if (currentMode === 'row' && idx >= 6) {
                     card.classList.add('hidden');
                 } else {
                     card.classList.remove('hidden');
                 }
             });
+            var btnRow = document.getElementById('viewBtnRow');
+            var btnAll = document.getElementById('viewBtnAll');
+            if (btnRow && btnAll) {
+                btnRow.className = currentMode === 'row'
+                    ? 'px-3 py-1.5 bg-slate-800 text-white transition-colors'
+                    : 'px-3 py-1.5 bg-white text-slate-600 hover:bg-slate-50 transition-colors';
+                btnAll.className = currentMode === 'all'
+                    ? 'px-3 py-1.5 bg-slate-800 text-white transition-colors'
+                    : 'px-3 py-1.5 bg-white text-slate-600 hover:bg-slate-50 transition-colors';
+            }
         }
 
-        select.addEventListener('change', applyMode);
+        window.setCardView = function(mode) {
+            currentMode = mode;
+            applyMode();
+        };
+
         applyMode();
     })();
 

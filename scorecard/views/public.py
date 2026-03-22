@@ -92,7 +92,7 @@ def senator_list(request):
                 "overall_score": overall_score,
                 "grade": grade,
                 "is_deceased": getattr(s, "is_deceased", False),
-                "is_still_computing": getattr(s, "is_still_computing", False),
+                "is_still_computing": getattr(s, "is_still_computing", False) or (overall_score > 0 and overall_score <= 50),
                 "is_no_longer_serving": getattr(s, "is_no_longer_serving", False),
                 "frontier": frontier,
             }

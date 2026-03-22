@@ -403,11 +403,11 @@
                 {% include "partials/metric_card.html" with title="Legislative Contributions" value=results.pillars.legislative total="20" trend="up" change="25%" subtext="Above National Average" icon="file-text" bg_class="bg-orange-50" text_class="text-orange-600" bar_class="bg-orange-400" %}
                 {% endif %}
                 {% if results.pillars.voting < 7 %}
-                {% include "partials/metric_card.html" with title="Voting Patterns" value=results.pillars.voting total="20" trend="up" change="National Average" icon="check-square" bg_class="bg-red-50" text_class="text-red-600" bar_class="bg-red-400" %}
+                {% include "partials/metric_card.html" with title="Voting Instance" value=results.pillars.voting total="20" trend="up" change="National Average" icon="check-square" bg_class="bg-red-50" text_class="text-red-600" bar_class="bg-red-400" %}
                 {% elif results.pillars.voting > 16 %}
-                {% include "partials/metric_card.html" with title="Voting Patterns" value=results.pillars.voting total="20" trend="up" change="National Average" icon="check-square" bg_class="bg-emerald-50" text_class="text-emerald-600" bar_class="bg-emerald-400" %}
+                {% include "partials/metric_card.html" with title="Voting Instance" value=results.pillars.voting total="20" trend="up" change="National Average" icon="check-square" bg_class="bg-emerald-50" text_class="text-emerald-600" bar_class="bg-emerald-400" %}
                 {% else %}
-                {% include "partials/metric_card.html" with title="Voting Patterns" value=results.pillars.voting total="20" trend="up" change="National Average" icon="check-square" bg_class="bg-orange-50" text_class="text-orange-600" bar_class="bg-orange-400" %}
+                {% include "partials/metric_card.html" with title="Voting Instance" value=results.pillars.voting total="20" trend="up" change="National Average" icon="check-square" bg_class="bg-orange-50" text_class="text-orange-600" bar_class="bg-orange-400" %}
                 {% endif %}
                 {% include "partials/metric_card.html" with title="Committee Membership" value=results.pillars.committee total="25" trend="up" change="15%" subtext="Above National Average" icon="users" bg_class="bg-teal-50" text_class="text-teal-600" bar_class="bg-teal-400" %}
                 {% if senator.nomination %}
@@ -612,7 +612,7 @@
                     </div>
                 </div>
 
-                <!-- Voting Patterns (collapsible) - shown for all senators -->
+                <!-- Voting Instance (collapsible) - shown for all senators -->
                 <div class="bg-white rounded-lg p-6 border border-slate-200 card-hover">
                     <details class="group">
                         <summary class="flex items-center justify-between cursor-pointer list-none [&::-webkit-details-marker]:hidden">
@@ -622,11 +622,11 @@
                                 </div>
                                 <div>
                                     <h3 class="font-brutal font-bold text-slate-900 uppercase tracking-wider text-sm">
-                                        Voting Patterns
+                                        Voting Instance
                                     </h3>
                                     <p class="text-[11px] text-slate-500">
                                         {% if voting_history_count %}
-                                        Voting history: {{ voting_history_count }} recorded votes
+                                        Voting history: {{ voting_participated_count }} of {{ voting_history_count }} votes
                                         {% else %}
                                         Voting history not yet recorded
                                         {% endif %}
