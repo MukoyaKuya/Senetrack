@@ -225,7 +225,8 @@ if not DEBUG or _IS_CLOUD_RUN or os.environ.get('USE_CLOUDINARY', 'false').lower
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Mapbox access token for frontier map (get at https://account.mapbox.com/access-tokens/)
-MAPBOX_ACCESS_TOKEN = os.environ.get('MAPBOX_ACCESS_TOKEN', 'pk.eyJ1IjoiZGVsdG8yNTQiLCJhIjoiY21taTNoeTl4MGFnMzJwczdoanZzdXhzcyJ9.VfdR2KBhUBPsLKGGl4Uusw')
+# Must be set via MAPBOX_ACCESS_TOKEN env var — no default provided.
+MAPBOX_ACCESS_TOKEN = os.environ.get('MAPBOX_ACCESS_TOKEN', '')
 
 # Kenya counties GeoJSON for frontier map (counties colored by region)
 KENYA_COUNTIES_GEOJSON_URL = os.environ.get(
@@ -283,3 +284,46 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+
+# --- Logging ---
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{levelname}] {asctime} {name}: {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '[{levelname}] {name}: {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose' if not DEBUG else 'simple',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'scorecard': {
+            'handlers': ['console'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+    },
+}

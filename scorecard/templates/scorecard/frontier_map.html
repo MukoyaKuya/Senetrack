@@ -21,7 +21,7 @@
             <h1 class="font-brutal text-2xl md:text-3xl font-black tracking-tight uppercase">Frontier Impact Map</h1>
             <p class="text-amber-100 mt-1 text-sm">Kenya's 8 frontiers — colored by region</p>
         </div>
-        <a href="{% url 'frontier-insights' %}" class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm font-semibold rounded-lg transition-colors">
+        <a href="{% url 'scorecard:frontier-insights' %}" class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm font-semibold rounded-lg transition-colors">
             Back to Analytics
         </a>
     </div>
@@ -55,10 +55,11 @@
 {% endblock %}
 
 {% block extra_js %}
+{{ map_metadata_json|json_script:"map-metadata-data" }}
 <script src="{% static 'scorecard/vendor/leaflet.js' %}" defer></script>
 <script>
 (function() {
-    const metadata = {{ map_metadata_json|safe }};
+    const metadata = JSON.parse(document.getElementById('map-metadata-data').textContent);
     const geojsonUrl = '{{ geojson_static_url|escapejs }}';
     const countyUrlTemplate = '{{ county_url_template|escapejs }}';
     const mapEl = document.getElementById('map');

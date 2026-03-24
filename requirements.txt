@@ -1,12 +1,28 @@
-Django>=5.2,<6
-django-unfold>=0.77
+Django>=5.2,<7
+django-unfold>=0.76
 Pillow>=10.0
 python-dotenv>=1.0
 # Concurrency & production
-psycopg2-binary>=2.9
-redis>=5.0
-gunicorn>=22.0
-whitenoise>=6.6
-dj-database-url>=2.1
+psycopg2-binary>=2.9,<3
+redis>=5.0,<6
+gunicorn>=22.0,<24
+whitenoise>=6.6,<7
+dj-database-url>=2.1,<4
 django-cloudinary-storage>=0.3.0
-cloudinary>=1.41.0
+cloudinary>=1.41.0,<2
+
+# ---- Pinned versions (last verified working) ----
+# Run `pip freeze | grep -E "^(Django|django-unfold|Pillow|...)" > requirements.lock.txt`
+# to generate a lockfile for fully reproducible production builds.
+# Tested with:
+#   Django==6.0.2
+#   django-unfold==0.76.0
+#   Pillow==12.1.1
+#   python-dotenv==1.2.1
+#   psycopg2-binary==2.9.11
+#   redis==5.2.1
+#   gunicorn==23.0.0
+#   whitenoise==6.11.0
+#   dj-database-url==3.0.1
+#   django-cloudinary-storage==0.3.0
+#   cloudinary==1.44.1

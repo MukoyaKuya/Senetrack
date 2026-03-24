@@ -1,3 +1,5 @@
+import logging
+
 from django.core.cache import cache
 from django.db import connection
 from django.db.models import Prefetch
@@ -9,6 +11,9 @@ from scorecard.engine import get_engine_result, perf_to_engine_data
 from scorecard.models import ParliamentaryPerformance, Senator, Party, SenatorQuote, VotingRecord
 from scorecard.security import sanitize_engine_type, sanitize_senator_id, sanitize_senator_ids
 from scorecard.services.senators import build_senator_display
+from scorecard.data.legacy_voting_history import VOTING_HISTORY
+
+logger = logging.getLogger(__name__)
 
 RANKING_CACHE_KEY = "senator_ranking_data_v3"
 RANKING_CACHE_TIMEOUT = 300  # 5 min
@@ -26,259 +31,6 @@ def _get_ranking_data():
     )
     cache.set(RANKING_CACHE_KEY, rows, RANKING_CACHE_TIMEOUT)
     return rows
-
-
-# Static voting history records from public sources (Mzalendo / Parliament)
-VOTING_HISTORY = {
-    "samson-kiprotich-cherargei": [
-        {
-            "date": "October 12, 2023",
-            "title": "The Social Health Insurance Bill (National Assembly Bill No. 58 of 2023)",
-            "decision": "Yes",
-        },
-        {
-            "date": "March 14, 2024",
-            "title": "Kisii Deputy Governor Impeachment - Grounds 4",
-            "decision": "No",
-        },
-        {
-            "date": "March 14, 2024",
-            "title": "Kisii Deputy Governor Impeachment - Grounds 3",
-            "decision": "No",
-        },
-        {
-            "date": "March 14, 2024",
-            "title": "Kisii Deputy Governor Impeachment - Grounds 2",
-            "decision": "No",
-        },
-        {
-            "date": "March 14, 2024",
-            "title": "Kisii Deputy Governor Impeachment - Grounds 1",
-            "decision": "No",
-        },
-        {
-            "date": "August 14, 2025",
-            "title": "The County Governments Allocation Bill, 2025 (Committee of the Whole)",
-            "decision": "Yes",
-        },
-        {
-            "date": "October 17, 2024",
-            "title": "Business Laws (Amendment) Bill 2024",
-            "decision": "Yes",
-        },
-        {
-            "date": "October 29, 2024",
-            "title": "Sugar Bill",
-            "decision": "Yes",
-        },
-        {
-            "date": "October 17, 2024",
-            "title": "Rigathi Gachagua Impeachment - Grounds 11",
-            "decision": "No",
-        },
-        {
-            "date": "October 17, 2024",
-            "title": "Rigathi Gachagua Impeachment - Grounds 10",
-            "decision": "Yes",
-        },
-        {
-            "date": "October 17, 2024",
-            "title": "Rigathi Gachagua Impeachment - Grounds 9",
-            "decision": "Yes",
-        },
-        {
-            "date": "October 17, 2024",
-            "title": "Rigathi Gachagua Impeachment - Grounds 8",
-            "decision": "Yes",
-        },
-        {
-            "date": "October 17, 2024",
-            "title": "Rigathi Gachagua Impeachment - Grounds 7",
-            "decision": "Yes",
-        },
-        {
-            "date": "October 17, 2024",
-            "title": "Rigathi Gachagua Impeachment - Grounds 6",
-            "decision": "Yes",
-        },
-        {
-            "date": "October 17, 2024",
-            "title": "Rigathi Gachagua Impeachment - Grounds 5",
-            "decision": "Yes",
-        },
-        {
-            "date": "October 17, 2024",
-            "title": "Rigathi Gachagua Impeachment - Grounds 4",
-            "decision": "Yes",
-        },
-        {
-            "date": "October 17, 2024",
-            "title": "Rigathi Gachagua Impeachment - Grounds 3",
-            "decision": "Yes",
-        },
-        {
-            "date": "October 17, 2024",
-            "title": "Rigathi Gachagua Impeachment - Grounds 2",
-            "decision": "No",
-        },
-        {
-            "date": "October 17, 2024",
-            "title": "Rigathi Gachagua Impeachment - Grounds 1",
-            "decision": "Yes",
-        },
-        {
-            "date": "March 12, 2024",
-            "title": "Affordable Housing Bill 2024",
-            "decision": "Yes",
-        },
-    ],
-    "aaron-cheruiyot": [
-        {
-            "date": "October 12, 2023",
-            "title": "The Social Health Insurance Bill (National Assembly Bill No. 58 of 2023)",
-            "decision": "Yes",
-        },
-        {
-            "date": "March 14, 2024",
-            "title": "Kisii Deputy Governor Impeachment - Grounds 4",
-            "decision": "No",
-        },
-        {
-            "date": "March 14, 2024",
-            "title": "Kisii Deputy Governor Impeachment - Grounds 3",
-            "decision": "No",
-        },
-        {
-            "date": "March 14, 2024",
-            "title": "Kisii Deputy Governor Impeachment - Grounds 2",
-            "decision": "No",
-        },
-        {
-            "date": "March 14, 2024",
-            "title": "Kisii Deputy Governor Impeachment - Grounds 1",
-            "decision": "No",
-        },
-        {
-            "date": "August 14, 2025",
-            "title": "The County Governments Allocation Bill, 2025 (Committee of the Whole)",
-            "decision": "Yes",
-        },
-        {
-            "date": "October 17, 2024",
-            "title": "Business Laws (Amendment) Bill 2024",
-            "decision": "Yes",
-        },
-        {
-            "date": "October 29, 2024",
-            "title": "Sugar Bill",
-            "decision": "Yes",
-        },
-        {
-            "date": "October 17, 2024",
-            "title": "Rigathi Gachagua Impeachment - Grounds 11",
-            "decision": "No",
-        },
-        {
-            "date": "October 17, 2024",
-            "title": "Rigathi Gachagua Impeachment - Grounds 10",
-            "decision": "Yes",
-        },
-        {
-            "date": "October 17, 2024",
-            "title": "Rigathi Gachagua Impeachment - Grounds 9",
-            "decision": "Yes",
-        },
-        {
-            "date": "October 17, 2024",
-            "title": "Rigathi Gachagua Impeachment - Grounds 8",
-            "decision": "No",
-        },
-        {
-            "date": "October 17, 2024",
-            "title": "Rigathi Gachagua Impeachment - Grounds 7",
-            "decision": "No",
-        },
-        {
-            "date": "October 17, 2024",
-            "title": "Rigathi Gachagua Impeachment - Grounds 6",
-            "decision": "Yes",
-        },
-        {
-            "date": "October 17, 2024",
-            "title": "Rigathi Gachagua Impeachment - Grounds 5",
-            "decision": "Yes",
-        },
-        {
-            "date": "October 17, 2024",
-            "title": "Rigathi Gachagua Impeachment - Grounds 4",
-            "decision": "Yes",
-        },
-        {
-            "date": "October 17, 2024",
-            "title": "Rigathi Gachagua Impeachment - Grounds 3",
-            "decision": "No",
-        },
-        {
-            "date": "October 17, 2024",
-            "title": "Rigathi Gachagua Impeachment - Grounds 2",
-            "decision": "Yes",
-        },
-        {
-            "date": "October 17, 2024",
-            "title": "Rigathi Gachagua Impeachment - Grounds 1",
-            "decision": "Yes",
-        },
-        {
-            "date": "March 12, 2024",
-            "title": "Affordable Housing Bill 2024",
-            "decision": "Yes",
-        },
-    ],
-    "murungi-kathuri": [
-        {"date": "October 12, 2023", "title": "The Social Health Insurance Bill (National Assembly Bill No. 58 of 2023)", "decision": "Yes"},
-        {"date": "March 14, 2024", "title": "Kisii Deputy Governor Impeachment - Grounds 4", "decision": "Yes"},
-        {"date": "March 14, 2024", "title": "Kisii Deputy Governor Impeachment - Grounds 3", "decision": "Yes"},
-        {"date": "March 14, 2024", "title": "Kisii Deputy Governor Impeachment - Grounds 2", "decision": "Yes"},
-        {"date": "March 14, 2024", "title": "Kisii Deputy Governor Impeachment - Grounds 1", "decision": "Yes"},
-        {"date": "August 14, 2025", "title": "The County Governments Allocation Bill, 2025 (Committee of the Whole)", "decision": "Yes"},
-        {"date": "October 17, 2024", "title": "Business Laws (Amendment) Bill 2024", "decision": "Yes"},
-        {"date": "October 29, 2024", "title": "Sugar Bill", "decision": "Absent"},
-        {"date": "October 17, 2024", "title": "Rigathi Gachagua Impeachment - Grounds 11", "decision": "No"},
-        {"date": "October 17, 2024", "title": "Rigathi Gachagua Impeachment - Grounds 10", "decision": "No"},
-        {"date": "October 17, 2024", "title": "Rigathi Gachagua Impeachment - Grounds 9", "decision": "Yes"},
-        {"date": "October 17, 2024", "title": "Rigathi Gachagua Impeachment - Grounds 8", "decision": "No"},
-        {"date": "October 17, 2024", "title": "Rigathi Gachagua Impeachment - Grounds 7", "decision": "No"},
-        {"date": "October 17, 2024", "title": "Rigathi Gachagua Impeachment - Grounds 6", "decision": "Yes"},
-        {"date": "October 17, 2024", "title": "Rigathi Gachagua Impeachment - Grounds 5", "decision": "Yes"},
-        {"date": "October 17, 2024", "title": "Rigathi Gachagua Impeachment - Grounds 4", "decision": "No"},
-        {"date": "October 17, 2024", "title": "Rigathi Gachagua Impeachment - Grounds 3", "decision": "No"},
-        {"date": "October 17, 2024", "title": "Rigathi Gachagua Impeachment - Grounds 2", "decision": "No"},
-        {"date": "October 17, 2024", "title": "Rigathi Gachagua Impeachment - Grounds 1", "decision": "Yes"},
-        {"date": "March 12, 2024", "title": "Affordable Housing Bill 2024", "decision": "Yes"},
-    ],
-    "stewart-mwachiru-shadrack-madzayo": [
-        {"date": "October 12, 2023", "title": "The Social Health Insurance Bill (National Assembly Bill No. 58 of 2023)", "decision": "Absent"},
-        {"date": "March 14, 2024", "title": "Kisii Deputy Governor Impeachment - Grounds 4", "decision": "Yes"},
-        {"date": "March 14, 2024", "title": "Kisii Deputy Governor Impeachment - Grounds 3", "decision": "Yes"},
-        {"date": "March 14, 2024", "title": "Kisii Deputy Governor Impeachment - Grounds 2", "decision": "Yes"},
-        {"date": "March 14, 2024", "title": "Kisii Deputy Governor Impeachment - Grounds 1", "decision": "Yes"},
-        {"date": "August 14, 2025", "title": "The County Governments Allocation Bill, 2025 (Committee of the Whole)", "decision": "Yes"},
-        {"date": "October 17, 2024", "title": "Business Laws (Amendment) Bill 2024", "decision": "Absent"},
-        {"date": "October 29, 2024", "title": "Sugar Bill", "decision": "Yes"},
-        {"date": "October 17, 2024", "title": "Rigathi Gachagua Impeachment - Grounds 11", "decision": "Yes"},
-        {"date": "October 17, 2024", "title": "Rigathi Gachagua Impeachment - Grounds 10", "decision": "No"},
-        {"date": "October 17, 2024", "title": "Rigathi Gachagua Impeachment - Grounds 9", "decision": "Yes"},
-        {"date": "October 17, 2024", "title": "Rigathi Gachagua Impeachment - Grounds 8", "decision": "Yes"},
-        {"date": "October 17, 2024", "title": "Rigathi Gachagua Impeachment - Grounds 7", "decision": "No"},
-        {"date": "October 17, 2024", "title": "Rigathi Gachagua Impeachment - Grounds 6", "decision": "Yes"},
-        {"date": "October 17, 2024", "title": "Rigathi Gachagua Impeachment - Grounds 5", "decision": "Yes"},
-        {"date": "October 17, 2024", "title": "Rigathi Gachagua Impeachment - Grounds 4", "decision": "Yes"},
-        {"date": "October 17, 2024", "title": "Rigathi Gachagua Impeachment - Grounds 3", "decision": "No"},
-        {"date": "October 17, 2024", "title": "Rigathi Gachagua Impeachment - Grounds 2", "decision": "No"},
-        {"date": "October 17, 2024", "title": "Rigathi Gachagua Impeachment - Grounds 1", "decision": "Yes"},
-        {"date": "March 12, 2024", "title": "Affordable Housing Bill 2024", "decision": "No"},
-    ],
-}
 
 
 def _get_voting_history_for_senator(senator):
@@ -311,8 +63,7 @@ def _get_voting_history_for_senator(senator):
             if history:
                 return history
     except Exception:
-        # On any DB or introspection issue, defer to legacy static data.
-        pass
+            logger.exception("Failed to fetch voting history from DB for senator %s; falling back to static data.", senator.senator_id)
 
     return VOTING_HISTORY.get(senator.senator_id, [])
 
@@ -364,6 +115,7 @@ def senator_detail(request, senator_id):
             else:
                 results.setdefault("insights", {"strengths": [], "improvements": []})
         except Exception:
+            logger.exception("Failed to build profile insights for senator %s.", clean_id)
             results.setdefault("insights", {"strengths": [], "improvements": []})
 
     ranking_data = _get_ranking_data()

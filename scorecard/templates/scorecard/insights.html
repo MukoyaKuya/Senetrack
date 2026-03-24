@@ -26,7 +26,7 @@
                 Explore attendance, voting, legislative activity, and overall performance across Kenya's Senate.
             </p>
         </div>
-        <a href="{% url 'insights-export-csv' %}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors shadow-lg shadow-emerald-900/30 shrink-0" title="Download full senator performance data as CSV">
+        <a href="{% url 'scorecard:insights-export-csv' %}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors shadow-lg shadow-emerald-900/30 shrink-0" title="Download full senator performance data as CSV">
             <i data-lucide="download" class="w-4 h-4"></i>
             Export CSV
         </a>
@@ -89,7 +89,7 @@
             </div>
             <button type="submit" class="px-4 py-1.5 bg-slate-800 text-white text-sm font-semibold rounded hover:bg-slate-700">Apply</button>
             {% if filters.party or filters.frontier or filters.county %}
-            <a href="{% url 'data-insights' %}" class="px-4 py-1.5 text-slate-600 text-sm font-medium hover:text-slate-900">Clear</a>
+            <a href="{% url 'scorecard:data-insights' %}" class="px-4 py-1.5 text-slate-600 text-sm font-medium hover:text-slate-900">Clear</a>
             {% endif %}
         </form>
         {% if deceased_excluded %}<p class="mt-2 text-xs text-slate-500">Deceased senators excluded from analytics.</p>{% endif %}
@@ -118,7 +118,7 @@
         </div>
         <div id="senatorCardsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {% for s in filtered_senators %}
-            <a href="{% url 'senator-detail' s.senator_id %}" class="block group" data-senator-card="1">
+            <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="block group" data-senator-card="1">
                 <div class="bg-white border border-slate-200 rounded-xl overflow-hidden card-hover flex flex-col h-full shadow-sm hover:border-slate-400">
                     <div class="aspect-[3/4] w-full bg-slate-100 relative overflow-hidden">
                         {% if s.display_image_url %}
@@ -159,7 +159,7 @@
             {% if active_senators %}
             <ul class="mt-3 space-y-1 max-h-32 overflow-y-auto text-sm text-slate-600">
                 {% for s in active_senators %}
-                <li><a href="{% url 'senator-detail' s.senator_id %}" class="hover:text-blue-600 hover:underline">{{ s.name }}</a></li>
+                <li><a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="hover:text-blue-600 hover:underline">{{ s.name }}</a></li>
                 {% endfor %}
             </ul>
             {% endif %}
@@ -215,7 +215,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.attendance %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-emerald-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-emerald-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-emerald-700 whitespace-nowrap">{{ s.attendance_rate }}%</span>
                     </li>
                     {% empty %}
@@ -228,7 +228,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.sponsored_bills %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-blue-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-blue-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-blue-700 whitespace-nowrap">{{ s.sponsored_bills }}</span>
                     </li>
                     {% empty %}
@@ -241,7 +241,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.passed_bills %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-violet-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-violet-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-violet-700 whitespace-nowrap">{{ s.passed_bills }}</span>
                     </li>
                     {% empty %}
@@ -254,7 +254,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.pass_rate %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-amber-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-amber-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-amber-700 whitespace-nowrap">{{ s.passed_bills }}/{{ s.sponsored_bills }}</span>
                     </li>
                     {% empty %}
@@ -267,7 +267,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.speeches %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-slate-900 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-slate-900 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-slate-800 whitespace-nowrap">{{ s.speeches }}</span>
                     </li>
                     {% empty %}
@@ -280,7 +280,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.words_spoken %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-red-700 whitespace-nowrap">{{ s.words_spoken|intcomma }}</span>
                     </li>
                     {% empty %}
@@ -293,7 +293,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.motions_sponsored %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-red-700 whitespace-nowrap">{{ s.motions_sponsored }}</span>
                     </li>
                     {% empty %}
@@ -306,7 +306,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.sessions_attended %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-red-700 whitespace-nowrap">{{ s.sessions_attended }}</span>
                     </li>
                     {% empty %}
@@ -319,7 +319,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.bills_per_speech %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-red-700 whitespace-nowrap">{{ s.bills_per_speech }}</span>
                     </li>
                     {% empty %}<li class="text-xs text-slate-400">No data.</li>{% endfor %}
@@ -330,7 +330,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.words_percentile %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-red-700 whitespace-nowrap">{{ s.words_percentile }}%</span>
                     </li>
                     {% empty %}<li class="text-xs text-slate-400">No data.</li>{% endfor %}
@@ -341,7 +341,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.verbosity %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-red-700 whitespace-nowrap">{{ s.words_per_speech }}</span>
                     </li>
                     {% empty %}
@@ -354,7 +354,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.amendments %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-rose-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-rose-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-rose-700 whitespace-nowrap">{{ s.amendments }}</span>
                     </li>
                     {% empty %}
@@ -367,7 +367,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.committee_attendance %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-teal-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-teal-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-teal-700 whitespace-nowrap">{{ s.committee_attendance }}%</span>
                     </li>
                     {% empty %}
@@ -380,7 +380,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.vote_rate %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-red-700 whitespace-nowrap">{{ s.vote_rate }}%</span>
                     </li>
                     {% empty %}
@@ -393,7 +393,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.county_representation %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-amber-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-amber-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-amber-700 whitespace-nowrap">{{ s.county_representation }}/10</span>
                     </li>
                     {% empty %}
@@ -406,7 +406,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.oversight_actions %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-cyan-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-cyan-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-cyan-700 whitespace-nowrap">{{ s.oversight_actions }}</span>
                     </li>
                     {% empty %}
@@ -419,7 +419,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.most_votes_missed %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-rose-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-rose-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-rose-700 whitespace-nowrap">{{ s.votes_missed }}</span>
                     </li>
                     {% empty %}
@@ -432,7 +432,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.high_quality_legislative %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-emerald-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-emerald-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-emerald-700 whitespace-nowrap">{{ s.pass_rate_pct }}%</span>
                     </li>
                     {% empty %}
@@ -445,7 +445,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.efficiency %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-sky-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-sky-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-sky-700 whitespace-nowrap">{{ s.efficiency }}</span>
                     </li>
                     {% empty %}
@@ -481,7 +481,7 @@
             <ol class="space-y-1.5 text-sm text-slate-700">
                 {% for s in leaderboards.statements_2025 %}
                 <li class="flex justify-between items-center gap-2">
-                    <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-emerald-600 hover:underline">
+                    <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-emerald-600 hover:underline">
                         {{ forloop.counter }}. {{ s.name }}
                     </a>
                     <span class="font-bold text-emerald-700 whitespace-nowrap">
@@ -578,7 +578,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.structural_heavy %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-blue-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-blue-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-blue-700 whitespace-nowrap">S:{{ s.structural_score }} D:{{ s.debate_score }}</span>
                     </li>
                     {% empty %}<li class="text-xs text-slate-400">None.</li>{% endfor %}
@@ -590,7 +590,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.debate_heavy %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-emerald-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-emerald-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-emerald-700 whitespace-nowrap">S:{{ s.structural_score }} D:{{ s.debate_score }}</span>
                     </li>
                     {% empty %}<li class="text-xs text-slate-400">None.</li>{% endfor %}
@@ -602,7 +602,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.balanced_contributors %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-violet-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-violet-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-violet-700 whitespace-nowrap">{{ s.overall_score|floatformat:0 }}</span>
                     </li>
                     {% empty %}<li class="text-xs text-slate-400">None.</li>{% endfor %}
@@ -620,7 +620,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.speeches_per_session %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-amber-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-amber-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-amber-700 whitespace-nowrap">{{ s.speeches_per_session }}/sess</span>
                     </li>
                     {% empty %}<li class="text-xs text-slate-400">No data.</li>{% endfor %}
@@ -632,7 +632,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.silent_attenders %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-rose-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-rose-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-rose-700 whitespace-nowrap">{{ s.sessions_attended }} sess</span>
                     </li>
                     {% empty %}<li class="text-xs text-slate-400">None.</li>{% endfor %}
@@ -643,7 +643,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.bills_per_session %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-cyan-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-cyan-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-cyan-700 whitespace-nowrap">{{ s.bills_per_session }}</span>
                     </li>
                     {% empty %}<li class="text-xs text-slate-400">No data.</li>{% endfor %}
@@ -655,7 +655,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.punchy_speakers %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-teal-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-teal-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-teal-700 whitespace-nowrap">{{ s.speeches }}</span>
                     </li>
                     {% empty %}<li class="text-xs text-slate-400">No data.</li>{% endfor %}
@@ -674,7 +674,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.floor_leader %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-red-700 whitespace-nowrap">{{ s.floor_leader_index }}</span>
                     </li>
                     {% empty %}<li class="text-xs text-slate-400">No data.</li>{% endfor %}
@@ -686,7 +686,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.legislative_workhorse %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-red-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-red-700 whitespace-nowrap">{{ s.legislative_workhorse_index }}</span>
                     </li>
                     {% empty %}<li class="text-xs text-slate-400">No data.</li>{% endfor %}
@@ -698,7 +698,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.high_bills_low_debate %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-amber-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-amber-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-amber-700 whitespace-nowrap">{{ s.sponsored_bills }} bills</span>
                     </li>
                     {% empty %}<li class="text-xs text-slate-400">None.</li>{% endfor %}
@@ -710,7 +710,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.vote_heavy_low_debate %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-amber-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-amber-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-amber-700 whitespace-nowrap">{{ s.vote_rate }}%</span>
                     </li>
                     {% empty %}<li class="text-xs text-slate-400">None.</li>{% endfor %}
@@ -722,7 +722,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.high_motions_low_speeches %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-amber-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-amber-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-amber-700 whitespace-nowrap">{{ s.motions_sponsored }} mot</span>
                     </li>
                     {% empty %}<li class="text-xs text-slate-400">None.</li>{% endfor %}
@@ -748,7 +748,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.all_rounders %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-emerald-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-emerald-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-emerald-700 whitespace-nowrap">{{ s.overall_score|floatformat:0 }}</span>
                     </li>
                     {% empty %}
@@ -762,7 +762,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.gap_high_att_low_leg %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-amber-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-amber-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-amber-700 whitespace-nowrap">{{ s.attendance_rate }}%</span>
                     </li>
                     {% empty %}
@@ -776,7 +776,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in leaderboards.gap_low_att_high_leg %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-blue-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-blue-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-blue-700 whitespace-nowrap">{{ s.sponsored_bills }}+{{ s.passed_bills }}</span>
                     </li>
                     {% empty %}
@@ -789,7 +789,7 @@
                 <ol class="space-y-1.5 text-sm text-slate-700">
                     {% for s in top_improving %}
                     <li class="flex justify-between items-center gap-2">
-                        <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-violet-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                        <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-violet-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                         <span class="font-bold text-violet-700 whitespace-nowrap">+{{ s.trend_change }}</span>
                     </li>
                     {% empty %}
@@ -804,7 +804,7 @@
             <ol class="space-y-1.5 text-sm text-slate-700">
                 {% for s in top_declining %}
                 <li class="flex justify-between items-center gap-2">
-                    <a href="{% url 'senator-detail' s.senator_id %}" class="truncate hover:text-rose-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
+                    <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate hover:text-rose-600 hover:underline">{{ forloop.counter }}. {{ s.name }}</a>
                     <span class="font-bold text-rose-700 whitespace-nowrap">{{ s.trend_change }}</span>
                 </li>
                 {% endfor %}

@@ -56,7 +56,7 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 pb-20 space-y-8">
     <!-- Frontier filter -->
     <section class="bg-white border border-slate-200 rounded-lg p-4">
-        <form method="get" action="{% url 'frontier-insights' %}" class="flex flex-wrap items-end gap-3">
+        <form method="get" action="{% url 'scorecard:frontier-insights' %}" class="flex flex-wrap items-end gap-3">
             <div>
                 <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Frontier</label>
                 <select name="frontier" class="text-sm border border-slate-300 rounded px-2 py-1.5 bg-white min-w-[180px]">
@@ -68,7 +68,7 @@
             </div>
             <button type="submit" class="px-4 py-1.5 bg-amber-700 text-white text-sm font-semibold rounded hover:bg-amber-600">Apply</button>
             {% if filters.frontier %}
-            <a href="{% url 'frontier-insights' %}" class="px-4 py-1.5 text-slate-600 text-sm font-medium hover:text-slate-900">Clear</a>
+            <a href="{% url 'scorecard:frontier-insights' %}" class="px-4 py-1.5 text-slate-600 text-sm font-medium hover:text-slate-900">Clear</a>
             {% endif %}
         </form>
     </section>
@@ -79,7 +79,7 @@
             <p class="text-xs font-semibold text-slate-500 uppercase tracking-[0.18em] mb-1">Senators in View</p>
             <p class="text-3xl font-black text-slate-900">{{ total_active }}</p>
         </div>
-        <a href="{% url 'frontier-map' %}" class="bg-white border border-slate-200 rounded-lg p-4 card-hover block hover:border-amber-300 hover:shadow-md transition-all group">
+        <a href="{% url 'scorecard:frontier-map' %}" class="bg-white border border-slate-200 rounded-lg p-4 card-hover block hover:border-amber-300 hover:shadow-md transition-all group">
             <p class="text-xs font-semibold text-slate-500 uppercase tracking-[0.18em] mb-1">Frontiers</p>
             <p class="text-3xl font-black text-amber-700 group-hover:text-amber-600">{{ frontier_stats|length }}</p>
             <p class="text-xs text-slate-500 mt-1 group-hover:text-amber-600">View map →</p>
@@ -103,7 +103,7 @@
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5 pb-2">
             {% for s in senators_display %}
-            <a href="{% url 'senator-detail' s.senator_id %}" class="block group">
+            <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="block group">
                 <div class="bg-white border-2 border-slate-100 rounded-xl overflow-hidden frontier-card flex flex-col shadow-sm hover:border-amber-200">
                     <div class="img-wrap aspect-[4/5] w-full bg-gradient-to-b from-slate-100 to-slate-200 relative overflow-hidden">
                         {% if s.display_image_url %}
@@ -223,7 +223,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script type="application/json" id="frontier-charts-data">{{ charts_json|safe }}</script>
+{{ charts_json|json_script:"frontier-charts-data" }}
 <script>
 (function() {
     var charts = {};

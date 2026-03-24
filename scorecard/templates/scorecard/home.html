@@ -91,7 +91,7 @@
                     Voting records, attendance, bills sponsored, and legislative impact from the Hansard.
                 </p>
                 <div class="flex flex-wrap gap-4">
-                    <a href="{% url 'senator-list' %}" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-lg transition-colors shadow-lg shadow-emerald-900/30">
+                    <a href="{% url 'scorecard:senator-list' %}" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-lg transition-colors shadow-lg shadow-emerald-900/30">
                         <i data-lucide="users" class="w-5 h-5"></i>
                         View All Senators
                     </a>
@@ -99,12 +99,12 @@
                         <i data-lucide="file-text" class="w-5 h-5"></i>
                         Hansard
                     </a>
-                    <a href="{% url 'county-list' %}" class="inline-flex items-center gap-2 bg-slate-700/90 hover:bg-slate-600 text-white font-bold px-6 py-3 rounded-lg transition-colors border border-slate-600">
+                    <a href="{% url 'scorecard:county-list' %}" class="inline-flex items-center gap-2 bg-slate-700/90 hover:bg-slate-600 text-white font-bold px-6 py-3 rounded-lg transition-colors border border-slate-600">
                         <i data-lucide="map-pin" class="w-5 h-5"></i>
                         Find Your County
                         <i data-lucide="chevron-right" class="w-4 h-4"></i>
                     </a>
-                    <a href="{% url 'compare-senators' %}" class="inline-flex items-center gap-2 bg-slate-700/90 hover:bg-slate-600 text-white font-bold px-6 py-3 rounded-lg transition-colors border border-slate-600">
+                    <a href="{% url 'scorecard:compare-senators' %}" class="inline-flex items-center gap-2 bg-slate-700/90 hover:bg-slate-600 text-white font-bold px-6 py-3 rounded-lg transition-colors border border-slate-600">
                         <i data-lucide="git-compare" class="w-5 h-5"></i>
                         Compare Senators
                     </a>
@@ -153,14 +153,14 @@
                     <h2 class="text-white font-brutal text-lg sm:text-xl font-black uppercase tracking-tight">Top Performers</h2>
                     <p class="text-slate-400 text-xs sm:text-sm mt-1">Highest overall SPM scores in 2025</p>
                 </div>
-                <a href="{% url 'data-insights' %}" class="text-sm text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1 transition-colors">
+                <a href="{% url 'scorecard:data-insights' %}" class="text-sm text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1 transition-colors">
                     Full insights
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 </a>
             </div>
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                 {% for senator in top_performers %}
-                <a href="{% url 'senator-detail' senator.senator_id %}" class="group relative block rounded-xl overflow-hidden bg-slate-800 hover:-translate-y-1 transition-transform duration-200 shadow-md hover:shadow-xl" style="aspect-ratio:3/4">
+                <a href="{% url 'scorecard:senator-detail' senator.senator_id %}" class="group relative block rounded-xl overflow-hidden bg-slate-800 hover:-translate-y-1 transition-transform duration-200 shadow-md hover:shadow-xl" style="aspect-ratio:3/4">
                     {% if senator.display_image_url %}
                     <img src="{{ senator.display_image_url|thumb:'w_400,h_533,c_fill,g_face' }}" alt="{{ senator.name }}" class="absolute inset-0 w-full h-full object-cover" style="object-position:center 15%;" loading="lazy" decoding="async" width="200" height="267">
                     {% else %}
@@ -182,7 +182,7 @@
                 {% endfor %}
             </div>
             <div class="mt-6 text-center">
-                <a href="{% url 'senator-list' %}" class="inline-flex items-center gap-2 text-slate-400 hover:text-white text-xs font-medium transition-colors">
+                <a href="{% url 'scorecard:senator-list' %}" class="inline-flex items-center gap-2 text-slate-400 hover:text-white text-xs font-medium transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     View all {{ total_senators }} senators
                 </a>

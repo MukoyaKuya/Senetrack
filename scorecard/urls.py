@@ -1,6 +1,8 @@
 from django.urls import path
 from . import views
 
+app_name = "scorecard"
+
 urlpatterns = [
     # PWA
     path("sw.js", views.service_worker, name="service-worker"),

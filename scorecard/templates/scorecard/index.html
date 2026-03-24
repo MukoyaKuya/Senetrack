@@ -188,7 +188,7 @@
     </div>
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 max-w-4xl mx-auto" id="senatorGrid">
         {% for senator in senators %}
-        <a href="{% if senator.is_deceased or senator.is_still_computing or senator.is_no_longer_serving %}#{% else %}{% url 'senator-detail' senator.senator_id %}{% endif %}"
+        <a href="{% if senator.is_deceased or senator.is_still_computing or senator.is_no_longer_serving %}#{% else %}{% url 'scorecard:senator-detail' senator.senator_id %}{% endif %}"
             class="senator-card card-hover block senator-card-wrapper group aspect-[3/4] {% if senator.is_deceased %}opacity-50{% endif %} {% if not senator.display_image_url %}fallback-initials{% endif %}"
             data-frontier="{{ senator.frontier }}"
             {% if senator.is_deceased %}onclick="showDeceasedNotice('{{ senator.name }}'); return false;"{% elif senator.is_still_computing %}onclick="showComputingNotice('{{ senator.name }}'); return false;"{% elif senator.is_no_longer_serving %}onclick="showNoLongerServingNotice('{{ senator.name }}'); return false;"{% endif %}

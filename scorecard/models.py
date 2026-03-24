@@ -10,8 +10,23 @@ Asset optimization (images):
     use the spec URL in templates for cards/lists; keep full image for detail pages.
   See docs/ASSETS.md for options and examples.
 """
+import logging
 import os
+
 from django.db import models
+
+logger = logging.getLogger(__name__)
+
+
+def _get_cloudinary_cloud_name(settings):
+    """Return the configured Cloudinary cloud name, or None if not set."""
+    name = settings.CLOUDINARY_STORAGE.get('CLOUD_NAME') or ''
+    if not name:
+        logger.warning(
+            "CLOUDINARY_CLOUD_NAME is not configured. "
+            "Set it via CLOUDINARY_CLOUD_NAME env var for production media URLs."
+        )
+    return name or None
 
 
 class County(models.Model):
@@ -50,9 +65,10 @@ class County(models.Model):
         if url.startswith('/media/'):
             is_cloud = os.environ.get('K_SERVICE') is not None
             if not settings.DEBUG or is_cloud:
-                cloud_name = settings.CLOUDINARY_STORAGE.get('CLOUD_NAME', 'dlj4gpozf')
-                relative_path = url.replace('/media/', '')
-                return f"https://res.cloudinary.com/{cloud_name}/image/upload/{relative_path}"
+                cloud_name = _get_cloudinary_cloud_name(settings)
+                if cloud_name:
+                    relative_path = url.replace('/media/', '')
+                    return f"https://res.cloudinary.com/{cloud_name}/image/upload/{relative_path}"
         return url
 
     @property
@@ -65,9 +81,10 @@ class County(models.Model):
         if url.startswith('/media/'):
             is_cloud = os.environ.get('K_SERVICE') is not None
             if not settings.DEBUG or is_cloud:
-                cloud_name = settings.CLOUDINARY_STORAGE.get('CLOUD_NAME', 'dlj4gpozf')
-                relative_path = url.replace('/media/', '')
-                return f"https://res.cloudinary.com/{cloud_name}/image/upload/{relative_path}"
+                cloud_name = _get_cloudinary_cloud_name(settings)
+                if cloud_name:
+                    relative_path = url.replace('/media/', '')
+                    return f"https://res.cloudinary.com/{cloud_name}/image/upload/{relative_path}"
         return url
 
 
@@ -114,13 +131,12 @@ class Party(models.Model):
         if url.startswith('/media/'):
             is_cloud = os.environ.get('K_SERVICE') is not None
             if not settings.DEBUG or is_cloud:
-                # If these are the repo-managed logos, serve from static (handled by WhiteNoise)
                 relative_path = url.replace('/media/parties/', '')
                 if relative_path in ['upa_logo.png', 'kanu_logo.png', 'anc_logo.png']:
                     return static(f'scorecard/images/parties/{relative_path}')
-                
-                cloud_name = settings.CLOUDINARY_STORAGE.get('CLOUD_NAME', 'dlj4gpozf')
-                return f"https://res.cloudinary.com/{cloud_name}/image/upload/parties/{relative_path}"
+                cloud_name = _get_cloudinary_cloud_name(settings)
+                if cloud_name:
+                    return f"https://res.cloudinary.com/{cloud_name}/image/upload/parties/{relative_path}"
         return url
 
 
@@ -164,12 +180,12 @@ class Senator(models.Model):
             return url
 
         if url.startswith('/media/'):
-            # On Cloud Run, always resolve to Cloudinary even in DEBUG mode because local storage is ephemeral
             is_cloud = os.environ.get('K_SERVICE') is not None
             if not settings.DEBUG or is_cloud:
-                cloud_name = settings.CLOUDINARY_STORAGE.get('CLOUD_NAME', 'dlj4gpozf')
-                relative_path = url.replace('/media/', '')
-                return f"https://res.cloudinary.com/{cloud_name}/image/upload/{relative_path}"
+                cloud_name = _get_cloudinary_cloud_name(settings)
+                if cloud_name:
+                    relative_path = url.replace('/media/', '')
+                    return f"https://res.cloudinary.com/{cloud_name}/image/upload/{relative_path}"
             
         return url
 
