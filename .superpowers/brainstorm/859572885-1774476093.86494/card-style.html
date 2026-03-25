@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Senator Card Style</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background: #0f172a; font-family: 'Segoe UI', sans-serif; color: #f1f5f9; margin: 0; padding: 24px; }
+  h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 6px; color: #f8fafc; }
+  .subtitle { color: #94a3b8; font-size: 0.9rem; margin-bottom: 28px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+  .choice-card { border: 2px solid #334155; border-radius: 16px; overflow: hidden; cursor: pointer; transition: all 0.2s; background: #1e293b; }
+  .choice-card:hover { border-color: #6366f1; transform: translateY(-2px); }
+  .choice-card.selected { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.3); }
+  .choice-label { padding: 12px 16px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #6366f1; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 8px; }
+  .choice-label .badge { background: #6366f1; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
+  .card-preview { padding: 16px; }
+  .card-desc { padding: 12px 16px; border-top: 1px solid #334155; font-size: 0.78rem; color: #94a3b8; line-height: 1.5; }
+
+  /* --- OPTION A: Clean Light Report Card --- */
+  .card-a { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 12px; padding: 20px; width: 260px; margin: 0 auto; }
+  .card-a .header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .card-a .avatar { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 700; color: white; flex-shrink: 0; }
+  .card-a .senator-name { font-size: 0.9rem; font-weight: 700; color: #f1f5f9; }
+  .card-a .county { font-size: 0.7rem; color: #94a3b8; }
+  .card-a .grade-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .card-a .grade-badge { width: 52px; height: 52px; border-radius: 12px; background: linear-gradient(135deg, #f59e0b, #d97706); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .card-a .grade-badge .letter { font-size: 1.5rem; font-weight: 900; color: white; line-height: 1; }
+  .card-a .grade-badge .score { font-size: 0.55rem; color: rgba(255,255,255,0.8); }
+  .card-a .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .card-a .stat { background: rgba(255,255,255,0.05); border-radius: 8px; padding: 8px; text-align: center; }
+  .card-a .stat .val { font-size: 1rem; font-weight: 700; color: #6ee7b7; }
+  .card-a .stat .lbl { font-size: 0.58rem; color: #94a3b8; margin-top: 2px; }
+  .card-a .footer { margin-top: 14px; font-size: 0.58rem; color: #475569; text-align: center; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px; }
+
+  /* --- OPTION B: Bold Dark with Pillar Bars --- */
+  .card-b { background: #0f172a; border: 1px solid #1e293b; border-radius: 14px; padding: 18px; width: 260px; margin: 0 auto; }
+  .card-b .top-bar { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .card-b .name-block .name { font-size: 0.95rem; font-weight: 800; color: white; }
+  .card-b .name-block .sub { font-size: 0.65rem; color: #64748b; margin-top: 2px; }
+  .card-b .score-circle { width: 56px; height: 56px; border-radius: 50%; border: 3px solid #22c55e; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .card-b .score-circle .num { font-size: 1.1rem; font-weight: 900; color: #22c55e; line-height: 1; }
+  .card-b .score-circle .pct { font-size: 0.5rem; color: #4ade80; }
+  .card-b .pillar { margin-bottom: 7px; }
+  .card-b .pillar-header { display: flex; justify-content: space-between; font-size: 0.62rem; color: #94a3b8; margin-bottom: 3px; }
+  .card-b .pillar-header .pval { color: #e2e8f0; font-weight: 600; }
+  .card-b .bar { height: 5px; background: #1e293b; border-radius: 3px; overflow: hidden; }
+  .card-b .fill { height: 100%; border-radius: 3px; }
+  .card-b .branding { margin-top: 12px; font-size: 0.58rem; color: #334155; text-align: right; }
+
+  /* --- OPTION C: Vibrant Gradient with Icons --- */
+  .card-c { background: linear-gradient(160deg, #7c3aed 0%, #2563eb 50%, #0891b2 100%); border-radius: 16px; padding: 20px; width: 260px; margin: 0 auto; position: relative; overflow: hidden; }
+  .card-c::before { content: ''; position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.07); }
+  .card-c .top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+  .card-c .title { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.12em; color: rgba(255,255,255,0.7); margin-bottom: 4px; }
+  .card-c .name { font-size: 0.95rem; font-weight: 800; color: white; }
+  .card-c .county-tag { display: inline-block; background: rgba(255,255,255,0.15); border-radius: 20px; padding: 2px 8px; font-size: 0.6rem; color: rgba(255,255,255,0.9); margin-top: 4px; }
+  .card-c .grade-big { font-size: 3.5rem; font-weight: 900; color: white; line-height: 1; text-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+  .card-c .score-sub { font-size: 0.65rem; color: rgba(255,255,255,0.7); }
+  .card-c .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 4px; }
+  .card-c .metric { background: rgba(255,255,255,0.12); border-radius: 10px; padding: 8px 6px; text-align: center; }
+  .card-c .metric .val { font-size: 1rem; font-weight: 800; color: white; }
+  .card-c .metric .lbl { font-size: 0.55rem; color: rgba(255,255,255,0.7); margin-top: 2px; }
+  .card-c .footer { margin-top: 14px; display: flex; justify-content: space-between; align-items: center; }
+  .card-c .footer .brand { font-size: 0.6rem; color: rgba(255,255,255,0.6); font-weight: 700; letter-spacing: 0.1em; }
+  .card-c .footer .party { font-size: 0.6rem; background: rgba(255,255,255,0.15); border-radius: 20px; padding: 2px 8px; color: rgba(255,255,255,0.85); }
+
+  .selected-indicator { display: none; margin-top: 8px; font-size: 0.75rem; color: #6366f1; font-weight: 600; text-align: center; }
+  .choice-card.selected .selected-indicator { display: block; }
+</style>
+</head>
+<body>
+<h2>Which Senator Card style feels right?</h2>
+<p class="subtitle">These are the shareable "Report Cards" users will download and post to WhatsApp. Pick the style that fits best.</p>
+
+<div class="cards">
+  <!-- OPTION A -->
+  <div class="choice-card" onclick="select(this, 'a')">
+    <div class="choice-label"><div class="badge">A</div> Clean & Professional</div>
+    <div class="card-preview">
+      <div class="card-a">
+        <div class="header">
+          <div class="avatar">AC</div>
+          <div>
+            <div class="senator-name">Aaron Cheruiyot</div>
+            <div class="county">Kericho County · UDA</div>
+          </div>
+        </div>
+        <div class="grade-row">
+          <div>
+            <div style="font-size:0.6rem;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;">Overall Score</div>
+            <div style="font-size:1.5rem;font-weight:900;color:#f1f5f9;">72<span style="font-size:0.8rem;color:#94a3b8;">/100</span></div>
+          </div>
+          <div class="grade-badge">
+            <div class="letter">B</div>
+            <div class="score">GRADE</div>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="val">78%</div><div class="lbl">Attendance</div></div>
+          <div class="stat"><div class="val">14</div><div class="lbl">Bills Sponsored</div></div>
+          <div class="stat"><div class="val">89%</div><div class="lbl">Voting Rate</div></div>
+          <div class="stat"><div class="val">63%</div><div class="lbl">Committee</div></div>
+        </div>
+        <div class="footer">senetrack.co.ke · 2025 Senate Report Card</div>
+      </div>
+    </div>
+    <div class="card-desc">Dark navy with senator photo initials, grade badge, and a 4-stat grid. Feels like a professional report. Clean and trustworthy.</div>
+    <div class="selected-indicator">✓ Selected</div>
+  </div>
+
+  <!-- OPTION B -->
+  <div class="choice-card" onclick="select(this, 'b')">
+    <div class="choice-label"><div class="badge">B</div> Data-Forward with Bars</div>
+    <div class="card-preview">
+      <div class="card-b">
+        <div class="top-bar">
+          <div class="name-block">
+            <div class="name">Aaron Cheruiyot</div>
+            <div class="sub">Kericho County · UDA</div>
+            <div style="font-size:0.58rem;color:#4b5563;margin-top:4px;">2025 Senate Report Card</div>
+          </div>
+          <div class="score-circle">
+            <div class="num">72</div>
+            <div class="pct">/ 100</div>
+          </div>
+        </div>
+        <div class="pillar">
+          <div class="pillar-header"><span>Participation</span><span class="pval">78%</span></div>
+          <div class="bar"><div class="fill" style="width:78%;background:linear-gradient(90deg,#6366f1,#8b5cf6);"></div></div>
+        </div>
+        <div class="pillar">
+          <div class="pillar-header"><span>Legislative Work</span><span class="pval">65%</span></div>
+          <div class="bar"><div class="fill" style="width:65%;background:linear-gradient(90deg,#0ea5e9,#6366f1);"></div></div>
+        </div>
+        <div class="pillar">
+          <div class="pillar-header"><span>Voting Record</span><span class="pval">89%</span></div>
+          <div class="bar"><div class="fill" style="width:89%;background:linear-gradient(90deg,#22c55e,#0ea5e9);"></div></div>
+        </div>
+        <div class="pillar">
+          <div class="pillar-header"><span>Committee Work</span><span class="pval">63%</span></div>
+          <div class="bar"><div class="fill" style="width:63%;background:linear-gradient(90deg,#f59e0b,#ef4444);"></div></div>
+        </div>
+        <div class="pillar">
+          <div class="pillar-header"><span>County Rep.</span><span class="pval">71%</span></div>
+          <div class="bar"><div class="fill" style="width:71%;background:linear-gradient(90deg,#ec4899,#f59e0b);"></div></div>
+        </div>
+        <div class="branding">senetrack.co.ke</div>
+      </div>
+    </div>
+    <div class="card-desc">Deep dark with 5 colored progress bars for each scoring pillar. Immediately shows where a senator is strong vs. weak. Data-driven and analytical.</div>
+    <div class="selected-indicator">✓ Selected</div>
+  </div>
+
+  <!-- OPTION C -->
+  <div class="choice-card" onclick="select(this, 'c')">
+    <div class="choice-label"><div class="badge">C</div> Bold Gradient (Eye-Catching)</div>
+    <div class="card-preview">
+      <div class="card-c">
+        <div class="top">
+          <div>
+            <div class="title">Senate Report Card</div>
+            <div class="name">Aaron Cheruiyot</div>
+            <div><span class="county-tag">Kericho County</span></div>
+          </div>
+          <div style="text-align:right;">
+            <div class="grade-big">B</div>
+            <div class="score-sub">72 / 100</div>
+          </div>
+        </div>
+        <div class="metrics">
+          <div class="metric"><div class="val">78%</div><div class="lbl">Attendance</div></div>
+          <div class="metric"><div class="val">14</div><div class="lbl">Bills</div></div>
+          <div class="metric"><div class="val">89%</div><div class="lbl">Votes</div></div>
+        </div>
+        <div class="footer">
+          <div class="brand">SENETRACK</div>
+          <div class="party">UDA</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-desc">Vibrant purple-to-blue gradient. The big grade letter is the hero element — instantly scannable while scrolling through WhatsApp Status. Very shareable.</div>
+    <div class="selected-indicator">✓ Selected</div>
+  </div>
+</div>
+
+<script>
+  function select(el, choice) {
+    document.querySelectorAll('.choice-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    if (window.__brainstormHelper) window.__brainstormHelper.recordChoice(choice, el.querySelector('h3, .choice-label')?.textContent?.trim() || choice);
+  }
+</script>
+</body>
+</html>

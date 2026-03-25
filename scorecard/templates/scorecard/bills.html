@@ -256,8 +256,9 @@
                 <span class="inline-block text-[9px] font-black uppercase tracking-[0.15em] text-slate-400 mb-3 border border-slate-300 rounded-full px-2.5 py-0.5">Senate Internal Process</span>
             </div>
 
-            <!-- Stage row 1-4 -->
-            <div class="flex items-start gap-0 min-w-[560px]">
+            <!-- Stage row 1-4 – centred so no empty right-hand negative space -->
+            <div class="flex justify-center">
+            <div class="flex items-stretch gap-0 min-w-[640px]">
 
                 <!-- Bill icon -->
                 <div class="flex flex-col items-center shrink-0 mr-1">
@@ -289,15 +290,15 @@
                 </div>
 
                 <!-- Stage 2 + failure branch -->
-                <div class="shrink-0 relative">
+                <div class="shrink-0 flex flex-col items-center">
                     <div class="rounded-xl px-3 py-2.5 w-28 shadow-sm text-center" style="background:#e0e7ff;border:1.5px solid #6366f1;">
                         <div class="w-5 h-5 rounded-full text-white text-[10px] font-black flex items-center justify-center mx-auto mb-1" style="background:#6366f1;">2</div>
                         <p class="text-[10px] font-black text-indigo-800 leading-tight">Second Reading</p>
                         <p class="text-[9px] text-indigo-600 mt-0.5 leading-tight">Senate debates principles. Vote to proceed.</p>
                     </div>
-                    <!-- Failure branch down -->
-                    <div class="absolute -bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center">
-                        <div class="w-0.5 h-4" style="background:#fca5a5;"></div>
+                    <!-- Failure branch down – in normal flow, no absolute overflow -->
+                    <div class="flex flex-col items-center mt-1.5">
+                        <div class="w-0.5 h-3" style="background:#fca5a5;"></div>
                         <div class="rounded-lg px-2 py-1 text-center whitespace-nowrap" style="background:#fef2f2;border:1px solid #fca5a5;">
                             <p class="text-[8px] font-black text-red-600">❌ NEGATIVED</p>
                             <p class="text-[7px] text-red-400">Bill fails here</p>
@@ -327,22 +328,20 @@
                 </div>
 
                 <!-- Stage 4 -->
-                <div class="shrink-0">
+                <div class="shrink-0 flex flex-col items-center">
                     <div class="rounded-xl px-3 py-2.5 w-28 shadow-sm text-center" style="background:#dbeafe;border:1.5px solid #2563eb;">
                         <div class="w-5 h-5 rounded-full text-white text-[10px] font-black flex items-center justify-center mx-auto mb-1" style="background:#2563eb;">4</div>
                         <p class="text-[10px] font-black text-blue-800 leading-tight">Third Reading</p>
                         <p class="text-[9px] text-blue-600 mt-0.5 leading-tight">Final Senate vote. If passed → National Assembly.</p>
                     </div>
+                    <!-- Connector line + arrowhead – always centred under Stage 4 card -->
+                    <div class="flex-1 flex flex-col items-center pt-1.5">
+                        <div class="flex-1 w-0.5" style="background:#3b82f6; min-height:6px;"></div>
+                        <div style="border-top:7px solid #3b82f6;border-left:4px solid transparent;border-right:4px solid transparent;"></div>
+                    </div>
                 </div>
             </div>
-
-            <!-- Down arrow from stage 4 to NA -->
-            <div class="flex min-w-[560px] mt-8 mb-2 pl-[424px]">
-                <div class="flex flex-col items-center">
-                    <div class="h-6 w-0.5" style="background:#3b82f6;"></div>
-                    <div style="border-top:7px solid #3b82f6;border-left:4px solid transparent;border-right:4px solid transparent;"></div>
-                </div>
-            </div>
+            </div><!-- end centering wrapper -->
 
             <!-- ═══════════ NATIONAL ASSEMBLY ═══════════ -->
             <div class="min-w-[560px]">
@@ -359,30 +358,34 @@
                     </div>
                 </div>
 
-                <!-- Three outcome paths from NA -->
-                <div class="grid grid-cols-3 gap-3 mb-4">
+                <!-- Three outcome paths from NA – flex+items-start so each column is only as tall as its own content -->
+                <div class="flex gap-3 mb-4 items-start">
                     <!-- Path A: Passes without amendments -->
-                    <div class="flex flex-col items-center gap-1 text-center">
+                    <div class="flex-1 flex flex-col items-center gap-1 text-center">
                         <div class="rounded-lg px-2 py-1.5 w-full" style="background:#f0fdf4;border:1px solid #86efac;">
                             <p class="text-[9px] font-black text-emerald-700 uppercase tracking-wide">✓ Passes (no amendments)</p>
                         </div>
                         <div class="h-4 w-0.5" style="background:#22c55e;"></div>
                         <div style="border-top:6px solid #22c55e;border-left:4px solid transparent;border-right:4px solid transparent;"></div>
-                        <p class="text-[8px] text-slate-400 font-medium">→ Goes to President</p>
+                        <div class="rounded-lg px-2 py-1.5 w-full mt-0.5" style="background:#f0fdf4;border:1px solid #86efac;">
+                            <p class="text-[8px] font-bold text-emerald-700">Goes directly to<br>Presidential Assent ↓</p>
+                        </div>
                     </div>
 
                     <!-- Path B: Passes with amendments → back to Senate -->
-                    <div class="flex flex-col items-center gap-1 text-center">
+                    <div class="flex-1 flex flex-col items-center gap-1 text-center">
                         <div class="rounded-lg px-2 py-1.5 w-full" style="background:#fff7ed;border:1px solid #fdba74;">
                             <p class="text-[9px] font-black text-orange-700 uppercase tracking-wide">⚡ Passes with amendments</p>
                         </div>
                         <div class="h-4 w-0.5" style="background:#f97316;"></div>
                         <div style="border-top:6px solid #f97316;border-left:4px solid transparent;border-right:4px solid transparent;"></div>
-                        <p class="text-[8px] text-slate-400 font-medium">→ Back to Senate to agree/disagree</p>
+                        <div class="rounded-lg px-2 py-1.5 w-full mt-0.5" style="background:#fff7ed;border:1px solid #fdba74;">
+                            <p class="text-[8px] font-bold text-orange-700">Returns to Senate<br>to agree or disagree</p>
+                        </div>
                     </div>
 
                     <!-- Path C: Disagrees → Mediation -->
-                    <div class="flex flex-col items-center gap-1 text-center">
+                    <div class="flex-1 flex flex-col items-center gap-1 text-center">
                         <div class="rounded-lg px-2 py-1.5 w-full" style="background:#fffbeb;border:1px solid #fcd34d;">
                             <p class="text-[9px] font-black text-amber-700 uppercase tracking-wide">⚠ Disagrees / Rejects</p>
                         </div>
