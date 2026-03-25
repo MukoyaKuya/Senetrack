@@ -1,0 +1,2196 @@
+{% extends "scorecard/base_light.html" %}
+{% load static %}
+
+{% block title %}Bills Analytics{% endblock %}
+{% block meta_description %}Deep-dive analytics on the 154 bills of Kenya's 13th Parliament Senate — funnel, cohorts, committee heatmap, sponsor success rates, women senators output, amendment analysis, and more.{% endblock %}
+{% block og_title %}Bills Analytics | SENETRACK{% endblock %}
+
+{% block nav %}
+{% include "partials/nav_light.html" with nav_active="bills" %}
+{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+    .insight-card { transition: box-shadow 0.15s, transform 0.15s; }
+    .insight-card:hover { box-shadow: 0 4px 0 0 #e2e8f0; transform: translateY(-2px); }
+    .section-title { font-family: 'Space Mono', monospace; }
+    .funnel-bar { transition: width 0.6s cubic-bezier(.4,0,.2,1); }
+    .chart-wrap { position: relative; }
+    .toc-nav::-webkit-scrollbar { height: 4px; }
+    .toc-nav::-webkit-scrollbar-track { background: transparent; }
+    .toc-nav::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 2px; }
+    .heat-cell { transition: opacity 0.15s; }
+    .heat-cell:hover { opacity: 0.8; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 pb-20">
+
+    <!-- ── Header ─────────────────────────────────────────────────────── -->
+    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+        <div>
+            <div class="flex items-center gap-2 mb-2">
+                <a href="{% url 'scorecard:bills-tracker' %}" class="text-xs font-bold text-slate-400 hover:text-red-700 transition-colors flex items-center gap-1">
+                    <i data-lucide="arrow-left" class="w-3 h-3"></i> Bills Tracker
+                </a>
+                <span class="text-slate-300">/</span>
+                <span class="text-xs font-bold text-slate-600">Analytics</span>
+            </div>
+            <span class="inline-flex items-center gap-1.5 bg-red-100 text-red-700 text-[10px] font-black uppercase tracking-[0.18em] rounded-full px-3 py-1 mb-2">
+                <i data-lucide="bar-chart-2" class="w-3 h-3"></i>
+                Data Analytics · 13th Parliament
+            </span>
+            <h1 class="font-brutal text-2xl md:text-4xl font-black text-slate-900 uppercase tracking-tight">
+                Bills Analytics
+            </h1>
+            <p class="text-slate-500 text-sm mt-1">{{ total }} bills · as at {{ as_at_date }}</p>
+        </div>
+        <a href="{{ source_url }}" target="_blank" rel="noopener"
+           class="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-red-700 border border-slate-200 rounded-xl px-4 py-2.5 bg-white transition-colors whitespace-nowrap self-start sm:self-auto">
+            <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+            Source PDF
+        </a>
+    </div>
+
+    <!-- ── Table of Contents ────────────────────────────────────────── -->
+    <div class="toc-nav overflow-x-auto flex items-center gap-2 pb-1 mb-8 border-b border-slate-200">
+        {% for label, anchor in toc_items %}
+        <a href="#{{ anchor }}"
+           class="shrink-0 text-[10px] font-black uppercase tracking-wider text-slate-500 hover:text-red-700 border border-slate-200 hover:border-red-200 rounded-lg px-3 py-1.5 transition-colors whitespace-nowrap">
+            {{ label }}
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- ── Key Insights Grid ─────────────────────────────────────────── -->
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-10">
+        {% for ins in insights %}
+        <div class="insight-card bg-white rounded-2xl border border-slate-200 p-4 sm:p-5">
+            <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0
+                    {% if ins.color == 'emerald' %}bg-emerald-100{% elif ins.color == 'blue' %}bg-blue-100{% elif ins.color == 'amber' %}bg-amber-100{% elif ins.color == 'red' %}bg-red-100{% elif ins.color == 'violet' %}bg-violet-100{% else %}bg-orange-100{% endif %}">
+                    <i data-lucide="{{ ins.icon }}" class="w-4 h-4
+                        {% if ins.color == 'emerald' %}text-emerald-600{% elif ins.color == 'blue' %}text-blue-600{% elif ins.color == 'amber' %}text-amber-600{% elif ins.color == 'red' %}text-red-700{% elif ins.color == 'violet' %}text-violet-600{% else %}text-orange-600{% endif %}">
+                    </i>
+                </div>
+                <div class="min-w-0">
+                    <p class="font-brutal font-black text-lg sm:text-xl text-slate-900 leading-none truncate">{{ ins.value }}</p>
+                    <p class="text-xs font-bold text-slate-500 mt-0.5">{{ ins.label }}</p>
+                    <p class="text-[10px] text-slate-400 mt-1 leading-snug">{{ ins.sub }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SECTION 1 · Legislative Funnel
+    ══════════════════════════════════════════════════════════════════ -->
+    <div id="s-funnel" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 mb-6">
+        <h2 class="section-title text-base font-bold text-slate-900 uppercase tracking-wider mb-1">
+            1 · Legislative Funnel
+        </h2>
+        <p class="text-xs text-slate-400 mb-6">How many bills survive each milestone?</p>
+
+        <div class="space-y-4">
+            {% for step in funnel %}
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-sm font-semibold text-slate-700">{{ step.label }}</span>
+                    <div class="flex items-center gap-3">
+                        <span class="font-brutal text-sm font-black text-slate-900">{{ step.count }}</span>
+                        <span class="text-xs font-bold text-slate-400 w-12 text-right">{{ step.pct }}%</span>
+                    </div>
+                </div>
+                <div class="h-8 bg-slate-100 rounded-lg overflow-hidden">
+                    <div class="funnel-bar h-full rounded-lg flex items-center pl-3
+                        {% if forloop.first %}bg-slate-400
+                        {% elif forloop.counter == 2 %}bg-blue-400
+                        {% elif forloop.counter == 3 %}bg-violet-500
+                        {% else %}bg-emerald-500{% endif %}"
+                        style="width: {{ step.pct }}%">
+                        {% if step.pct > 15 %}
+                        <span class="text-white text-[10px] font-black font-brutal">{{ step.pct }}%</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if not forloop.last %}
+                <div class="flex justify-center mt-2">
+                    <i data-lucide="chevron-down" class="w-4 h-4 text-slate-300"></i>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        <p class="text-[11px] text-slate-400 mt-5 italic border-t border-slate-100 pt-4">
+            "Cleared the Senate" means the bill passed its Third Reading and was referred to the National Assembly
+            (includes bills at the NA, in mediation, under Presidential Memorandum, or already assented).
+        </p>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SECTION 2 · Year-over-Year Trend   SECTION 3 · Origin
+    ══════════════════════════════════════════════════════════════════ -->
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
+        <div id="s-yoy" class="lg:col-span-3 bg-white rounded-2xl border border-slate-200 p-6 sm:p-8">
+            <h2 class="section-title text-base font-bold text-slate-900 uppercase tracking-wider mb-1">
+                2 · Legislative Activity by Year
+            </h2>
+            <p class="text-xs text-slate-400 mb-5">Bills introduced per year by current status</p>
+            <div class="chart-wrap" style="height:260px;"><canvas id="yearChart"></canvas></div>
+        </div>
+        <div id="s-origin" class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 sm:p-8">
+            <h2 class="section-title text-base font-bold text-slate-900 uppercase tracking-wider mb-1">
+                3 · Bill Origin
+            </h2>
+            <p class="text-xs text-slate-400 mb-4">Senate-initiated vs referred from National Assembly</p>
+            <div class="chart-wrap" style="height:180px;"><canvas id="originChart"></canvas></div>
+            <div class="mt-4 space-y-2 text-xs" id="originLegend"></div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SECTION 4 · Committee Performance
+    ══════════════════════════════════════════════════════════════════ -->
+    <div id="s-committees" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 mb-6">
+        <h2 class="section-title text-base font-bold text-slate-900 uppercase tracking-wider mb-1">
+            4 · Committee Performance Scorecard
+        </h2>
+        <p class="text-xs text-slate-400 mb-6">Bills handled per committee — assented, active, and lapsed</p>
+        <div class="chart-wrap mb-8" style="height:360px;">
+            <canvas id="committeeChart"></canvas>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-slate-200">
+                        <th class="text-left py-2 px-3 text-[10px] font-black text-slate-400 uppercase tracking-wider">Committee</th>
+                        <th class="text-right py-2 px-3 text-[10px] font-black text-slate-400 uppercase tracking-wider">Total</th>
+                        <th class="text-right py-2 px-3 text-[10px] font-black text-emerald-600 uppercase tracking-wider">Assented</th>
+                        <th class="text-right py-2 px-3 text-[10px] font-black text-blue-600 uppercase tracking-wider hidden sm:table-cell">Active</th>
+                        <th class="text-right py-2 px-3 text-[10px] font-black text-slate-400 uppercase tracking-wider hidden sm:table-cell">Lapsed</th>
+                        <th class="text-left py-2 px-3 text-[10px] font-black text-slate-400 uppercase tracking-wider">Assent Rate</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for comm, data in committee_list %}
+                    <tr class="hover:bg-slate-50/60 transition-colors">
+                        <td class="py-2.5 px-3 font-medium text-slate-800 text-xs">{{ comm }}</td>
+                        <td class="py-2.5 px-3 text-right font-brutal font-black text-slate-700 text-xs">{{ data.total }}</td>
+                        <td class="py-2.5 px-3 text-right text-emerald-700 font-bold text-xs">{{ data.assented }}</td>
+                        <td class="py-2.5 px-3 text-right text-blue-600 font-medium text-xs hidden sm:table-cell">{{ data.active }}</td>
+                        <td class="py-2.5 px-3 text-right text-slate-400 text-xs hidden sm:table-cell">{{ data.lapsed }}</td>
+                        <td class="py-2.5 px-3 min-w-[140px]">
+                            <div class="flex items-center gap-2">
+                                <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full rounded-full
+                                        {% if data.assent_rate >= 50 %}bg-emerald-500
+                                        {% elif data.assent_rate >= 25 %}bg-blue-400
+                                        {% else %}bg-slate-300{% endif %}"
+                                        style="width:{{ data.assent_rate }}%">
+                                    </div>
+                                </div>
+                                <span class="text-xs font-bold text-slate-600 w-10 text-right">{{ data.assent_rate }}%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SECTION 5 · Pipeline   SECTION 6 · Top Sponsors
+    ══════════════════════════════════════════════════════════════════ -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div id="s-pipeline" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8">
+            <h2 class="section-title text-base font-bold text-slate-900 uppercase tracking-wider mb-1">
+                5 · Current Pipeline Breakdown
+            </h2>
+            <p class="text-xs text-slate-400 mb-5">Where are all {{ total }} bills right now?</p>
+            <div class="chart-wrap" style="height:280px;"><canvas id="pipelineChart"></canvas></div>
+        </div>
+        <div id="s-sponsors" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8">
+            <h2 class="section-title text-base font-bold text-slate-900 uppercase tracking-wider mb-1">
+                6 · Top Individual Sponsors
+            </h2>
+            <p class="text-xs text-slate-400 mb-4">Most prolific senators by bills introduced</p>
+            <div class="space-y-1.5">
+                {% for s in top_sponsors %}
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="w-4 text-right text-slate-400 font-bold shrink-0">{{ forloop.counter }}</span>
+                    {% if s.senator_id %}
+                    <a href="{% url 'scorecard:senator-detail' s.senator_id %}"
+                       class="font-medium text-slate-800 hover:text-red-700 transition-colors truncate flex-1">
+                        {{ s.name }}
+                    </a>
+                    {% else %}
+                    <span class="font-medium text-slate-700 truncate flex-1">{{ s.name }}</span>
+                    {% endif %}
+                    <div class="flex items-center gap-1 shrink-0">
+                        <div class="h-2 bg-red-600 rounded-full" style="width:{{ s.count }}0px;min-width:4px;"></div>
+                        <span class="font-brutal font-black text-slate-900 w-4 text-right">{{ s.count }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SECTION 7 · Cohort Completion Analysis
+    ══════════════════════════════════════════════════════════════════ -->
+    <div id="s-cohort" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 mb-6">
+        <h2 class="section-title text-base font-bold text-slate-900 uppercase tracking-wider mb-1">
+            7 · Cohort Completion Analysis
+        </h2>
+        <p class="text-xs text-slate-400 mb-6">For each year class — how many bills were introduced and what became of them?</p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            <div class="lg:col-span-3 chart-wrap" style="height:260px;">
+                <canvas id="cohortChart"></canvas>
+            </div>
+            <div class="lg:col-span-2 overflow-x-auto">
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr class="border-b border-slate-200">
+                            <th class="text-left py-1.5 px-2 text-[10px] font-black text-slate-400 uppercase tracking-wider">Year</th>
+                            <th class="text-right py-1.5 px-2 text-[10px] font-black text-slate-400 uppercase tracking-wider">Bills</th>
+                            <th class="text-right py-1.5 px-2 text-[10px] font-black text-emerald-600 uppercase tracking-wider">Signed</th>
+                            <th class="text-right py-1.5 px-2 text-[10px] font-black text-slate-400 uppercase tracking-wider">Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for row in cohort_rows %}
+                        <tr class="hover:bg-slate-50/60">
+                            <td class="py-2 px-2 font-bold text-slate-800">{{ row.year }}</td>
+                            <td class="py-2 px-2 text-right text-slate-600">{{ row.total }}</td>
+                            <td class="py-2 px-2 text-right text-emerald-700 font-bold">{{ row.assented }}</td>
+                            <td class="py-2 px-2 text-right font-bold
+                                {% if row.assent_rate >= 40 %}text-emerald-600
+                                {% elif row.assent_rate >= 20 %}text-blue-600
+                                {% else %}text-slate-400{% endif %}">
+                                {{ row.assent_rate }}%
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <p class="text-[10px] text-slate-400 mt-3 italic">2025–2026 cohorts are still early-stage — low assent rates are expected.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SECTION 8 · National Assembly Dynamics
+    ══════════════════════════════════════════════════════════════════ -->
+    <div id="s-na" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 mb-6">
+        <h2 class="section-title text-base font-bold text-slate-900 uppercase tracking-wider mb-1">
+            8 · National Assembly Dynamics
+        </h2>
+        <p class="text-xs text-slate-400 mb-6">What happens to bills once they clear the Senate?
+            <span class="font-bold text-slate-600">{{ na_dynamics.cleared_senate }} bills</span> have been sent to the National Assembly.
+        </p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            <div class="chart-wrap" style="height:220px;">
+                <canvas id="naDynamicsChart"></canvas>
+            </div>
+            <div class="space-y-3">
+                {% with items=na_dynamics %}
+                <div class="flex items-center justify-between p-3 rounded-xl bg-emerald-50 border border-emerald-100">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                        <span class="text-sm font-semibold text-emerald-800">Assented into Law</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="font-brutal font-black text-lg text-emerald-700">{{ items.assented }}</span>
+                        <span class="text-xs text-emerald-600 ml-1.5">({{ items.assent_rate }}%)</span>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-xl bg-blue-50 border border-blue-100">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+                        <span class="text-sm font-semibold text-blue-800">Pending at Nat. Assembly</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="font-brutal font-black text-lg text-blue-700">{{ items.pending_na }}</span>
+                        <span class="text-xs text-blue-600 ml-1.5">({{ items.pending_na|floatformat:0 }})</span>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-xl bg-amber-50 border border-amber-100">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                        <span class="text-sm font-semibold text-amber-800">In Mediation</span>
+                    </div>
+                    <span class="font-brutal font-black text-lg text-amber-700">{{ items.in_mediation }}</span>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-xl bg-orange-50 border border-orange-100">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-orange-500"></div>
+                        <span class="text-sm font-semibold text-orange-800">Presidential Memorandum</span>
+                    </div>
+                    <span class="font-brutal font-black text-lg text-orange-700">{{ items.presidential_memo }}</span>
+                </div>
+                {% endwith %}
+                <p class="text-[11px] text-slate-400 italic pt-1">
+                    Only {{ na_dynamics.assent_rate }}% of Senate-cleared bills ultimately become law — the National Assembly is a significant bottleneck.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SECTION 9 · Amendment Analysis
+    ══════════════════════════════════════════════════════════════════ -->
+    <div id="s-amendments" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 mb-6">
+        <h2 class="section-title text-base font-bold text-slate-900 uppercase tracking-wider mb-1">
+            9 · Amendment Analysis
+        </h2>
+        <p class="text-xs text-slate-400 mb-6">
+            Of the <strong class="text-slate-600">{{ amendment_stats.known }}</strong> bills that cleared the Senate,
+            did the Senate amend the bill before passing it — and does amendment correlate with better outcomes?
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            <div class="bg-violet-50 border border-violet-100 rounded-2xl p-5 text-center">
+                <p class="font-brutal font-black text-3xl text-violet-700">{{ amendment_stats.amended_pct }}%</p>
+                <p class="text-xs font-bold text-violet-600 mt-1">passed with Senate amendments</p>
+                <p class="text-[10px] text-violet-400 mt-1">{{ amendment_stats.amended }} of {{ amendment_stats.known }} bills</p>
+            </div>
+            <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 text-center">
+                <p class="font-brutal font-black text-3xl text-emerald-700">{{ amendment_stats.amended_assent_rate }}%</p>
+                <p class="text-xs font-bold text-emerald-600 mt-1">assent rate — amended bills</p>
+                <p class="text-[10px] text-emerald-400 mt-1">Bills the Senate revised before passing</p>
+            </div>
+            <div class="bg-blue-50 border border-blue-100 rounded-2xl p-5 text-center">
+                <p class="font-brutal font-black text-3xl text-blue-700">{{ amendment_stats.clean_assent_rate }}%</p>
+                <p class="text-xs font-bold text-blue-600 mt-1">assent rate — clean passes</p>
+                <p class="text-[10px] text-blue-400 mt-1">Bills passed without Senate changes</p>
+            </div>
+        </div>
+
+        <div class="chart-wrap" style="height:160px;">
+            <canvas id="amendmentChart"></canvas>
+        </div>
+        <p class="text-[11px] text-slate-400 mt-4 italic">
+            When the Senate amends a bill, it is more likely to end up in mediation as the National Assembly may reject those amendments.
+            Clean passes tend to sail through faster but represent the minority of bills.
+        </p>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SECTION 10 · Sponsor Success Rate
+    ══════════════════════════════════════════════════════════════════ -->
+    <div id="s-success" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 mb-6">
+        <h2 class="section-title text-base font-bold text-slate-900 uppercase tracking-wider mb-1">
+            10 · Sponsor Success Rate
+        </h2>
+        <p class="text-xs text-slate-400 mb-6">Senators with 2+ bills — how many of their introductions became law? (Click a name to view their profile.)</p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="chart-wrap" style="height:340px;">
+                <canvas id="sponsorSuccessChart"></canvas>
+            </div>
+            <div class="overflow-y-auto" style="max-height:340px;">
+                <table class="w-full text-xs">
+                    <thead class="sticky top-0 bg-white">
+                        <tr class="border-b border-slate-200">
+                            <th class="text-left py-1.5 px-2 text-[10px] font-black text-slate-400 uppercase tracking-wider">Senator</th>
+                            <th class="text-right py-1.5 px-2 text-[10px] font-black text-slate-400 uppercase tracking-wider">Bills</th>
+                            <th class="text-right py-1.5 px-2 text-[10px] font-black text-emerald-600 uppercase tracking-wider">Signed</th>
+                            <th class="text-right py-1.5 px-2 text-[10px] font-black text-slate-400 uppercase tracking-wider">Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for s in sponsor_success %}
+                        <tr class="hover:bg-slate-50/60 transition-colors">
+                            <td class="py-2 px-2">
+                                {% if s.senator_id %}
+                                <a href="{% url 'scorecard:senator-detail' s.senator_id %}"
+                                   class="font-medium text-slate-800 hover:text-red-700 transition-colors">
+                                    {{ s.name }}
+                                </a>
+                                {% else %}
+                                <span class="font-medium text-slate-700">{{ s.name }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-2 px-2 text-right font-bold text-slate-700">{{ s.total }}</td>
+                            <td class="py-2 px-2 text-right text-emerald-700 font-bold">{{ s.assented }}</td>
+                            <td class="py-2 px-2 text-right font-bold
+                                {% if s.rate >= 40 %}text-emerald-600
+                                {% elif s.rate >= 20 %}text-blue-600
+                                {% else %}text-slate-400{% endif %}">
+                                {{ s.rate }}%
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SECTION 11 · Women Senators' Legislative Output
+    ══════════════════════════════════════════════════════════════════ -->
+    <div id="s-gender" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 mb-6">
+        <h2 class="section-title text-base font-bold text-slate-900 uppercase tracking-wider mb-1">
+            11 · Women Senators' Legislative Output
+        </h2>
+        <p class="text-xs text-slate-400 mb-6">Comparing bill volume and assent rates across gender groups</p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            {% with g=gender_stats.women %}
+            <div class="rounded-2xl border border-pink-100 bg-pink-50 p-5">
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="w-7 h-7 bg-pink-100 rounded-xl flex items-center justify-center">
+                        <i data-lucide="user" class="w-4 h-4 text-pink-600"></i>
+                    </div>
+                    <span class="text-xs font-black text-pink-700 uppercase tracking-wider">Women Senators</span>
+                </div>
+                <p class="font-brutal font-black text-3xl text-pink-700">{{ g.total }}</p>
+                <p class="text-[10px] text-pink-500 mt-0.5">bills introduced</p>
+                <div class="mt-3 pt-3 border-t border-pink-100 flex items-center justify-between">
+                    <span class="text-xs text-pink-600">Assented</span>
+                    <span class="font-bold text-pink-700">{{ g.assented }} <span class="font-normal text-[10px]">({{ g.assent_rate }}%)</span></span>
+                </div>
+            </div>
+            {% endwith %}
+            {% with g=gender_stats.men %}
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="w-7 h-7 bg-slate-100 rounded-xl flex items-center justify-center">
+                        <i data-lucide="user" class="w-4 h-4 text-slate-600"></i>
+                    </div>
+                    <span class="text-xs font-black text-slate-600 uppercase tracking-wider">Men Senators</span>
+                </div>
+                <p class="font-brutal font-black text-3xl text-slate-700">{{ g.total }}</p>
+                <p class="text-[10px] text-slate-500 mt-0.5">bills introduced</p>
+                <div class="mt-3 pt-3 border-t border-slate-200 flex items-center justify-between">
+                    <span class="text-xs text-slate-600">Assented</span>
+                    <span class="font-bold text-slate-700">{{ g.assented }} <span class="font-normal text-[10px]">({{ g.assent_rate }}%)</span></span>
+                </div>
+            </div>
+            {% endwith %}
+            {% with g=gender_stats.leadership %}
+            <div class="rounded-2xl border border-amber-100 bg-amber-50 p-5">
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="w-7 h-7 bg-amber-100 rounded-xl flex items-center justify-center">
+                        <i data-lucide="gavel" class="w-4 h-4 text-amber-600"></i>
+                    </div>
+                    <span class="text-xs font-black text-amber-700 uppercase tracking-wider">Senate Leadership</span>
+                </div>
+                <p class="font-brutal font-black text-3xl text-amber-700">{{ g.total }}</p>
+                <p class="text-[10px] text-amber-500 mt-0.5">bills introduced</p>
+                <div class="mt-3 pt-3 border-t border-amber-100 flex items-center justify-between">
+                    <span class="text-xs text-amber-600">Assented</span>
+                    <span class="font-bold text-amber-700">{{ g.assented }} <span class="font-normal text-[10px]">({{ g.assent_rate }}%)</span></span>
+                </div>
+            </div>
+            {% endwith %}
+        </div>
+
+        <div class="chart-wrap" style="height:200px;">
+            <canvas id="genderChart"></canvas>
+        </div>
+        <p class="text-[11px] text-slate-400 mt-4 italic">
+            "Leadership" = bills introduced by the Senate Majority Leader or a Committee Chairperson in their official capacity.
+            Women senators are identified by first name; figures may under-count if a woman senator's first name is shared.
+        </p>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SECTION 12 · Stalled Bills Spotlight
+    ══════════════════════════════════════════════════════════════════ -->
+    <div id="s-stalled" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 mb-6">
+        <h2 class="section-title text-base font-bold text-slate-900 uppercase tracking-wider mb-1">
+            12 · Stalled Bills Spotlight
+        </h2>
+        <p class="text-xs text-slate-400 mb-1">
+            Bills introduced in <strong class="text-slate-600">2023 or earlier</strong> that are still active within the Senate
+            (at 2nd Reading or at Committee stage). These have been in the pipeline for <strong class="text-slate-600">2+ years</strong>.
+        </p>
+        <p class="text-[10px] text-slate-400 mb-5">Click any row to read a plain-English explainer of that bill.</p>
+
+        {% if stalled %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-slate-200">
+                        <th class="text-left py-2 px-3 text-[10px] font-black text-slate-400 uppercase tracking-wider">Year</th>
+                        <th class="text-left py-2 px-3 text-[10px] font-black text-slate-400 uppercase tracking-wider">Bill</th>
+                        <th class="text-left py-2 px-3 text-[10px] font-black text-slate-400 uppercase tracking-wider hidden sm:table-cell">Sponsor</th>
+                        <th class="text-left py-2 px-3 text-[10px] font-black text-slate-400 uppercase tracking-wider hidden md:table-cell">Committee</th>
+                        <th class="text-left py-2 px-3 text-[10px] font-black text-slate-400 uppercase tracking-wider">Stage</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for b in stalled %}
+                    <tr class="hover:bg-orange-50 cursor-pointer transition-colors stalled-row"
+                        data-title="{{ b.title }}"
+                        data-summary="{{ b.summary }}"
+                        data-sponsor="{{ b.sponsor }}"
+                        data-party="{{ b.sponsor_party|default:'' }}"
+                        data-coalition="{{ b.sponsor_coalition|default:'' }}"
+                        data-image="{{ b.sponsor_image|default:'' }}"
+                        data-ref="{{ b.bill_ref }}"
+                        data-year="{{ b.year }}"
+                        data-status="{{ b.status_label }}"
+                        data-committee="{{ b.committee }}"
+                        data-type="stalled">
+                        <td class="py-2.5 px-3 text-xs font-bold text-orange-600">{{ b.year }}</td>
+                        <td class="py-2.5 px-3 text-xs font-medium text-slate-800 max-w-xs">
+                            <span class="flex items-center gap-1.5">
+                                <i data-lucide="file-text" class="w-3 h-3 shrink-0 text-slate-400"></i>
+                                {{ b.title }}
+                            </span>
+                        </td>
+                        <td class="py-2.5 px-3 text-xs text-slate-500 hidden sm:table-cell max-w-[180px] truncate">{{ b.sponsor }}</td>
+                        <td class="py-2.5 px-3 text-xs text-slate-500 hidden md:table-cell max-w-[160px] truncate">{{ b.committee }}</td>
+                        <td class="py-2.5 px-3">
+                            <span class="inline-flex items-center text-[10px] font-black rounded-full px-2 py-0.5
+                                {% if b.status == 'at_cowt' %}bg-violet-100 text-violet-700
+                                {% else %}bg-slate-100 text-slate-600{% endif %}">
+                                {{ b.status_label }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="text-[11px] text-slate-400 mt-4 italic">
+            {{ stalled|length }} bill{{ stalled|length|pluralize }} stalled for 2+ years without progressing.
+            These represent significant unfinished legislative business from the early 13th Parliament.
+        </p>
+        {% else %}
+        <p class="text-slate-500 text-sm">No bills matching these criteria were found.</p>
+        {% endif %}
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SECTION 13 · Committee × Year Heatmap
+    ══════════════════════════════════════════════════════════════════ -->
+    <div id="s-heatmap" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 mb-6">
+        <h2 class="section-title text-base font-bold text-slate-900 uppercase tracking-wider mb-1">
+            13 · Committee × Year Heatmap
+        </h2>
+        <p class="text-xs text-slate-400 mb-6">How many bills did each committee receive per year? Darker = more bills.</p>
+
+        <div class="overflow-x-auto">
+            <table class="text-xs border-separate" style="border-spacing:2px;">
+                <thead>
+                    <tr>
+                        <th class="text-left py-1 pr-3 text-[10px] font-black text-slate-400 uppercase tracking-wider whitespace-nowrap" style="min-width:160px;">Committee</th>
+                        {% for y in heatmap_years %}
+                        <th class="text-center py-1 px-1 text-[10px] font-black text-slate-400 w-10">{{ y }}</th>
+                        {% endfor %}
+                        <th class="text-center py-1 px-1 text-[10px] font-black text-slate-500 uppercase tracking-wider w-12">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in heatmap_rows %}
+                    <tr>
+                        <td class="py-1 pr-3 font-medium text-slate-700 whitespace-nowrap text-[11px]">{{ row.committee }}</td>
+                        {% for val in row.cells %}
+                        <td class="text-center rounded" style="width:36px;height:28px;">
+                            {% if val > 0 %}
+                            <div class="heat-cell w-full h-full rounded flex items-center justify-center font-bold text-[11px]
+                                {% if val >= 6 %}bg-red-800 text-white
+                                {% elif val >= 4 %}bg-red-600 text-white
+                                {% elif val >= 2 %}bg-red-300 text-red-900
+                                {% else %}bg-red-100 text-red-700{% endif %}"
+                                title="{{ row.committee }}: {{ val }} bill{{ val|pluralize }}">
+                                {{ val }}
+                            </div>
+                            {% else %}
+                            <div class="w-full h-full rounded bg-slate-50"></div>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                        <td class="text-center font-brutal font-black text-slate-700 text-xs">{{ row.total }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Legend -->
+        <div class="flex items-center gap-2 mt-4">
+            <span class="text-[10px] text-slate-400">Fewer</span>
+            <div class="flex gap-0.5">
+                <div class="w-5 h-3 rounded-sm bg-red-100"></div>
+                <div class="w-5 h-3 rounded-sm bg-red-200"></div>
+                <div class="w-5 h-3 rounded-sm bg-red-400"></div>
+                <div class="w-5 h-3 rounded-sm bg-red-600"></div>
+                <div class="w-5 h-3 rounded-sm bg-red-800"></div>
+            </div>
+            <span class="text-[10px] text-slate-400">More</span>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SECTION 14 · County Legislative Output
+    ══════════════════════════════════════════════════════════════════ -->
+    <div id="s-county" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 mb-6">
+        <h2 class="section-title text-base font-bold text-slate-900 uppercase tracking-wider mb-1">
+            14 · County Legislative Output
+        </h2>
+        <p class="text-xs text-slate-400 mb-6">
+            Bills introduced per county (matched from senator profiles) and how many became law.
+            Co-sponsored bills count for each sponsoring county.
+        </p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="chart-wrap" style="height:380px;">
+                <canvas id="countyChart"></canvas>
+            </div>
+            <div class="overflow-y-auto" style="max-height:380px;">
+                <table class="w-full text-xs">
+                    <thead class="sticky top-0 bg-white">
+                        <tr class="border-b border-slate-200">
+                            <th class="text-left py-1.5 px-2 text-[10px] font-black text-slate-400 uppercase tracking-wider">#</th>
+                            <th class="text-left py-1.5 px-2 text-[10px] font-black text-slate-400 uppercase tracking-wider">County</th>
+                            <th class="text-right py-1.5 px-2 text-[10px] font-black text-slate-400 uppercase tracking-wider">Bills</th>
+                            <th class="text-right py-1.5 px-2 text-[10px] font-black text-emerald-600 uppercase tracking-wider">Signed</th>
+                            <th class="text-left py-1.5 px-2 text-[10px] font-black text-slate-400 uppercase tracking-wider">Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for county, data in county_list %}
+                        <tr class="hover:bg-slate-50/60 transition-colors">
+                            <td class="py-2 px-2 text-slate-400 font-bold">{{ forloop.counter }}</td>
+                            <td class="py-2 px-2 font-medium text-slate-800">{{ county }}</td>
+                            <td class="py-2 px-2 text-right font-brutal font-black text-slate-700">{{ data.total }}</td>
+                            <td class="py-2 px-2 text-right text-emerald-700 font-bold">{{ data.assented }}</td>
+                            <td class="py-2 px-2 min-w-[100px]">
+                                <div class="flex items-center gap-2">
+                                    <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                        <div class="h-full rounded-full
+                                            {% if data.assent_rate >= 40 %}bg-emerald-500
+                                            {% elif data.assent_rate >= 20 %}bg-blue-400
+                                            {% else %}bg-slate-300{% endif %}"
+                                            style="width:{{ data.assent_rate }}%">
+                                        </div>
+                                    </div>
+                                    <span class="font-bold text-slate-600 w-9 text-right
+                                        {% if data.assent_rate >= 40 %}text-emerald-600
+                                        {% elif data.assent_rate >= 20 %}text-blue-600
+                                        {% else %}text-slate-400{% endif %}">
+                                        {{ data.assent_rate }}%
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <p class="text-[11px] text-slate-400 mt-4 italic">
+            Bills with multiple sponsors from different counties are counted once per county.
+            Bills by Senate leadership or committees without a clear individual county sponsor are excluded.
+        </p>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SECTION 15 · Bills Racing Against Parliament's End
+    ══════════════════════════════════════════════════════════════════ -->
+    <div id="s-risk" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 mb-6">
+        <h2 class="section-title text-base font-bold text-slate-900 uppercase tracking-wider mb-1">
+            15 · Bills Racing Against Parliament's End
+        </h2>
+        <p class="text-xs text-slate-400 mb-6">
+            The 13th Parliament is expected to dissolve in <strong class="text-slate-600">~September 2027</strong>.
+            Bills that don't complete the legislative process before dissolution lapse automatically.
+            These <strong class="text-slate-600">{{ at_risk|length }} active bills</strong> introduced in 2022–2023 are most at risk.
+        </p>
+
+        <!-- Risk summary cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            <div class="bg-red-50 border border-red-200 rounded-2xl p-4 text-center">
+                <p class="font-brutal font-black text-2xl text-red-700">{{ risk_counts.critical }}</p>
+                <p class="text-[10px] font-black text-red-600 uppercase tracking-wider mt-1">Critical</p>
+                <p class="text-[10px] text-red-400 mt-0.5">2022, stuck in Senate</p>
+            </div>
+            <div class="bg-orange-50 border border-orange-200 rounded-2xl p-4 text-center">
+                <p class="font-brutal font-black text-2xl text-orange-700">{{ risk_counts.high }}</p>
+                <p class="text-[10px] font-black text-orange-600 uppercase tracking-wider mt-1">High</p>
+                <p class="text-[10px] text-orange-400 mt-0.5">2022, at NA/mediation</p>
+            </div>
+            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center">
+                <p class="font-brutal font-black text-2xl text-amber-700">{{ risk_counts.medium }}</p>
+                <p class="text-[10px] font-black text-amber-600 uppercase tracking-wider mt-1">Medium</p>
+                <p class="text-[10px] text-amber-400 mt-0.5">2023, stuck in Senate</p>
+            </div>
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-center">
+                <p class="font-brutal font-black text-2xl text-slate-700">{{ risk_counts.low }}</p>
+                <p class="text-[10px] font-black text-slate-500 uppercase tracking-wider mt-1">Low</p>
+                <p class="text-[10px] text-slate-400 mt-0.5">2023, progressed</p>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-slate-200">
+                        <th class="text-left py-2 px-3 text-[10px] font-black text-slate-400 uppercase tracking-wider">Risk</th>
+                        <th class="text-left py-2 px-3 text-[10px] font-black text-slate-400 uppercase tracking-wider">Yr</th>
+                        <th class="text-left py-2 px-3 text-[10px] font-black text-slate-400 uppercase tracking-wider">Bill</th>
+                        <th class="text-left py-2 px-3 text-[10px] font-black text-slate-400 uppercase tracking-wider hidden sm:table-cell">Sponsor</th>
+                        <th class="text-left py-2 px-3 text-[10px] font-black text-slate-400 uppercase tracking-wider hidden md:table-cell">Committee</th>
+                        <th class="text-left py-2 px-3 text-[10px] font-black text-slate-400 uppercase tracking-wider">Stage</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for b in at_risk %}
+                    <tr class="hover:bg-slate-50/40 transition-colors">
+                        <td class="py-2.5 px-3">
+                            <span class="inline-flex items-center text-[10px] font-black rounded-full px-2 py-0.5
+                                {% if b.risk == 'critical' %}bg-red-100 text-red-700
+                                {% elif b.risk == 'high' %}bg-orange-100 text-orange-700
+                                {% elif b.risk == 'medium' %}bg-amber-100 text-amber-700
+                                {% else %}bg-slate-100 text-slate-600{% endif %}">
+                                {{ b.risk|capfirst }}
+                            </span>
+                        </td>
+                        <td class="py-2.5 px-3 text-xs font-bold text-slate-600">{{ b.year }}</td>
+                        <td class="py-2.5 px-3 text-xs font-medium text-slate-800 max-w-[220px]">
+                            <span class="line-clamp-2">{{ b.title }}</span>
+                        </td>
+                        <td class="py-2.5 px-3 text-xs text-slate-500 hidden sm:table-cell max-w-[160px] truncate">{{ b.sponsor }}</td>
+                        <td class="py-2.5 px-3 text-xs text-slate-500 hidden md:table-cell max-w-[150px] truncate">{{ b.committee }}</td>
+                        <td class="py-2.5 px-3">
+                            <span class="inline-flex items-center text-[10px] font-black rounded-full px-2 py-0.5
+                                {% if b.status == 'at_na' %}bg-blue-100 text-blue-700
+                                {% elif b.status == 'in_mediation' %}bg-amber-100 text-amber-700
+                                {% elif b.status == 'at_cowt' %}bg-violet-100 text-violet-700
+                                {% else %}bg-slate-100 text-slate-600{% endif %}">
+                                {{ b.status_label }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="text-[11px] text-slate-400 mt-4 italic border-t border-slate-100 pt-4">
+            If Parliament dissolves before these bills complete the full legislative cycle, they must be re-introduced in the next Parliament.
+        </p>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SECTION 16 · Stage Bottleneck Analysis
+    ══════════════════════════════════════════════════════════════════ -->
+    <div id="s-bottleneck" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 mb-6">
+        <h2 class="section-title text-base font-bold text-slate-900 uppercase tracking-wider mb-1">
+            16 · Stage Bottleneck Analysis
+        </h2>
+        <p class="text-xs text-slate-400 mb-6">
+            Where do bills pile up? Each active stage shows the bill count, average introduction year (older = more stuck),
+            and how many are from the earliest 2022 cohort.
+        </p>
+
+        <!-- Transition yields -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5">
+                <p class="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Senate Passage Yield</p>
+                <p class="font-brutal font-black text-3xl text-slate-800">{{ transition_yields.senate_yield }}%</p>
+                <p class="text-xs text-slate-500 mt-1">
+                    of the {{ transition_yields.senate_resolved }} bills that finished Senate consideration cleared it
+                    ({{ na_dynamics.cleared_senate }} cleared, rest negatived/withdrawn)
+                </p>
+            </div>
+            <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-5">
+                <p class="text-[10px] font-black text-emerald-600 uppercase tracking-wider mb-1">National Assembly Yield</p>
+                <p class="font-brutal font-black text-3xl text-emerald-700">{{ transition_yields.na_yield }}%</p>
+                <p class="text-xs text-emerald-600 mt-1">
+                    of Senate-cleared bills have been assented into law so far
+                    ({{ na_dynamics.assented }} of {{ na_dynamics.cleared_senate }})
+                </p>
+            </div>
+        </div>
+
+        <!-- Per-stage bottleneck table + chart -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div>
+                <div class="chart-wrap" style="height:220px;">
+                    <canvas id="bottleneckChart"></canvas>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-200">
+                            <th class="text-left py-2 px-3 text-[10px] font-black text-slate-400 uppercase tracking-wider">Stage</th>
+                            <th class="text-right py-2 px-3 text-[10px] font-black text-slate-400 uppercase tracking-wider">Bills</th>
+                            <th class="text-right py-2 px-3 text-[10px] font-black text-slate-400 uppercase tracking-wider">Avg Year</th>
+                            <th class="text-right py-2 px-3 text-[10px] font-black text-red-600 uppercase tracking-wider">2022 Bills</th>
+                            <th class="text-left py-2 px-3 text-[10px] font-black text-slate-400 uppercase tracking-wider">Severity</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for s in stage_bottleneck %}
+                        <tr class="hover:bg-slate-50/60 transition-colors">
+                            <td class="py-2.5 px-3 text-xs font-medium text-slate-800">{{ s.label }}</td>
+                            <td class="py-2.5 px-3 text-right font-brutal font-black text-slate-700 text-xs">{{ s.count }}</td>
+                            <td class="py-2.5 px-3 text-right text-xs font-bold
+                                {% if s.avg_year <= 2023 %}text-red-600
+                                {% elif s.avg_year <= 2024 %}text-amber-600
+                                {% else %}text-slate-500{% endif %}">
+                                {{ s.avg_year }}
+                            </td>
+                            <td class="py-2.5 px-3 text-right text-xs
+                                {% if s.early_n > 0 %}text-red-600 font-bold{% else %}text-slate-300{% endif %}">
+                                {% if s.early_n > 0 %}{{ s.early_n }} ({{ s.early_pct }}%){% else %}—{% endif %}
+                            </td>
+                            <td class="py-2.5 px-3 min-w-[100px]">
+                                {% if s.avg_year <= 2022 %}
+                                <span class="inline-flex text-[10px] font-black rounded-full px-2 py-0.5 bg-red-100 text-red-700">Severe</span>
+                                {% elif s.avg_year <= 2023 %}
+                                <span class="inline-flex text-[10px] font-black rounded-full px-2 py-0.5 bg-orange-100 text-orange-700">High</span>
+                                {% elif s.avg_year <= 2024 %}
+                                <span class="inline-flex text-[10px] font-black rounded-full px-2 py-0.5 bg-amber-100 text-amber-700">Moderate</span>
+                                {% else %}
+                                <span class="inline-flex text-[10px] font-black rounded-full px-2 py-0.5 bg-slate-100 text-slate-600">Normal</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <p class="text-[11px] text-slate-400 mt-3 italic">
+                    "Avg Year" closer to 2022 = bills have been at this stage much longer than normal.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SECTION 17 · Policy Domain Clustering
+    ══════════════════════════════════════════════════════════════════ -->
+    <div id="s-domains" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 mb-6">
+        <h2 class="section-title text-base font-bold text-slate-900 uppercase tracking-wider mb-1">
+            17 · Policy Domain Analysis
+        </h2>
+        <p class="text-xs text-slate-400 mb-6">
+            Bills grouped by policy area based on title keywords — which domains are most legislated, and which convert best?
+        </p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            <div class="lg:col-span-3 chart-wrap" style="height:320px;">
+                <canvas id="domainChart"></canvas>
+            </div>
+            <div class="lg:col-span-2 overflow-y-auto" style="max-height:320px;">
+                <table class="w-full text-xs">
+                    <thead class="sticky top-0 bg-white">
+                        <tr class="border-b border-slate-200">
+                            <th class="text-left py-1.5 px-2 text-[10px] font-black text-slate-400 uppercase tracking-wider">Domain</th>
+                            <th class="text-right py-1.5 px-2 text-[10px] font-black text-slate-400 uppercase tracking-wider">Bills</th>
+                            <th class="text-right py-1.5 px-2 text-[10px] font-black text-emerald-600 uppercase tracking-wider">Signed</th>
+                            <th class="text-right py-1.5 px-2 text-[10px] font-black text-slate-400 uppercase tracking-wider">Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for domain, data in domain_list %}
+                        <tr class="hover:bg-slate-50/60 transition-colors">
+                            <td class="py-2 px-2 font-medium text-slate-800">{{ domain }}</td>
+                            <td class="py-2 px-2 text-right font-brutal font-black text-slate-700">{{ data.total }}</td>
+                            <td class="py-2 px-2 text-right text-emerald-700 font-bold">{{ data.assented }}</td>
+                            <td class="py-2 px-2 text-right font-bold
+                                {% if data.assent_rate >= 40 %}text-emerald-600
+                                {% elif data.assent_rate >= 20 %}text-blue-600
+                                {% else %}text-slate-400{% endif %}">
+                                {{ data.assent_rate }}%
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <p class="text-[11px] text-slate-400 mt-4 italic">
+            Domain assigned by matching keywords in the bill title. A bill is assigned to the first matching domain (ordered by specificity).
+            "Finance/Budget" tends to dominate because of the annual revenue-sharing and fund allocation bills.
+        </p>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SECTION 18 · Co-Sponsorship Effect
+    ══════════════════════════════════════════════════════════════════ -->
+    <div id="s-cosponsor" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 mb-6">
+        <h2 class="section-title text-base font-bold text-slate-900 uppercase tracking-wider mb-1">
+            18 · Co-Sponsorship Effect
+        </h2>
+        <p class="text-xs text-slate-400 mb-6">
+            Does having a co-sponsor improve a bill's chances of becoming law?
+            <strong class="text-slate-600">{{ cosponsor_stats.co.total }}</strong> bills list a co-sponsor;
+            <strong class="text-slate-600">{{ cosponsor_stats.solo.total }}</strong> are solo-sponsored.
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            <div class="rounded-2xl border border-violet-100 bg-violet-50 p-6">
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="w-7 h-7 bg-violet-100 rounded-xl flex items-center justify-center">
+                        <i data-lucide="users" class="w-4 h-4 text-violet-600"></i>
+                    </div>
+                    <span class="text-xs font-black text-violet-700 uppercase tracking-wider">Co-Sponsored Bills</span>
+                </div>
+                <p class="font-brutal font-black text-4xl text-violet-700">{{ cosponsor_stats.co.assent_rate }}%</p>
+                <p class="text-xs text-violet-600 mt-1">assent rate</p>
+                <div class="mt-3 pt-3 border-t border-violet-100 text-xs text-violet-600">
+                    {{ cosponsor_stats.co.assented }} of {{ cosponsor_stats.co.total }} bills assented
+                </div>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-6">
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="w-7 h-7 bg-slate-100 rounded-xl flex items-center justify-center">
+                        <i data-lucide="user" class="w-4 h-4 text-slate-600"></i>
+                    </div>
+                    <span class="text-xs font-black text-slate-600 uppercase tracking-wider">Solo-Sponsored Bills</span>
+                </div>
+                <p class="font-brutal font-black text-4xl text-slate-700">{{ cosponsor_stats.solo.assent_rate }}%</p>
+                <p class="text-xs text-slate-500 mt-1">assent rate</p>
+                <div class="mt-3 pt-3 border-t border-slate-200 text-xs text-slate-500">
+                    {{ cosponsor_stats.solo.assented }} of {{ cosponsor_stats.solo.total }} bills assented
+                </div>
+            </div>
+        </div>
+
+        <!-- Visual comparison bar -->
+        <div class="space-y-3">
+            <div>
+                <div class="flex justify-between text-xs font-semibold text-slate-700 mb-1.5">
+                    <span>Co-Sponsored</span>
+                    <span class="text-violet-600 font-bold">{{ cosponsor_stats.co.assent_rate }}%</span>
+                </div>
+                <div class="h-5 bg-slate-100 rounded-lg overflow-hidden">
+                    <div class="h-full bg-violet-500 rounded-lg" style="width:{{ cosponsor_stats.co.assent_rate }}%"></div>
+                </div>
+            </div>
+            <div>
+                <div class="flex justify-between text-xs font-semibold text-slate-700 mb-1.5">
+                    <span>Solo-Sponsored</span>
+                    <span class="text-slate-600 font-bold">{{ cosponsor_stats.solo.assent_rate }}%</span>
+                </div>
+                <div class="h-5 bg-slate-100 rounded-lg overflow-hidden">
+                    <div class="h-full bg-slate-400 rounded-lg" style="width:{{ cosponsor_stats.solo.assent_rate }}%"></div>
+                </div>
+            </div>
+        </div>
+
+        <p class="text-[11px] text-slate-400 mt-5 italic border-t border-slate-100 pt-4">
+            Co-sponsored bills often reflect cross-party or cross-region consensus building, which may
+            make them easier to pass. However, co-sponsorship is also common on technically complex or
+            politically sensitive bills that face greater scrutiny.
+        </p>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SECTION 19 · Senate Amendment Rate by Bill Origin
+    ══════════════════════════════════════════════════════════════════ -->
+    <div id="s-amend-origin" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 mb-6">
+        <h2 class="section-title text-base font-bold text-slate-900 uppercase tracking-wider mb-1">
+            19 · Senate Amendment Rate by Bill Origin
+        </h2>
+        <p class="text-xs text-slate-400 mb-6">
+            Does the Senate revise National Assembly bills more aggressively than its own bills?
+            Analysis covers the <strong class="text-slate-600">{{ amendment_by_origin.sb_total }}</strong> Senate bills and
+            <strong class="text-slate-600">{{ amendment_by_origin.nab_total }}</strong> NA bills where amendment data is known.
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            <div class="rounded-2xl border border-red-100 bg-red-50 p-6 text-center">
+                <p class="text-[10px] font-black text-red-600 uppercase tracking-wider mb-2">Senate Bills (SBs)</p>
+                <p class="font-brutal font-black text-4xl text-red-700">{{ amendment_by_origin.sb_amended_pct }}%</p>
+                <p class="text-xs text-red-600 mt-1">amended during Senate passage</p>
+                <p class="text-[10px] text-red-400 mt-2">{{ amendment_by_origin.sb_amended }} of {{ amendment_by_origin.sb_total }} cleared SBs</p>
+            </div>
+            <div class="rounded-2xl border border-blue-100 bg-blue-50 p-6 text-center">
+                <p class="text-[10px] font-black text-blue-600 uppercase tracking-wider mb-2">Nat. Assembly Bills (NABs)</p>
+                <p class="font-brutal font-black text-4xl text-blue-700">{{ amendment_by_origin.nab_amended_pct }}%</p>
+                <p class="text-xs text-blue-600 mt-1">amended by Senate before passing</p>
+                <p class="text-[10px] text-blue-400 mt-2">{{ amendment_by_origin.nab_amended }} of {{ amendment_by_origin.nab_total }} cleared NABs</p>
+            </div>
+        </div>
+
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <div class="flex items-start gap-2">
+                <i data-lucide="lightbulb" class="w-4 h-4 text-amber-500 shrink-0 mt-0.5"></i>
+                <p class="text-xs text-slate-600">{{ amendment_by_origin.insight }}</p>
+            </div>
+        </div>
+
+        <div class="mt-5 space-y-3">
+            <div>
+                <div class="flex justify-between text-xs font-semibold text-slate-700 mb-1.5">
+                    <span>Senate-Originated Bills amended</span>
+                    <span class="text-red-600 font-bold">{{ amendment_by_origin.sb_amended_pct }}%</span>
+                </div>
+                <div class="h-5 bg-slate-100 rounded-lg overflow-hidden">
+                    <div class="h-full bg-red-500 rounded-lg" style="width:{{ amendment_by_origin.sb_amended_pct }}%"></div>
+                </div>
+            </div>
+            <div>
+                <div class="flex justify-between text-xs font-semibold text-slate-700 mb-1.5">
+                    <span>National Assembly Bills amended by Senate</span>
+                    <span class="text-blue-600 font-bold">{{ amendment_by_origin.nab_amended_pct }}%</span>
+                </div>
+                <div class="h-5 bg-slate-100 rounded-lg overflow-hidden">
+                    <div class="h-full bg-blue-500 rounded-lg" style="width:{{ amendment_by_origin.nab_amended_pct }}%"></div>
+                </div>
+            </div>
+        </div>
+        <p class="text-[11px] text-slate-400 mt-4 italic">
+            "Amended" means the bill was passed to the National Assembly with Senate amendments incorporated — not just minor editorial changes.
+        </p>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SECTION 20 · Mediation Deep Dive
+    ══════════════════════════════════════════════════════════════════ -->
+    <div id="s-mediation" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 mb-6">
+        <h2 class="section-title text-base font-bold text-slate-900 uppercase tracking-wider mb-1">
+            20 · Mediation Deep Dive
+        </h2>
+        <p class="text-xs text-slate-400 mb-6">
+            <strong class="text-slate-600">{{ mediation_bills|length }} bills</strong> are currently in a Mediation Committee —
+            a joint Senate–National Assembly process formed when both houses cannot agree on a bill's text.
+            If unresolved before Parliament dissolves, they lapse automatically.
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for b in mediation_bills %}
+            <div class="rounded-2xl border p-4
+                {% if b.med_risk == 'critical' %}border-red-200 bg-red-50
+                {% elif b.med_risk == 'high' %}border-orange-200 bg-orange-50
+                {% else %}border-amber-100 bg-amber-50{% endif %}">
+
+                <!-- Risk + Domain badges -->
+                <div class="flex items-center gap-1.5 mb-3 flex-wrap">
+                    <span class="text-[9px] font-black uppercase tracking-wider rounded-full px-2 py-0.5
+                        {% if b.med_risk == 'critical' %}bg-red-200 text-red-800
+                        {% elif b.med_risk == 'high' %}bg-orange-200 text-orange-800
+                        {% else %}bg-amber-200 text-amber-800{% endif %}">
+                        {{ b.med_risk|capfirst }} Risk
+                    </span>
+                    <span class="text-[9px] font-black uppercase tracking-wider rounded-full px-2 py-0.5 bg-slate-200 text-slate-700">
+                        {{ b.domain }}
+                    </span>
+                    <span class="text-[9px] font-medium text-slate-500 ml-auto">{{ b.year }}</span>
+                </div>
+
+                <!-- Title -->
+                <p class="text-xs font-bold text-slate-800 leading-snug mb-2">{{ b.title }}</p>
+
+                <!-- Meta -->
+                <p class="text-[10px] text-slate-500 truncate mb-1">
+                    <i data-lucide="user" class="w-3 h-3 inline-block mr-0.5 -mt-0.5"></i>
+                    {{ b.sponsor }}
+                </p>
+                <p class="text-[10px] text-slate-500 truncate">
+                    <i data-lucide="folder" class="w-3 h-3 inline-block mr-0.5 -mt-0.5"></i>
+                    {{ b.committee }}
+                </p>
+
+                <!-- Time in mediation indicator -->
+                <div class="mt-3 pt-3 border-t
+                    {% if b.med_risk == 'critical' %}border-red-200{% elif b.med_risk == 'high' %}border-orange-200{% else %}border-amber-200{% endif %}">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px]
+                            {% if b.med_risk == 'critical' %}text-red-600{% elif b.med_risk == 'high' %}text-orange-600{% else %}text-amber-600{% endif %}">
+                            {{ b.years_pending }} yr{{ b.years_pending|pluralize }} in system
+                        </span>
+                        <span class="text-[10px] font-bold text-slate-600">{{ b.bill_ref }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+            <p class="text-[11px] text-slate-600">
+                <strong>How mediation works:</strong> When the Senate and National Assembly pass different versions of a bill,
+                a joint Mediation Committee of equal members from both houses is formed. They have 30 days to agree on a
+                compromise text. If the mediated version is approved by both houses, it goes for Presidential assent.
+                If not, the bill fails for that Parliament.
+            </p>
+        </div>
+    </div>
+
+    <!-- ── 21 · Coalition / Party Output ─────────────────────────── -->
+    <div id="s-coalition" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 mb-6">
+        <h2 class="section-title text-base font-bold text-slate-900 uppercase tracking-wider mb-1">
+            21 · Coalition Legislative Output
+        </h2>
+        <p class="text-xs text-slate-400 mb-6">
+            Bills grouped by the political coalition of their lead sponsor.
+            Kenya Kwanza (ruling coalition) vs Azimio la Umoja (opposition) vs nominated / multi-party bills.
+        </p>
+
+        <!-- Summary cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            {% for name, v in coalition_list %}
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <p class="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">{{ name }}</p>
+                <p class="text-3xl font-extrabold text-slate-800 mb-1">{{ v.total }}</p>
+                <div class="flex gap-3 text-[11px] mt-2">
+                    <span class="text-emerald-600 font-semibold">{{ v.assented }} assented</span>
+                    <span class="text-blue-600">{{ v.active }} active</span>
+                    <span class="text-slate-400">{{ v.lapsed }} lapsed</span>
+                </div>
+                <div class="mt-3 h-2 rounded-full bg-slate-200 overflow-hidden">
+                    <div class="h-2 rounded-full bg-emerald-500" style="width:{{ v.assent_rate }}%"></div>
+                </div>
+                <p class="text-[10px] text-slate-500 mt-1">{{ v.assent_rate }}% assent rate</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Chart -->
+        <div class="relative h-52">
+            <canvas id="coalitionChart"></canvas>
+        </div>
+    </div>
+
+    <!-- ── 22 · Regional Legislative Output ───────────────────────── -->
+    <div id="s-region" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 mb-6">
+        <h2 class="section-title text-base font-bold text-slate-900 uppercase tracking-wider mb-1">
+            22 · Regional Legislative Output
+        </h2>
+        <p class="text-xs text-slate-400 mb-6">
+            Bills mapped to the home region of their lead sponsor (derived from the senator's county).
+            Reveals whether legislative energy is concentrated in certain parts of the country.
+        </p>
+
+        <div class="relative h-72 mb-6">
+            <canvas id="regionChart"></canvas>
+        </div>
+
+        <table class="w-full text-xs border-collapse">
+            <thead>
+                <tr class="bg-slate-100 text-slate-600 text-left">
+                    <th class="py-2 px-3 rounded-l-lg">Region</th>
+                    <th class="py-2 px-3 text-right">Bills</th>
+                    <th class="py-2 px-3 text-right">Assented</th>
+                    <th class="py-2 px-3 text-right rounded-r-lg">Assent Rate</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for name, v in region_list %}
+                <tr class="hover:bg-slate-50">
+                    <td class="py-2 px-3 font-semibold text-slate-700">{{ name }}</td>
+                    <td class="py-2 px-3 text-right text-slate-600">{{ v.total }}</td>
+                    <td class="py-2 px-3 text-right text-emerald-600 font-semibold">{{ v.assented }}</td>
+                    <td class="py-2 px-3 text-right">
+                        <span class="inline-flex items-center gap-1.5">
+                            <span class="w-16 h-1.5 rounded-full bg-slate-200 inline-block align-middle overflow-hidden">
+                                <span class="h-1.5 rounded-full bg-emerald-500 block" style="width:{{ v.assent_rate }}%"></span>
+                            </span>
+                            <span class="text-slate-600">{{ v.assent_rate }}%</span>
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ── 23 · Time-to-Law Analysis ──────────────────────────────── -->
+    <div id="s-ttl" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 mb-6">
+        <h2 class="section-title text-base font-bold text-slate-900 uppercase tracking-wider mb-1">
+            23 · Time-to-Law Analysis
+        </h2>
+        <p class="text-xs text-slate-400 mb-6">
+            How long does it take from a bill's introduction to Presidential assent?
+            Tracked for the <strong class="text-slate-600">{{ timed_bills|length }} bills</strong> with known assent dates.
+        </p>
+
+        <!-- KPI cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div class="rounded-2xl border border-slate-200 bg-emerald-50 p-5 col-span-1">
+                <p class="text-[10px] font-black uppercase tracking-wider text-emerald-700 mb-1">Average</p>
+                <p class="text-4xl font-extrabold text-emerald-800">{{ time_to_law.avg_years }}<span class="text-lg font-normal ml-1">yrs</span></p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-blue-50 p-5">
+                <p class="text-[10px] font-black uppercase tracking-wider text-blue-700 mb-1">Fastest</p>
+                <p class="text-xl font-bold text-blue-800 mb-1">{{ time_to_law.fastest_years }} yr{{ time_to_law.fastest_years|pluralize }}</p>
+                <p class="text-[11px] text-blue-600 leading-snug truncate" title="{{ time_to_law.fastest_title }}">{{ time_to_law.fastest_title|truncatechars:60 }}</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-orange-50 p-5">
+                <p class="text-[10px] font-black uppercase tracking-wider text-orange-700 mb-1">Slowest</p>
+                <p class="text-xl font-bold text-orange-800 mb-1">{{ time_to_law.slowest_years }} yr{{ time_to_law.slowest_years|pluralize }}</p>
+                <p class="text-[11px] text-orange-600 leading-snug truncate" title="{{ time_to_law.slowest_title }}">{{ time_to_law.slowest_title|truncatechars:60 }}</p>
+            </div>
+        </div>
+
+        <!-- Duration distribution chart -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div>
+                <p class="text-[11px] font-semibold text-slate-600 mb-2">Distribution by years taken</p>
+                <div class="relative h-48">
+                    <canvas id="ttlDistChart"></canvas>
+                </div>
+            </div>
+            <div>
+                <p class="text-[11px] font-semibold text-slate-600 mb-2">Average time to assent by signing year</p>
+                <div class="relative h-48">
+                    <canvas id="ttlYearChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ranked table -->
+        <p class="text-[11px] font-semibold text-slate-600 mb-1">All assented bills ranked by speed</p>
+        <p class="text-[10px] text-slate-400 mb-3">Click any row to read a plain-English explainer of that bill.</p>
+        <div class="overflow-x-auto">
+            <table class="w-full text-xs border-collapse min-w-[700px]">
+                <thead>
+                    <tr class="bg-slate-100 text-slate-600 text-left">
+                        <th class="py-2 px-3 rounded-l-lg">Bill</th>
+                        <th class="py-2 px-3">Sponsor</th>
+                        <th class="py-2 px-3">Party</th>
+                        <th class="py-2 px-3 text-center">Intro</th>
+                        <th class="py-2 px-3 text-center">Assented</th>
+                        <th class="py-2 px-3 text-center rounded-r-lg">Yrs</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100" id="ttl-tbody">
+                    {% for b in timed_bills %}
+                    <tr class="hover:bg-emerald-50 cursor-pointer transition-colors ttl-row"
+                        data-title="{{ b.title }}"
+                        data-summary="{{ b.summary }}"
+                        data-sponsor="{{ b.sponsor }}"
+                        data-party="{{ b.sponsor_party }}"
+                        data-coalition="{{ b.sponsor_coalition }}"
+                        data-image="{{ b.sponsor_image }}"
+                        data-ref="{{ b.bill_ref }}"
+                        data-year="{{ b.year }}"
+                        data-assented="{{ b.assent_year }}"
+                        data-yrs="{{ b.years_to_assent }}">
+                        <td class="py-2 px-3 text-slate-700 font-medium max-w-[220px]">
+                            <span class="flex items-center gap-1.5">
+                                <i data-lucide="file-text" class="w-3 h-3 shrink-0 text-slate-400"></i>
+                                {{ b.title|truncatechars:50 }}
+                            </span>
+                        </td>
+                        <td class="py-2 px-3 text-slate-500 whitespace-nowrap max-w-[160px] truncate" title="{{ b.sponsor }}">
+                            {{ b.sponsor|truncatechars:32 }}
+                        </td>
+                        <td class="py-2 px-3 whitespace-nowrap">
+                            {% if b.sponsor_party %}
+                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide
+                                {% if b.sponsor_coalition == 'Kenya Kwanza' %}bg-blue-100 text-blue-800
+                                {% elif b.sponsor_coalition == 'Azimio' %}bg-orange-100 text-orange-800
+                                {% else %}bg-slate-100 text-slate-600{% endif %}">
+                                {{ b.sponsor_party|truncatechars:20 }}
+                            </span>
+                            {% else %}
+                            <span class="text-slate-400 text-[10px]">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-2 px-3 text-center text-slate-500 font-mono">{{ b.year }}</td>
+                        <td class="py-2 px-3 text-center text-slate-500 font-mono">{{ b.assent_year }}</td>
+                        <td class="py-2 px-3 text-center">
+                            <span class="inline-block w-7 text-center font-extrabold rounded-lg py-0.5
+                                {% if b.years_to_assent == 0 %}bg-emerald-100 text-emerald-700
+                                {% elif b.years_to_assent == 1 %}bg-blue-100 text-blue-700
+                                {% elif b.years_to_assent == 2 %}bg-amber-100 text-amber-700
+                                {% else %}bg-red-100 text-red-700{% endif %}">
+                                {{ b.years_to_assent }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ── Bill explainer modal ─────────────────────────────────── -->
+        <div id="bill-modal-overlay"
+             class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center p-0 sm:p-6"
+             style="background:rgba(2,6,23,0.7);backdrop-filter:blur(8px);">
+
+            <div id="bill-modal"
+                 class="relative w-full sm:max-w-lg bg-white sm:rounded-3xl rounded-t-[28px] overflow-hidden"
+                 style="box-shadow:0 32px 80px -12px rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,0.05);"
+                 role="dialog" aria-modal="true" aria-labelledby="modal-title">
+
+                <!-- Speed accent line -->
+                <div id="modal-bar" class="h-[3px] w-full"></div>
+
+                <!-- ── ID Card header ─────────────────────────────────── -->
+                <div id="modal-hero"
+                     class="relative flex items-stretch gap-0 overflow-hidden"
+                     style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);min-height:172px;">
+
+                    <!-- Subtle dot pattern overlay -->
+                    <div class="absolute inset-0 pointer-events-none opacity-[0.04]"
+                         style="background-image:radial-gradient(circle,#fff 1px,transparent 1px);background-size:18px 18px;"></div>
+
+                    <!-- ── Photo portrait frame (left) ───────────────── -->
+                    <div class="relative shrink-0 flex items-center justify-center p-4 pr-3" style="width:120px;">
+                        <!-- Outer card frame -->
+                        <div class="relative w-full rounded-xl overflow-hidden shadow-2xl"
+                             style="aspect-ratio:3/4;border:2px solid rgba(255,255,255,0.12);">
+
+                            <!-- Photo — object-contain so nothing is cropped -->
+                            <img id="modal-photo" src="" alt=""
+                                 class="w-full h-full hidden"
+                                 style="object-fit:contain;object-position:center top;background:#0f172a;"
+                                 onerror="this.classList.add('hidden');document.getElementById('modal-photo-fallback').classList.remove('hidden');">
+
+                            <!-- Fallback: initials or institution icon -->
+                            <div id="modal-photo-fallback"
+                                 class="absolute inset-0 flex flex-col items-center justify-center gap-2"
+                                 style="background:#0f172a;">
+
+                                <!-- Initials (individual senator without photo) -->
+                                <div id="modal-initials-wrap"
+                                     class="hidden w-14 h-14 rounded-full flex items-center justify-center border border-white/10">
+                                    <span id="modal-initials" class="text-xl font-black text-white select-none"></span>
+                                </div>
+
+                                <!-- Institution icon -->
+                                <div id="modal-institution-wrap" class="hidden flex flex-col items-center gap-1.5 px-2">
+                                    <i id="modal-institution-icon" data-lucide="landmark" class="w-8 h-8 text-slate-400"></i>
+                                    <span id="modal-institution-label"
+                                          class="text-[8px] font-bold uppercase tracking-widest text-slate-500 text-center leading-tight"></span>
+                                </div>
+                            </div>
+
+                            <!-- "SENATE" watermark strip at bottom of photo -->
+                            <div class="absolute bottom-0 inset-x-0 py-1 text-center"
+                                 style="background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);">
+                                <p class="text-[7px] font-black uppercase tracking-[0.2em] text-white/60">Kenya Senate</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Sponsor details (right of photo) ─────────── -->
+                    <div class="flex-1 flex flex-col justify-between py-4 pr-4 pl-1 min-w-0">
+
+                        <!-- Top row: speed pill + close -->
+                        <div class="flex items-start justify-between gap-2">
+                            <span id="modal-speed-chip"
+                                  class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-bold leading-none"
+                                  style="backdrop-filter:blur(8px);">
+                                <i data-lucide="zap" class="w-2.5 h-2.5"></i>
+                                <span id="modal-speed-label"></span>
+                            </span>
+                            <button id="modal-close"
+                                    class="shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all"
+                                    style="background:rgba(255,255,255,0.1);"
+                                    onmouseover="this.style.background='rgba(255,255,255,0.2)'"
+                                    onmouseout="this.style.background='rgba(255,255,255,0.1)'"
+                                    aria-label="Close">
+                                <i data-lucide="x" class="w-3 h-3 text-white/70"></i>
+                            </button>
+                        </div>
+
+                        <!-- Middle: divider lines (ID card feel) -->
+                        <div class="flex-1 flex flex-col justify-center gap-0.5 py-2">
+                            <p class="text-[8px] font-black uppercase tracking-[0.2em] text-white/30 mb-0.5">Sponsor</p>
+                            <p id="modal-sponsor"
+                               class="text-white font-extrabold text-[15px] leading-snug mb-2"></p>
+                            <div id="modal-party-chip" class="hidden">
+                                <span id="modal-party"
+                                      class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[8px] font-black uppercase tracking-wider"></span>
+                            </div>
+                        </div>
+
+                        <!-- Bottom: assented badge -->
+                        <div>
+                            <span id="modal-status-badge"
+                                  class="inline-flex items-center gap-1 rounded-full text-[8px] font-black uppercase tracking-wider px-2.5 py-1"
+                                  style="background:rgba(16,185,129,0.18);border:1px solid rgba(52,211,153,0.3);color:#6ee7b7;">
+                                <i data-lucide="check-circle" class="w-2.5 h-2.5"></i>
+                                <span id="modal-status-text">Assented</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Bill content ──────────────────────────────────── -->
+                <div class="px-5 pt-4 pb-5 bg-white">
+
+                    <!-- Reference -->
+                    <p id="modal-ref"
+                       class="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1"></p>
+
+                    <!-- Title -->
+                    <h3 id="modal-title"
+                        class="text-[16px] font-extrabold text-slate-900 leading-snug mb-3"
+                        style="letter-spacing:-0.01em;"></h3>
+
+                    <!-- Summary -->
+                    <div class="rounded-xl px-4 py-3 mb-4"
+                         style="background:#f8fafc;border:1px solid #e2e8f0;">
+                        <p id="modal-summary" class="text-[12.5px] text-slate-600 leading-relaxed m-0"></p>
+                    </div>
+
+                    <!-- 3-column stat tiles -->
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="rounded-xl p-2.5 text-center" style="background:#f1f5f9;">
+                            <p class="text-[8px] font-black uppercase tracking-wider text-slate-400 mb-1">Introduced</p>
+                            <p id="modal-year" class="text-sm font-extrabold text-slate-800 leading-none"></p>
+                        </div>
+                        <div class="rounded-xl p-2.5 text-center" style="background:#f0fdf4;border:1px solid #bbf7d0;">
+                            <p class="text-[8px] font-black uppercase tracking-wider text-emerald-500 mb-1" id="modal-tile2-label">Assented</p>
+                            <p id="modal-assented" class="text-sm font-extrabold text-emerald-700 leading-none"></p>
+                        </div>
+                        <div id="modal-duration-chip" class="rounded-xl p-2.5 text-center">
+                            <p class="text-[8px] font-black uppercase tracking-wider mb-1" id="modal-dur-label">Duration</p>
+                            <p id="modal-dur-value" class="text-sm font-extrabold leading-none"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <p class="text-[10px] text-slate-400 mt-2">
+            <span class="inline-block w-4 text-center font-bold rounded bg-emerald-100 text-emerald-700">0</span> same year &nbsp;
+            <span class="inline-block w-4 text-center font-bold rounded bg-blue-100 text-blue-700">1</span> 1 year &nbsp;
+            <span class="inline-block w-4 text-center font-bold rounded bg-amber-100 text-amber-700">2</span> 2 years &nbsp;
+            <span class="inline-block w-4 text-center font-bold rounded bg-red-100 text-red-700">3</span> 3+ years
+        </p>
+    </div>
+
+    <!-- ── Attribution ────────────────────────────────────────────── -->
+    <p class="text-center text-[11px] text-slate-400 mt-4">
+        Data: Parliament of Kenya Bills Tracker ({{ as_at_date }}) ·
+        <a href="{{ source_url }}" target="_blank" rel="noopener" class="underline hover:text-slate-600">Original PDF ↗</a>
+    </p>
+
+</div>
+
+{{ chart_data|json_script:"chart-data" }}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const raw = JSON.parse(document.getElementById('chart-data').textContent);
+
+    const C = {
+        assented: 'rgba(5,150,105,0.85)',
+        active:   'rgba(37,99,235,0.75)',
+        lapsed:   'rgba(156,163,175,0.7)',
+        grid:     'rgba(226,232,240,0.8)',
+        tick:     '#94a3b8',
+    };
+    const statusColors = [
+        'rgba(71,85,105,0.85)',
+        'rgba(124,58,237,0.85)',
+        'rgba(37,99,235,0.85)',
+        'rgba(217,119,6,0.85)',
+        'rgba(234,88,12,0.85)',
+        'rgba(5,150,105,0.85)',
+        'rgba(220,38,38,0.85)',
+        'rgba(148,163,184,0.75)',
+    ];
+
+    Chart.defaults.font.family = "'Plus Jakarta Sans', system-ui, sans-serif";
+    Chart.defaults.color = C.tick;
+
+    // ── 1. Year chart ───────────────────────────────────────────────────────
+    new Chart(document.getElementById('yearChart'), {
+        type: 'bar',
+        data: {
+            labels: raw.years.labels,
+            datasets: [
+                { label: 'Assented', data: raw.years.assented, backgroundColor: C.assented, borderRadius: 3 },
+                { label: 'Active',   data: raw.years.active,   backgroundColor: C.active,   borderRadius: 3 },
+                { label: 'Lapsed',   data: raw.years.lapsed,   backgroundColor: C.lapsed,   borderRadius: 3 },
+            ],
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } },
+            scales: {
+                x: { stacked: true, grid: { display: false } },
+                y: { stacked: true, grid: { color: C.grid }, ticks: { stepSize: 10 } },
+            },
+        },
+    });
+
+    // ── 2. Origin doughnut ──────────────────────────────────────────────────
+    const o = raw.origin;
+    new Chart(document.getElementById('originChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Senate Bills', 'Nat. Assembly Bills'],
+            datasets: [{
+                data: [o.senate_total, o.na_total],
+                backgroundColor: ['rgba(185,28,28,0.85)', 'rgba(37,99,235,0.75)'],
+                borderWidth: 2, borderColor: '#fff',
+            }],
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, cutout: '65%',
+            plugins: { legend: { display: false } },
+        },
+    });
+    const origLegend = document.getElementById('originLegend');
+    [
+        { label: 'Senate Bills',        count: o.senate_total, assented: o.senate_assented, color: 'bg-red-700' },
+        { label: 'Nat. Assembly Bills', count: o.na_total,     assented: o.na_assented,     color: 'bg-blue-600' },
+    ].forEach(function (item) {
+        const rate = item.count > 0 ? Math.round(item.assented / item.count * 100) : 0;
+        origLegend.innerHTML += `<div class="flex items-center justify-between py-1 border-b border-slate-100 last:border-0">
+            <div class="flex items-center gap-2"><span class="inline-block w-2.5 h-2.5 rounded-full ${item.color}"></span>
+            <span class="font-medium text-slate-700">${item.label}</span></div>
+            <div class="text-right"><span class="font-brutal font-black text-slate-800">${item.count}</span>
+            <span class="text-slate-400 ml-2">${rate}% assented</span></div></div>`;
+    });
+
+    // ── 3. Committee stacked horizontal bar ────────────────────────────────
+    new Chart(document.getElementById('committeeChart'), {
+        type: 'bar',
+        data: {
+            labels: raw.committees.labels,
+            datasets: [
+                { label: 'Assented', data: raw.committees.assented, backgroundColor: C.assented, borderRadius: 2 },
+                { label: 'Active',   data: raw.committees.active,   backgroundColor: C.active,   borderRadius: 2 },
+                { label: 'Lapsed',   data: raw.committees.lapsed,   backgroundColor: C.lapsed,   borderRadius: 2 },
+            ],
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } },
+            scales: {
+                x: { stacked: true, grid: { color: C.grid }, ticks: { stepSize: 5 } },
+                y: { stacked: true, grid: { display: false }, ticks: { font: { size: 11 } } },
+            },
+        },
+    });
+
+    // ── 4. Pipeline horizontal bar ──────────────────────────────────────────
+    new Chart(document.getElementById('pipelineChart'), {
+        type: 'bar',
+        data: {
+            labels: raw.pipeline.labels,
+            datasets: [{ data: raw.pipeline.values, backgroundColor: statusColors, borderRadius: 4, borderSkipped: false }],
+        },
+        options: {
+            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { color: C.grid } },
+                y: { grid: { display: false }, ticks: { font: { size: 11 } } },
+            },
+        },
+    });
+
+    // ── 5. Top sponsors bar ─────────────────────────────────────────────────
+    new Chart(document.getElementById('sponsorChart'), {
+        type: 'bar',
+        data: {
+            labels: raw.sponsors.labels.map(function (n) { return n.replace('Sen. ', ''); }),
+            datasets: [{ label: 'Bills', data: raw.sponsors.values, backgroundColor: 'rgba(185,28,28,0.8)', borderRadius: 4, borderSkipped: false }],
+        },
+        options: {
+            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { color: C.grid }, ticks: { stepSize: 1 } },
+                y: { grid: { display: false }, ticks: { font: { size: 11 } } },
+            },
+        },
+    });
+
+    // ── 6. Cohort completion (stacked bar + line) ────────────────────────────
+    new Chart(document.getElementById('cohortChart'), {
+        type: 'bar',
+        data: {
+            labels: raw.cohort.labels,
+            datasets: [
+                { label: 'Assented', data: raw.cohort.assented, backgroundColor: C.assented, borderRadius: 3, stack: 's' },
+                { label: 'Active',   data: raw.cohort.active,   backgroundColor: C.active,   borderRadius: 3, stack: 's' },
+                { label: 'Lapsed',   data: raw.cohort.lapsed,   backgroundColor: C.lapsed,   borderRadius: 3, stack: 's' },
+                {
+                    label: 'Assent Rate %', data: raw.cohort.assent_rate,
+                    type: 'line', yAxisID: 'y2',
+                    borderColor: 'rgba(234,88,12,0.9)', backgroundColor: 'transparent',
+                    pointBackgroundColor: 'rgba(234,88,12,0.9)', tension: 0.3, borderWidth: 2,
+                    pointRadius: 4,
+                },
+            ],
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } },
+            scales: {
+                x: { grid: { display: false } },
+                y:  { stacked: true, grid: { color: C.grid }, ticks: { stepSize: 10 } },
+                y2: { position: 'right', min: 0, max: 100, grid: { display: false }, ticks: { callback: function(v) { return v + '%'; }, font: { size: 10 } } },
+            },
+        },
+    });
+
+    // ── 7. NA Dynamics doughnut ─────────────────────────────────────────────
+    new Chart(document.getElementById('naDynamicsChart'), {
+        type: 'doughnut',
+        data: {
+            labels: raw.na_dynamics.labels,
+            datasets: [{
+                data: raw.na_dynamics.values,
+                backgroundColor: [
+                    'rgba(5,150,105,0.85)',
+                    'rgba(37,99,235,0.75)',
+                    'rgba(217,119,6,0.85)',
+                    'rgba(234,88,12,0.85)',
+                ],
+                borderWidth: 2, borderColor: '#fff',
+            }],
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, cutout: '60%',
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } },
+        },
+    });
+
+    // ── 8. Amendment grouped bar ────────────────────────────────────────────
+    const am = raw.amendment;
+    new Chart(document.getElementById('amendmentChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Amended Bills', 'Clean Passes'],
+            datasets: [
+                {
+                    label: 'Assent Rate (%)',
+                    data: [am.amended_assent_rate, am.clean_assent_rate],
+                    backgroundColor: ['rgba(124,58,237,0.8)', 'rgba(37,99,235,0.7)'],
+                    borderRadius: 6, borderSkipped: false,
+                },
+            ],
+        },
+        options: {
+            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: function(ctx) { return ' ' + ctx.parsed.x + '% assent rate'; } } },
+            },
+            scales: {
+                x: { min: 0, max: 100, grid: { color: C.grid }, ticks: { callback: function(v) { return v + '%'; } } },
+                y: { grid: { display: false }, ticks: { font: { size: 12, weight: 'bold' } } },
+            },
+        },
+    });
+
+    // ── 9. Sponsor success (grouped horizontal bar) ─────────────────────────
+    const ss = raw.sponsor_success;
+    new Chart(document.getElementById('sponsorSuccessChart'), {
+        type: 'bar',
+        data: {
+            labels: ss.labels,
+            datasets: [
+                { label: 'Introduced', data: ss.total,    backgroundColor: 'rgba(148,163,184,0.7)', borderRadius: 3, borderSkipped: false },
+                { label: 'Assented',   data: ss.assented, backgroundColor: 'rgba(5,150,105,0.85)',  borderRadius: 3, borderSkipped: false },
+            ],
+        },
+        options: {
+            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } },
+            scales: {
+                x: { grid: { color: C.grid }, ticks: { stepSize: 1 } },
+                y: { grid: { display: false }, ticks: { font: { size: 11 } } },
+            },
+        },
+    });
+
+    // ── 10. Gender grouped bar ──────────────────────────────────────────────
+    const g = raw.gender;
+    new Chart(document.getElementById('genderChart'), {
+        type: 'bar',
+        data: {
+            labels: g.labels,
+            datasets: [
+                { label: 'Bills Introduced', data: g.totals,   backgroundColor: 'rgba(148,163,184,0.65)', borderRadius: 4, borderSkipped: false },
+                { label: 'Assented',         data: g.assented, backgroundColor: 'rgba(5,150,105,0.85)',   borderRadius: 4, borderSkipped: false },
+            ],
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } },
+            scales: {
+                x: { grid: { display: false } },
+                y: { grid: { color: C.grid }, ticks: { stepSize: 10 } },
+            },
+        },
+    });
+
+    // ── 11. County output (grouped horizontal bar) ──────────────────────────
+    if (document.getElementById('countyChart')) {
+        const cy = raw.county;
+        new Chart(document.getElementById('countyChart'), {
+            type: 'bar',
+            data: {
+                labels: cy.labels,
+                datasets: [
+                    { label: 'Introduced', data: cy.total,    backgroundColor: 'rgba(148,163,184,0.65)', borderRadius: 3, borderSkipped: false },
+                    { label: 'Assented',   data: cy.assented, backgroundColor: 'rgba(5,150,105,0.85)',   borderRadius: 3, borderSkipped: false },
+                ],
+            },
+            options: {
+                indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } },
+                scales: {
+                    x: { grid: { color: C.grid }, ticks: { stepSize: 1 } },
+                    y: { grid: { display: false }, ticks: { font: { size: 11 } } },
+                },
+            },
+        });
+    }
+
+    // ── 12. Stage bottleneck (bar) ──────────────────────────────────────────
+    if (document.getElementById('bottleneckChart')) {
+        const bn = raw.bottleneck;
+        new Chart(document.getElementById('bottleneckChart'), {
+            type: 'bar',
+            data: {
+                labels: bn.labels,
+                datasets: [{
+                    label: 'Bills at Stage',
+                    data: bn.counts,
+                    backgroundColor: [
+                        'rgba(220,38,38,0.8)',
+                        'rgba(124,58,237,0.8)',
+                        'rgba(37,99,235,0.75)',
+                        'rgba(217,119,6,0.8)',
+                    ],
+                    borderRadius: 6, borderSkipped: false,
+                }],
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { grid: { color: C.grid }, ticks: { stepSize: 10 } },
+                },
+            },
+        });
+    }
+
+    // ── 13. Policy domain stacked horizontal bar ────────────────────────────
+    if (document.getElementById('domainChart')) {
+        const dm = raw.domain;
+        new Chart(document.getElementById('domainChart'), {
+            type: 'bar',
+            data: {
+                labels: dm.labels,
+                datasets: [
+                    { label: 'Assented', data: dm.assented, backgroundColor: C.assented,  borderRadius: 3, borderSkipped: false, stack: 's' },
+                    { label: 'Active',   data: dm.active,   backgroundColor: C.active,    borderRadius: 3, borderSkipped: false, stack: 's' },
+                    { label: 'Lapsed',   data: dm.lapsed,   backgroundColor: C.lapsed,    borderRadius: 3, borderSkipped: false, stack: 's' },
+                ],
+            },
+            options: {
+                indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } },
+                scales: {
+                    x: { stacked: true, grid: { color: C.grid } },
+                    y: { stacked: true, grid: { display: false }, ticks: { font: { size: 11 } } },
+                },
+            },
+        });
+    }
+
+    // ── 14. Coalition grouped bar ─────────────────────────────────────────
+    if (document.getElementById('coalitionChart')) {
+        const co = raw.coalition;
+        const coPalette = ['rgba(37,99,235,0.8)', 'rgba(234,88,12,0.8)', 'rgba(148,163,184,0.7)'];
+        new Chart(document.getElementById('coalitionChart'), {
+            type: 'bar',
+            data: {
+                labels: co.labels,
+                datasets: [
+                    { label: 'Assented', data: co.assented, backgroundColor: C.assented,   borderRadius: 4, borderSkipped: false },
+                    { label: 'Active',   data: co.active,   backgroundColor: C.active,     borderRadius: 4, borderSkipped: false },
+                    { label: 'Lapsed',   data: co.lapsed,   backgroundColor: C.lapsed,     borderRadius: 4, borderSkipped: false },
+                ],
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { grid: { color: C.grid } },
+                },
+            },
+        });
+    }
+
+    // ── 15. Region stacked horizontal bar ────────────────────────────────
+    if (document.getElementById('regionChart')) {
+        const rg = raw.region;
+        new Chart(document.getElementById('regionChart'), {
+            type: 'bar',
+            data: {
+                labels: rg.labels,
+                datasets: [
+                    { label: 'Assented', data: rg.assented,                                backgroundColor: C.assented, borderRadius: 3, borderSkipped: false, stack: 's' },
+                    { label: 'Other',    data: rg.total.map((t,i) => t - rg.assented[i]), backgroundColor: C.active,   borderRadius: 3, borderSkipped: false, stack: 's' },
+                ],
+            },
+            options: {
+                indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } },
+                scales: {
+                    x: { stacked: true, grid: { color: C.grid } },
+                    y: { stacked: true, grid: { display: false }, ticks: { font: { size: 11 } } },
+                },
+            },
+        });
+    }
+
+    // ── 16. Time-to-Law: duration distribution (bar) ──────────────────────
+    if (document.getElementById('ttlDistChart')) {
+        const td = raw.ttl;
+        new Chart(document.getElementById('ttlDistChart'), {
+            type: 'bar',
+            data: {
+                labels: td.dist_labels,
+                datasets: [{
+                    label: 'Bills',
+                    data: td.dist_counts,
+                    backgroundColor: ['rgba(5,150,105,0.85)','rgba(37,99,235,0.75)','rgba(217,119,6,0.8)','rgba(220,38,38,0.8)'],
+                    borderRadius: 6, borderSkipped: false,
+                }],
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { grid: { color: C.grid }, ticks: { stepSize: 1 } },
+                },
+            },
+        });
+    }
+
+    // ── Bill explainer modal ──────────────────────────────────────────────
+    (function () {
+        const overlay = document.getElementById('bill-modal-overlay');
+        const bar     = document.getElementById('modal-bar');
+        const photo   = document.getElementById('modal-photo');
+        const photoFB = document.getElementById('modal-photo-fallback');
+
+        // speed → visual tokens
+        const S = {
+            0: {
+                bar: '#10b981',
+                chip: 'rgba(16,185,129,0.18)', chipBorder: 'rgba(52,211,153,0.35)', chipText: '#6ee7b7',
+                dur: { bg:'#f0fdf4', border:'#bbf7d0', label:'#22c55e', value:'#15803d' },
+                label: 'Same-year assent ⚡',
+            },
+            1: {
+                bar: '#3b82f6',
+                chip: 'rgba(59,130,246,0.18)', chipBorder: 'rgba(147,197,253,0.35)', chipText: '#93c5fd',
+                dur: { bg:'#eff6ff', border:'#bfdbfe', label:'#3b82f6', value:'#1d4ed8' },
+                label: '1 year to law',
+            },
+            2: {
+                bar: '#f59e0b',
+                chip: 'rgba(245,158,11,0.18)', chipBorder: 'rgba(253,211,77,0.35)', chipText: '#fcd34d',
+                dur: { bg:'#fffbeb', border:'#fde68a', label:'#d97706', value:'#92400e' },
+                label: '2 years to law',
+            },
+        };
+        const Sdef = {
+            bar: '#ef4444',
+            chip: 'rgba(239,68,68,0.18)', chipBorder: 'rgba(252,165,165,0.35)', chipText: '#fca5a5',
+            dur: { bg:'#fff1f2', border:'#fecdd3', label:'#ef4444', value:'#991b1b' },
+            label: '3+ years to law',
+        };
+
+        const coaStyle = {
+            'Kenya Kwanza': 'rgba(59,130,246,0.2);border:1px solid rgba(147,197,253,0.3);color:#93c5fd',
+            'Azimio':       'rgba(249,115,22,0.2);border:1px solid rgba(253,186,116,0.3);color:#fdba74',
+        };
+
+        function openModal(row) {
+            const yrs  = parseInt(row.dataset.yrs, 10);
+            const meta = S[yrs] || Sdef;
+
+            // Accent bar colour
+            bar.style.background = meta.bar;
+
+            // ── Classify sponsor type ───────────────────────────────
+            const rawSponsor  = row.dataset.sponsor;
+            const isMajority  = /majority leader/i.test(rawSponsor);
+            const isMinority  = /minority leader/i.test(rawSponsor);
+            const isChair     = /^chairperson/i.test(rawSponsor);
+            const isInstitutional = isMajority || isMinority || isChair;
+
+            // ── Photo / fallback logic ──────────────────────────────
+            const imgSrc = row.dataset.image || '';
+            const initialsWrap    = document.getElementById('modal-initials-wrap');
+            const institutionWrap = document.getElementById('modal-institution-wrap');
+            initialsWrap.classList.add('hidden');
+            institutionWrap.classList.add('hidden');
+
+            if (imgSrc) {
+                photo.src = imgSrc;
+                photo.alt = rawSponsor;
+                photo.classList.remove('hidden');
+                photoFB.classList.add('hidden');
+            } else {
+                photo.classList.add('hidden');
+                photoFB.classList.remove('hidden');
+
+                if (isInstitutional) {
+                    const iconEl  = document.getElementById('modal-institution-icon');
+                    const labelEl = document.getElementById('modal-institution-label');
+                    iconEl.setAttribute('data-lucide', isMajority ? 'shield' : isMinority ? 'shield-off' : 'landmark');
+                    if (isMajority)      labelEl.textContent = 'Senate Majority';
+                    else if (isMinority) labelEl.textContent = 'Senate Minority';
+                    else labelEl.textContent = rawSponsor.replace(/^Chairperson,\s*/i,'').replace(/\s*Committee$/i,'') || 'Committee';
+                    institutionWrap.classList.remove('hidden');
+                    if (window.lucide) lucide.createIcons({ nodes: [iconEl] });
+                } else {
+                    const nameParts = rawSponsor.replace(/^Sen\.\s*/i,'').replace(/\s*\(.*\)/,'').trim().split(/\s+/);
+                    const initials  = nameParts.length >= 2
+                        ? (nameParts[0][0] + nameParts[nameParts.length-1][0]).toUpperCase()
+                        : rawSponsor.substring(0,2).toUpperCase();
+                    document.getElementById('modal-initials').textContent = initials;
+                    initialsWrap.style.background  = meta.chip;
+                    initialsWrap.style.borderColor = meta.chipBorder;
+                    initialsWrap.classList.remove('hidden');
+                }
+            }
+
+            // Speed chip
+            const sc = document.getElementById('modal-speed-chip');
+            sc.style.cssText = `background:${meta.chip};border:1px solid ${meta.chipBorder};color:${meta.chipText};backdrop-filter:blur(8px);`;
+            document.getElementById('modal-speed-label').textContent = meta.label;
+
+            // Sponsor display name
+            // For institutional roles, show the role title; the photo already identifies the person
+            const cleanSponsor = isInstitutional
+                ? rawSponsor
+                    .replace(/^The\s+Senate\s+(Majority|Minority)\s+Leader$/i, 'Senate $1 Leader')
+                    .replace(/^Chairperson,\s*/i, 'Chp. ')
+                : rawSponsor;
+            document.getElementById('modal-sponsor').textContent = cleanSponsor;
+
+            // Party chip
+            const partyChip = document.getElementById('modal-party-chip');
+            const partyEl   = document.getElementById('modal-party');
+            if (row.dataset.party) {
+                const style = coaStyle[row.dataset.coalition] || 'rgba(100,116,139,0.2);border:1px solid rgba(148,163,184,0.3);color:#94a3b8';
+                partyEl.setAttribute('style', `background:${style};`);
+                partyEl.textContent = row.dataset.party;
+                partyChip.classList.remove('hidden');
+            } else {
+                partyChip.classList.add('hidden');
+            }
+
+            // Bill meta
+            document.getElementById('modal-ref').textContent     = row.dataset.ref;
+            document.getElementById('modal-title').textContent   = row.dataset.title;
+            document.getElementById('modal-summary').textContent = row.dataset.summary || 'No summary available.';
+            document.getElementById('modal-year').textContent    = row.dataset.year;
+            document.getElementById('modal-assented').textContent= row.dataset.assented;
+
+            // Reset tile 2 to "Assented" defaults
+            const tile2Label = document.getElementById('modal-tile2-label');
+            tile2Label.textContent = 'Assented'; tile2Label.style.color = '#22c55e';
+            const tile2 = document.getElementById('modal-assented').closest('div');
+            tile2.style.cssText = 'background:#f0fdf4;border:1px solid #bbf7d0;';
+            document.getElementById('modal-assented').style.color    = '#15803d';
+            document.getElementById('modal-assented').style.fontSize = '';
+
+            // Status badge — Assented
+            const badge = document.getElementById('modal-status-badge');
+            badge.style.cssText = 'background:rgba(16,185,129,0.18);border:1px solid rgba(52,211,153,0.3);color:#6ee7b7;display:inline-flex;align-items:center;gap:4px;border-radius:9999px;padding:4px 10px;font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;';
+            document.getElementById('modal-status-text').textContent = 'Assented';
+
+            // Duration tile
+            const d = meta.dur;
+            const dc = document.getElementById('modal-duration-chip');
+            dc.style.cssText = `background:${d.bg};border:1px solid ${d.border};`;
+            document.getElementById('modal-dur-label').style.color = d.label;
+            document.getElementById('modal-dur-label').textContent = 'Duration';
+            const durEl = document.getElementById('modal-dur-value');
+            durEl.style.color   = d.value;
+            durEl.textContent   = yrs === 0 ? '< 1 yr' : `${yrs} yr${yrs > 1 ? 's' : ''}`;
+
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function closeModal() {
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+            document.body.style.overflow = '';
+        }
+
+        // ── Stalled modal variant ─────────────────────────────────────────
+        function openStalledModal(row) {
+            const meta = {
+                bar: '#f97316',
+                chip: 'rgba(249,115,22,0.18)', chipBorder: 'rgba(253,186,116,0.35)', chipText: '#fdba74',
+                dur: { bg:'#fff7ed', border:'#fed7aa', label:'#ea580c', value:'#9a3412' },
+                label: 'Stalled · 2+ years',
+            };
+
+            bar.style.background = meta.bar;
+
+            // Photo / fallback (reuse same logic)
+            const imgSrc = row.dataset.image || '';
+            const initialsWrap    = document.getElementById('modal-initials-wrap');
+            const institutionWrap = document.getElementById('modal-institution-wrap');
+            initialsWrap.classList.add('hidden');
+            institutionWrap.classList.add('hidden');
+            const rawSponsor  = row.dataset.sponsor;
+            const isMajority  = /majority leader/i.test(rawSponsor);
+            const isMinority  = /minority leader/i.test(rawSponsor);
+            const isChair     = /^chairperson/i.test(rawSponsor);
+            const isInstitutional = isMajority || isMinority || isChair;
+
+            if (imgSrc) {
+                photo.src = imgSrc; photo.alt = rawSponsor;
+                photo.classList.remove('hidden'); photoFB.classList.add('hidden');
+            } else {
+                photo.classList.add('hidden'); photoFB.classList.remove('hidden');
+                if (isInstitutional) {
+                    const iconEl = document.getElementById('modal-institution-icon');
+                    const labelEl = document.getElementById('modal-institution-label');
+                    if (isMajority)      { iconEl.setAttribute('data-lucide','shield');     labelEl.textContent = 'Senate Majority'; }
+                    else if (isMinority) { iconEl.setAttribute('data-lucide','shield-off'); labelEl.textContent = 'Senate Minority'; }
+                    else {
+                        iconEl.setAttribute('data-lucide','landmark');
+                        labelEl.textContent = rawSponsor.replace(/^Chairperson,\s*/i,'').replace(/\s*Committee$/i,'') || 'Senate Committee';
+                    }
+                    institutionWrap.classList.remove('hidden');
+                    if (window.lucide) lucide.createIcons({ nodes: [iconEl] });
+                } else {
+                    const nameParts = rawSponsor.replace(/^Sen\.\s*/i,'').replace(/\s*\(.*\)/,'').trim().split(/\s+/);
+                    const initials  = nameParts.length >= 2 ? (nameParts[0][0]+nameParts[nameParts.length-1][0]).toUpperCase() : rawSponsor.substring(0,2).toUpperCase();
+                    document.getElementById('modal-initials').textContent = initials;
+                    initialsWrap.style.background   = meta.chip;
+                    initialsWrap.style.borderColor  = meta.chipBorder;
+                    initialsWrap.classList.remove('hidden');
+                }
+            }
+
+            // Speed chip → "Stalled" chip
+            const scS = document.getElementById('modal-speed-chip');
+            scS.style.cssText = `background:${meta.chip};border:1px solid ${meta.chipBorder};color:${meta.chipText};backdrop-filter:blur(8px);`;
+            document.getElementById('modal-speed-label').textContent = meta.label;
+
+            // Sponsor display name
+            const cleanSponsorS = isInstitutional
+                ? rawSponsor
+                    .replace(/^The\s+Senate\s+(Majority|Minority)\s+Leader$/i, 'Senate $1 Leader')
+                    .replace(/^Chairperson,\s*/i, 'Chp. ')
+                : rawSponsor;
+            document.getElementById('modal-sponsor').textContent = cleanSponsorS;
+
+            // Party chip
+            const partyChip = document.getElementById('modal-party-chip');
+            const partyEl   = document.getElementById('modal-party');
+            if (row.dataset.party) {
+                const style = coaStyle[row.dataset.coalition] || 'rgba(100,116,139,0.2);border:1px solid rgba(148,163,184,0.3);color:#94a3b8';
+                partyEl.setAttribute('style', `background:${style};`);
+                partyEl.textContent = row.dataset.party;
+                partyChip.classList.remove('hidden');
+            } else {
+                partyChip.classList.add('hidden');
+            }
+
+            // Bill details
+            document.getElementById('modal-ref').textContent     = row.dataset.ref;
+            document.getElementById('modal-title').textContent   = row.dataset.title;
+            document.getElementById('modal-summary').textContent = row.dataset.summary || 'No summary available.';
+            document.getElementById('modal-year').textContent    = row.dataset.year;
+
+            // Status badge → "Stalled"
+            const badge2 = document.getElementById('modal-status-badge');
+            badge2.style.cssText = 'background:rgba(249,115,22,0.18);border:1px solid rgba(253,186,116,0.3);color:#fdba74;display:inline-flex;align-items:center;gap:4px;border-radius:9999px;padding:4px 10px;font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;';
+            document.getElementById('modal-status-text').textContent = 'Stalled';
+
+            // Tile 2 → Stage
+            const tile2LabelS = document.getElementById('modal-tile2-label');
+            tile2LabelS.textContent = 'Stage'; tile2LabelS.style.color = '#ea580c';
+            const tile2S = document.getElementById('modal-assented').closest('div');
+            tile2S.style.cssText = 'background:#fff7ed;border:1px solid #fed7aa;';
+            document.getElementById('modal-assented').style.color    = '#9a3412';
+            document.getElementById('modal-assented').style.fontSize = '10px';
+            document.getElementById('modal-assented').textContent    = row.dataset.status || 'Active';
+
+            // Tile 3 → Committee
+            const dc = document.getElementById('modal-duration-chip');
+            dc.style.cssText = `background:${meta.dur.bg};border:1px solid ${meta.dur.border};`;
+            document.getElementById('modal-dur-label').style.color = meta.dur.label;
+            document.getElementById('modal-dur-label').textContent = 'Committee';
+            const durEl = document.getElementById('modal-dur-value');
+            durEl.style.color    = meta.dur.value;
+            durEl.style.fontSize = '10px';
+            durEl.textContent    = (row.dataset.committee || '—').replace(/\s*Committee$/i,'');
+
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+            if (window.lucide) lucide.createIcons();
+        }
+
+        // resetStatTiles is now handled inline inside openModal (TTL path)
+        function resetStatTiles() { /* no-op — TTL openModal resets tiles itself */ }
+
+        document.querySelectorAll('.ttl-row').forEach(r => r.addEventListener('click', () => { resetStatTiles(); openModal(r); }));
+        document.querySelectorAll('.stalled-row').forEach(r => r.addEventListener('click', () => openStalledModal(r)));
+        document.getElementById('modal-close').addEventListener('click', closeModal);
+        overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+    })();
+
+    // ── 17. Time-to-Law: avg by assent year (line) ───────────────────────
+    if (document.getElementById('ttlYearChart')) {
+        const td = raw.ttl;
+        new Chart(document.getElementById('ttlYearChart'), {
+            type: 'bar',
+            data: {
+                labels: td.assent_yr_labels,
+                datasets: [
+                    {
+                        type: 'line',
+                        label: 'Avg years',
+                        data: td.assent_yr_avgs,
+                        borderColor: 'rgba(234,88,12,0.9)',
+                        backgroundColor: 'rgba(234,88,12,0.15)',
+                        fill: true, tension: 0.3, pointRadius: 4, pointHoverRadius: 6,
+                        yAxisID: 'yLine',
+                    },
+                    {
+                        label: 'Bills assented',
+                        data: td.assent_yr_counts,
+                        backgroundColor: C.assented,
+                        borderRadius: 4, borderSkipped: false,
+                        yAxisID: 'yBar',
+                    },
+                ],
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } },
+                scales: {
+                    x: { grid: { display: false } },
+                    yBar:  { position: 'left',  grid: { color: C.grid }, title: { display: true, text: 'Count', font: { size: 10 } } },
+                    yLine: { position: 'right', grid: { display: false }, title: { display: true, text: 'Avg yrs', font: { size: 10 } } },
+                },
+            },
+        });
+    }
+
+})();
+</script>
+{% endblock %}

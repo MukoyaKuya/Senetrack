@@ -1,0 +1,701 @@
+{% extends "scorecard/base_light.html" %}
+{% load static %}
+
+{% block title %}Senate Bills Tracker{% endblock %}
+{% block meta_description %}Track all 154 bills tabled in the 13th Parliament Senate — status, sponsors, committees, and legislative progress as at 19 March 2026.{% endblock %}
+{% block og_title %}Senate Bills Tracker | SENETRACK{% endblock %}
+{% block og_description %}Follow every bill through the Kenyan Senate — from First Reading to Presidential Assent. 154 bills tracked, filterable by status, committee, and year.{% endblock %}
+
+{% block nav %}
+{% include "partials/nav_light.html" with nav_active="bills" %}
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .status-assented       { background: #d1fae5; color: #065f46; }
+    .status-at_na          { background: #dbeafe; color: #1e40af; }
+    .status-in_mediation   { background: #fef3c7; color: #92400e; }
+    .status-at_cowt        { background: #ede9fe; color: #5b21b6; }
+    .status-at_2nd_reading { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+    .status-negatived      { background: #fee2e2; color: #991b1b; }
+    .status-withdrawn      { background: #f1f5f9; color: #64748b; }
+    .status-presidential_memo { background: #ffedd5; color: #9a3412; }
+
+    .filter-btn { transition: all 0.15s; }
+    .filter-btn.active { background: #b91c1c; color: #fff; border-color: #b91c1c; }
+
+    .bill-row { transition: background 0.1s; }
+    .bill-row.hidden-row { display: none; }
+
+    .pipeline-step { flex: 1; text-align: center; position: relative; }
+    .pipeline-step:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        top: 50%; right: -1px;
+        width: 2px; height: 40%;
+        background: #e2e8f0;
+        transform: translateY(-50%);
+    }
+
+    @media (max-width: 640px) {
+        .bills-table thead { display: none; }
+        .bills-table tr { display: block; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 8px; padding: 12px; }
+        .bills-table td { display: block; padding: 2px 0; border: none !important; }
+        .bills-table td::before { content: attr(data-label); font-size: 0.65rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; display: block; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 pb-20">
+
+    <!-- ── Header ─────────────────────────────────────────── -->
+    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+        <div>
+            <span class="inline-flex items-center gap-1.5 bg-red-100 text-red-700 text-[10px] font-black uppercase tracking-[0.18em] rounded-full px-3 py-1 mb-3">
+                <i data-lucide="scroll-text" class="w-3 h-3"></i>
+                13th Parliament · Senate
+            </span>
+            <h1 class="font-brutal text-2xl md:text-4xl font-black text-slate-900 uppercase tracking-tight mb-2">
+                Bills Tracker 2022 – 2026
+            </h1>
+            <p class="text-slate-500 text-sm max-w-2xl">
+                All {{ stats.total }} bills tabled in the Senate during the 13th Parliament.
+                Track their journey from First Reading through to Presidential Assent.
+                Data as at <strong class="text-slate-700">{{ as_at_date }}</strong>.
+                <a href="{{ source_url }}" target="_blank" rel="noopener" class="text-red-700 hover:underline ml-1">Source ↗</a>
+            </p>
+        </div>
+        <a href="{% url 'scorecard:bills-analytics' %}"
+           class="inline-flex items-center gap-2 bg-slate-900 hover:bg-red-700 text-white text-xs font-bold px-5 py-3 rounded-xl transition-colors whitespace-nowrap self-start sm:self-auto">
+            <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
+            View Analytics
+        </a>
+    </div>
+
+    <!-- ── Stat Cards ─────────────────────────────────────── -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 text-center cursor-pointer filter-btn-stat" data-filter-status="">
+            <p class="text-2xl font-black text-slate-900 font-brutal">{{ stats.total }}</p>
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">Total Bills</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-emerald-200 p-4 text-center cursor-pointer filter-btn-stat" data-filter-status="assented">
+            <p class="text-2xl font-black text-emerald-700 font-brutal">{{ stats.assented }}</p>
+            <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mt-0.5">Assented</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-blue-200 p-4 text-center cursor-pointer filter-btn-stat" data-filter-status="at_na">
+            <p class="text-2xl font-black text-blue-700 font-brutal">{{ stats.at_na }}</p>
+            <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider mt-0.5">At Nat. Assembly</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 text-center cursor-pointer filter-btn-stat" data-filter-status="">
+            <p class="text-2xl font-black text-slate-700 font-brutal">{{ stats.active_senate }}</p>
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">Active in Senate</p>
+            <p class="text-[9px] text-slate-400 mt-0.5">2nd Rdg + CoWT</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-amber-200 p-4 text-center cursor-pointer filter-btn-stat" data-filter-status="in_mediation">
+            <p class="text-2xl font-black text-amber-700 font-brutal">{{ stats.in_mediation }}</p>
+            <p class="text-[10px] font-bold text-amber-600 uppercase tracking-wider mt-0.5">In Mediation</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 text-center cursor-pointer filter-btn-stat" data-filter-status="">
+            <p class="text-2xl font-black text-slate-500 font-brutal">{{ stats.negatived|add:stats.withdrawn }}</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Lapsed / Withdrawn</p>
+        </div>
+    </div>
+
+    <!-- ── Pipeline Visual ───────────────────────────────── -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-4 mb-6 overflow-x-auto">
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3">Legislative Pipeline</p>
+        <div class="flex gap-1 min-w-[600px]">
+            <div class="flex-1 rounded-xl p-3 text-center status-at_2nd_reading">
+                <p class="text-lg font-black font-brutal" id="pipe-2nd">—</p>
+                <p class="text-[10px] font-bold uppercase tracking-wider mt-0.5">2nd Reading</p>
+            </div>
+            <div class="flex items-center text-slate-300 px-1"><i data-lucide="chevron-right" class="w-4 h-4"></i></div>
+            <div class="flex-1 rounded-xl p-3 text-center status-at_cowt">
+                <p class="text-lg font-black font-brutal" id="pipe-cowt">—</p>
+                <p class="text-[10px] font-bold uppercase tracking-wider mt-0.5">Committee Whole</p>
+            </div>
+            <div class="flex items-center text-slate-300 px-1"><i data-lucide="chevron-right" class="w-4 h-4"></i></div>
+            <div class="flex-1 rounded-xl p-3 text-center status-at_na">
+                <p class="text-lg font-black font-brutal text-blue-700" id="pipe-na">—</p>
+                <p class="text-[10px] font-bold uppercase tracking-wider mt-0.5">Nat. Assembly</p>
+            </div>
+            <div class="flex items-center text-slate-300 px-1"><i data-lucide="chevron-right" class="w-4 h-4"></i></div>
+            <div class="flex-1 rounded-xl p-3 text-center status-in_mediation">
+                <p class="text-lg font-black font-brutal" id="pipe-med">—</p>
+                <p class="text-[10px] font-bold uppercase tracking-wider mt-0.5">Mediation</p>
+            </div>
+            <div class="flex items-center text-slate-300 px-1"><i data-lucide="chevron-right" class="w-4 h-4"></i></div>
+            <div class="flex-1 rounded-xl p-3 text-center status-assented">
+                <p class="text-lg font-black font-brutal text-emerald-700" id="pipe-law">—</p>
+                <p class="text-[10px] font-bold uppercase tracking-wider mt-0.5">Became Law</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Status Legend ─────────────────────────────────── -->
+    <div class="flex flex-wrap gap-2 mb-5">
+        {% for key, label in status_labels.items %}
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold status-{{ key }}">
+            {{ label }}
+        </span>
+        {% endfor %}
+    </div>
+
+    <!-- ── Filters & Search ───────────────────────────────── -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-4 mb-4">
+        <div class="flex flex-col sm:flex-row gap-3">
+            <!-- Search -->
+            <div class="relative flex-1">
+                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                <input type="text" id="billSearch" placeholder="Search bill title or sponsor…"
+                    class="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 bg-slate-50">
+            </div>
+            <!-- Committee -->
+            <select id="committeeFilter"
+                class="text-sm border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 min-w-[180px]">
+                <option value="">All Committees</option>
+                {% for c in committees %}
+                <option value="{{ c }}">{{ c }}</option>
+                {% endfor %}
+            </select>
+            <!-- Year -->
+            <select id="yearFilter"
+                class="text-sm border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 min-w-[110px]">
+                <option value="">All Years</option>
+                {% for y in years %}
+                <option value="{{ y }}">{{ y }}</option>
+                {% endfor %}
+            </select>
+            <!-- Clear -->
+            <button id="clearFilters" class="text-sm text-slate-500 hover:text-red-700 font-medium px-3 py-2.5 rounded-xl border border-slate-200 hover:border-red-200 transition-colors whitespace-nowrap">
+                Clear filters
+            </button>
+        </div>
+        <!-- Status filter row -->
+        <div class="flex flex-wrap gap-2 mt-3" id="statusFilterRow">
+            <button class="filter-btn active text-[11px] font-bold px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-600" data-status="">All</button>
+            <button class="filter-btn text-[11px] font-bold px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-600" data-status="assented">Assented into Law</button>
+            <button class="filter-btn text-[11px] font-bold px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-600" data-status="at_na">At National Assembly</button>
+            <button class="filter-btn text-[11px] font-bold px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-600" data-status="at_cowt">At Committee (Senate)</button>
+            <button class="filter-btn text-[11px] font-bold px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-600" data-status="at_2nd_reading">At Second Reading</button>
+            <button class="filter-btn text-[11px] font-bold px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-600" data-status="in_mediation">In Mediation</button>
+            <button class="filter-btn text-[11px] font-bold px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-600" data-status="negatived">Negatived</button>
+            <button class="filter-btn text-[11px] font-bold px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-600" data-status="withdrawn">Withdrawn</button>
+        </div>
+    </div>
+
+    <!-- ── Results count ─────────────────────────────────── -->
+    <p class="text-xs text-slate-400 font-medium mb-3" id="resultsCount">Showing {{ bills|length }} of {{ bills|length }} bills</p>
+
+    <!-- ── Bills Table ───────────────────────────────────── -->
+    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full bills-table" id="billsTable">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200">
+                        <th class="text-left py-3 px-4 text-[10px] font-black text-slate-500 uppercase tracking-wider w-10">#</th>
+                        <th class="text-left py-3 px-4 text-[10px] font-black text-slate-500 uppercase tracking-wider">Bill</th>
+                        <th class="text-left py-3 px-4 text-[10px] font-black text-slate-500 uppercase tracking-wider hidden md:table-cell">Sponsor</th>
+                        <th class="text-left py-3 px-4 text-[10px] font-black text-slate-500 uppercase tracking-wider hidden lg:table-cell">Committee</th>
+                        <th class="text-left py-3 px-4 text-[10px] font-black text-slate-500 uppercase tracking-wider hidden sm:table-cell w-16">Year</th>
+                        <th class="text-left py-3 px-4 text-[10px] font-black text-slate-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100" id="billsBody">
+                    {% for bill in bills %}
+                    <tr class="bill-row hover:bg-slate-50/60 transition-colors"
+                        data-status="{{ bill.status }}"
+                        data-committee="{{ bill.committee }}"
+                        data-year="{{ bill.year }}"
+                        data-search="{{ bill.title|lower }} {{ bill.sponsor|lower }} {{ bill.bill_ref|lower }} {{ bill.summary|lower }}">
+                        <td class="py-3 px-4 text-xs font-bold text-slate-400 font-brutal" data-label="No.">{{ bill.number }}</td>
+                        <td class="py-3 px-4" data-label="Bill">
+                            <div class="font-semibold text-sm text-slate-900 leading-snug">{{ bill.title }}</div>
+                            <div class="text-[11px] text-slate-400 mt-0.5 font-mono">{{ bill.bill_ref }}</div>
+                            {% if bill.summary %}
+                            <div class="text-[11px] text-slate-500 mt-1 leading-snug hidden sm:block">{{ bill.summary }}</div>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4 text-xs text-slate-600 hidden md:table-cell max-w-[180px]" data-label="Sponsor">{{ bill.sponsor }}</td>
+                        <td class="py-3 px-4 text-xs text-slate-500 hidden lg:table-cell whitespace-nowrap" data-label="Committee">{{ bill.committee }}</td>
+                        <td class="py-3 px-4 text-xs text-slate-500 hidden sm:table-cell font-mono" data-label="Year">{{ bill.year }}</td>
+                        <td class="py-3 px-4" data-label="Status">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold whitespace-nowrap status-{{ bill.status }}">
+                                {{ bill.status_label }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Empty state -->
+        <div id="emptyState" class="hidden text-center py-16">
+            <i data-lucide="file-search" class="w-10 h-10 text-slate-300 mx-auto mb-3"></i>
+            <p class="text-slate-400 font-medium text-sm">No bills match your filters.</p>
+            <button onclick="clearAllFilters()" class="mt-3 text-xs text-red-700 hover:underline font-bold">Clear all filters</button>
+        </div>
+    </div>
+
+    <!-- ── How a Bill Becomes Law infographic ───────────── -->
+    <div class="mt-10 rounded-2xl overflow-hidden border border-slate-200" style="background:#f8fafc;">
+
+        <!-- Header -->
+        <div class="px-6 py-5 text-center" style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);">
+            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-blue-300 mb-1">Kenya Senate · 13th Parliament</p>
+            <h2 class="text-lg sm:text-xl font-extrabold text-white leading-tight">How a Bill Becomes Law</h2>
+            <p class="text-slate-400 text-xs mt-1">The journey of a Senate-initiated bill from introduction to Presidential assent</p>
+        </div>
+
+        <div class="p-5 sm:p-7 overflow-x-auto">
+
+            <!-- ═══════════ SENATE STAGE ═══════════ -->
+            <div class="mb-1">
+                <span class="inline-block text-[9px] font-black uppercase tracking-[0.15em] text-slate-400 mb-3 border border-slate-300 rounded-full px-2.5 py-0.5">Senate Internal Process</span>
+            </div>
+
+            <!-- Stage row 1-4 -->
+            <div class="flex items-start gap-0 min-w-[560px]">
+
+                <!-- Bill icon -->
+                <div class="flex flex-col items-center shrink-0 mr-1">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center text-lg shadow-sm" style="background:#e2e8f0;">
+                        📄
+                    </div>
+                    <p class="text-[9px] text-center font-bold text-slate-500 mt-1 w-14 leading-tight">Bill<br>Drafted</p>
+                </div>
+
+                <!-- Arrow -->
+                <div class="flex items-center h-12 shrink-0 px-1">
+                    <div class="w-5 h-0.5 bg-slate-400"></div>
+                    <div style="border-left:7px solid #94a3b8;border-top:4px solid transparent;border-bottom:4px solid transparent;"></div>
+                </div>
+
+                <!-- Stage 1 -->
+                <div class="shrink-0">
+                    <div class="rounded-xl px-3 py-2.5 w-28 shadow-sm text-center" style="background:#e2e8f0;border:1.5px solid #94a3b8;">
+                        <div class="w-5 h-5 rounded-full bg-slate-500 text-white text-[10px] font-black flex items-center justify-center mx-auto mb-1">1</div>
+                        <p class="text-[10px] font-black text-slate-700 leading-tight">First Reading</p>
+                        <p class="text-[9px] text-slate-500 mt-0.5 leading-tight">Published in Kenya Gazette. No debate.</p>
+                    </div>
+                </div>
+
+                <!-- Arrow -->
+                <div class="flex items-center h-12 shrink-0 px-1">
+                    <div class="w-5 h-0.5 bg-slate-400"></div>
+                    <div style="border-left:7px solid #94a3b8;border-top:4px solid transparent;border-bottom:4px solid transparent;"></div>
+                </div>
+
+                <!-- Stage 2 + failure branch -->
+                <div class="shrink-0 relative">
+                    <div class="rounded-xl px-3 py-2.5 w-28 shadow-sm text-center" style="background:#e0e7ff;border:1.5px solid #6366f1;">
+                        <div class="w-5 h-5 rounded-full text-white text-[10px] font-black flex items-center justify-center mx-auto mb-1" style="background:#6366f1;">2</div>
+                        <p class="text-[10px] font-black text-indigo-800 leading-tight">Second Reading</p>
+                        <p class="text-[9px] text-indigo-600 mt-0.5 leading-tight">Senate debates principles. Vote to proceed.</p>
+                    </div>
+                    <!-- Failure branch down -->
+                    <div class="absolute -bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center">
+                        <div class="w-0.5 h-4" style="background:#fca5a5;"></div>
+                        <div class="rounded-lg px-2 py-1 text-center whitespace-nowrap" style="background:#fef2f2;border:1px solid #fca5a5;">
+                            <p class="text-[8px] font-black text-red-600">❌ NEGATIVED</p>
+                            <p class="text-[7px] text-red-400">Bill fails here</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Arrow -->
+                <div class="flex items-center h-12 shrink-0 px-1">
+                    <div class="w-5 h-0.5 bg-slate-400"></div>
+                    <div style="border-left:7px solid #94a3b8;border-top:4px solid transparent;border-bottom:4px solid transparent;"></div>
+                </div>
+
+                <!-- Stage 3 -->
+                <div class="shrink-0">
+                    <div class="rounded-xl px-3 py-2.5 w-28 shadow-sm text-center" style="background:#ede9fe;border:1.5px solid #7c3aed;">
+                        <div class="w-5 h-5 rounded-full text-white text-[10px] font-black flex items-center justify-center mx-auto mb-1" style="background:#7c3aed;">3</div>
+                        <p class="text-[10px] font-black text-violet-800 leading-tight">CoWT</p>
+                        <p class="text-[9px] text-violet-600 mt-0.5 leading-tight">Clause-by-clause review. Amendments adopted.</p>
+                    </div>
+                </div>
+
+                <!-- Arrow -->
+                <div class="flex items-center h-12 shrink-0 px-1">
+                    <div class="w-5 h-0.5 bg-slate-400"></div>
+                    <div style="border-left:7px solid #94a3b8;border-top:4px solid transparent;border-bottom:4px solid transparent;"></div>
+                </div>
+
+                <!-- Stage 4 -->
+                <div class="shrink-0">
+                    <div class="rounded-xl px-3 py-2.5 w-28 shadow-sm text-center" style="background:#dbeafe;border:1.5px solid #2563eb;">
+                        <div class="w-5 h-5 rounded-full text-white text-[10px] font-black flex items-center justify-center mx-auto mb-1" style="background:#2563eb;">4</div>
+                        <p class="text-[10px] font-black text-blue-800 leading-tight">Third Reading</p>
+                        <p class="text-[9px] text-blue-600 mt-0.5 leading-tight">Final Senate vote. If passed → National Assembly.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Down arrow from stage 4 to NA -->
+            <div class="flex min-w-[560px] mt-8 mb-2 pl-[424px]">
+                <div class="flex flex-col items-center">
+                    <div class="h-6 w-0.5" style="background:#3b82f6;"></div>
+                    <div style="border-top:7px solid #3b82f6;border-left:4px solid transparent;border-right:4px solid transparent;"></div>
+                </div>
+            </div>
+
+            <!-- ═══════════ NATIONAL ASSEMBLY ═══════════ -->
+            <div class="min-w-[560px]">
+                <span class="inline-block text-[9px] font-black uppercase tracking-[0.15em] text-blue-500 mb-3 border border-blue-300 rounded-full px-2.5 py-0.5">National Assembly</span>
+
+                <!-- Stage 5 -->
+                <div class="rounded-2xl px-5 py-4 shadow-sm mb-4" style="background:#eff6ff;border:1.5px solid #3b82f6;">
+                    <div class="flex items-center gap-3">
+                        <div class="w-7 h-7 rounded-full text-white text-[11px] font-black flex items-center justify-center shrink-0" style="background:#3b82f6;">5</div>
+                        <div>
+                            <p class="text-sm font-extrabold text-blue-900">National Assembly Consideration</p>
+                            <p class="text-xs text-blue-600 mt-0.5">The NA debates the bill. They may pass it as-is, pass it with amendments, or reject it.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Three outcome paths from NA -->
+                <div class="grid grid-cols-3 gap-3 mb-4">
+                    <!-- Path A: Passes without amendments -->
+                    <div class="flex flex-col items-center gap-1 text-center">
+                        <div class="rounded-lg px-2 py-1.5 w-full" style="background:#f0fdf4;border:1px solid #86efac;">
+                            <p class="text-[9px] font-black text-emerald-700 uppercase tracking-wide">✓ Passes (no amendments)</p>
+                        </div>
+                        <div class="h-4 w-0.5" style="background:#22c55e;"></div>
+                        <div style="border-top:6px solid #22c55e;border-left:4px solid transparent;border-right:4px solid transparent;"></div>
+                        <p class="text-[8px] text-slate-400 font-medium">→ Goes to President</p>
+                    </div>
+
+                    <!-- Path B: Passes with amendments → back to Senate -->
+                    <div class="flex flex-col items-center gap-1 text-center">
+                        <div class="rounded-lg px-2 py-1.5 w-full" style="background:#fff7ed;border:1px solid #fdba74;">
+                            <p class="text-[9px] font-black text-orange-700 uppercase tracking-wide">⚡ Passes with amendments</p>
+                        </div>
+                        <div class="h-4 w-0.5" style="background:#f97316;"></div>
+                        <div style="border-top:6px solid #f97316;border-left:4px solid transparent;border-right:4px solid transparent;"></div>
+                        <p class="text-[8px] text-slate-400 font-medium">→ Back to Senate to agree/disagree</p>
+                    </div>
+
+                    <!-- Path C: Disagrees → Mediation -->
+                    <div class="flex flex-col items-center gap-1 text-center">
+                        <div class="rounded-lg px-2 py-1.5 w-full" style="background:#fffbeb;border:1px solid #fcd34d;">
+                            <p class="text-[9px] font-black text-amber-700 uppercase tracking-wide">⚠ Disagrees / Rejects</p>
+                        </div>
+                        <div class="h-4 w-0.5" style="background:#f59e0b;"></div>
+                        <div style="border-top:6px solid #f59e0b;border-left:4px solid transparent;border-right:4px solid transparent;"></div>
+
+                        <!-- Stage 6: Mediation -->
+                        <div class="rounded-xl px-3 py-2.5 w-full shadow-sm mt-1" style="background:#fffbeb;border:1.5px solid #f59e0b;">
+                            <div class="w-5 h-5 rounded-full text-white text-[10px] font-black flex items-center justify-center mx-auto mb-1" style="background:#d97706;">6</div>
+                            <p class="text-[10px] font-black text-amber-800">Mediation Committee</p>
+                            <p class="text-[9px] text-amber-600 mt-0.5 leading-tight">Joint Senate–NA committee agrees common text (30 days).</p>
+                        </div>
+                        <div class="flex gap-3 mt-1 w-full text-[8px]">
+                            <div class="flex-1 text-center">
+                                <div class="h-3 w-0.5 mx-auto" style="background:#22c55e;"></div>
+                                <p class="text-emerald-600 font-bold">✓ Agreed</p>
+                                <p class="text-slate-400">→ President</p>
+                            </div>
+                            <div class="flex-1 text-center">
+                                <div class="h-3 w-0.5 mx-auto" style="background:#ef4444;"></div>
+                                <p class="text-red-600 font-bold">✗ Failed</p>
+                                <div class="rounded px-1 py-0.5 mt-0.5" style="background:#fef2f2;border:1px solid #fca5a5;">
+                                    <p class="text-red-600 font-black">BILL LAPSES</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Down arrow to President -->
+            <div class="flex min-w-[560px] justify-center my-2">
+                <div class="flex flex-col items-center">
+                    <div class="h-5 w-0.5" style="background:#94a3b8;"></div>
+                    <div style="border-top:7px solid #94a3b8;border-left:4px solid transparent;border-right:4px solid transparent;"></div>
+                </div>
+            </div>
+
+            <!-- ═══════════ PRESIDENTIAL STAGE ═══════════ -->
+            <div class="min-w-[560px]">
+                <span class="inline-block text-[9px] font-black uppercase tracking-[0.15em] text-orange-500 mb-3 border border-orange-300 rounded-full px-2.5 py-0.5">Presidential Stage</span>
+
+                <!-- Stage 7: President -->
+                <div class="rounded-2xl px-5 py-4 shadow-sm mb-4" style="background:#fff7ed;border:1.5px solid #f97316;">
+                    <div class="flex items-center gap-3">
+                        <div class="w-7 h-7 rounded-full text-white text-[11px] font-black flex items-center justify-center shrink-0" style="background:#ea580c;">7</div>
+                        <div>
+                            <p class="text-sm font-extrabold text-orange-900">President of Kenya</p>
+                            <p class="text-xs text-orange-600 mt-0.5">The President has 14 days to assent to the bill or refer it back to Parliament with a memorandum.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Two outcomes from President -->
+                <div class="grid grid-cols-2 gap-4 min-w-[560px]">
+
+                    <!-- Signs → Law -->
+                    <div class="flex flex-col items-center gap-2">
+                        <div class="flex flex-col items-center">
+                            <div class="h-4 w-0.5" style="background:#22c55e;"></div>
+                            <div style="border-top:7px solid #22c55e;border-left:4px solid transparent;border-right:4px solid transparent;"></div>
+                        </div>
+                        <div class="rounded-2xl px-5 py-4 w-full text-center shadow-md" style="background:linear-gradient(135deg,#14532d,#166534);border:2px solid #22c55e;">
+                            <p class="text-xl mb-1">🏛️</p>
+                            <div class="w-6 h-6 rounded-full text-white text-[11px] font-black flex items-center justify-center mx-auto mb-1.5" style="background:#16a34a;">8</div>
+                            <p class="text-sm font-black text-white">BILL IS LAW ✓</p>
+                            <p class="text-[10px] text-emerald-300 mt-1">President signs. The bill becomes an Act of Parliament.</p>
+                        </div>
+                    </div>
+
+                    <!-- Memorandum → reconsideration -->
+                    <div class="flex flex-col items-center gap-2">
+                        <div class="flex flex-col items-center">
+                            <div class="h-4 w-0.5" style="background:#f97316;"></div>
+                            <div style="border-top:7px solid #f97316;border-left:4px solid transparent;border-right:4px solid transparent;"></div>
+                        </div>
+                        <div class="rounded-2xl px-4 py-4 w-full shadow-sm" style="background:#fff7ed;border:1.5px solid #fb923c;">
+                            <p class="text-[10px] font-black uppercase tracking-wide text-orange-700 mb-2">Presidential Memorandum</p>
+                            <p class="text-xs text-orange-600 leading-relaxed mb-3">Bill is returned to Parliament with the President's reservations. Senate reconsiders.</p>
+                            <div class="flex gap-2 text-[9px]">
+                                <div class="flex-1 rounded-lg p-2 text-center" style="background:#f0fdf4;border:1px solid #86efac;">
+                                    <p class="font-black text-emerald-700">Parliament approves</p>
+                                    <p class="text-emerald-600 mt-0.5">Bill becomes law regardless of memo</p>
+                                </div>
+                                <div class="flex-1 rounded-lg p-2 text-center" style="background:#fef2f2;border:1px solid #fca5a5;">
+                                    <p class="font-black text-red-700">Parliament amends</p>
+                                    <p class="text-red-500 mt-0.5">Returns amended bill to President</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ── What each status means ────────────────────────── -->
+    <div class="mt-10 bg-white rounded-2xl border border-slate-200 p-6 sm:p-8">
+        <h2 class="font-brutal text-base font-bold text-slate-900 uppercase tracking-wider mb-1">
+            Understanding the Legislative Stages
+        </h2>
+        <p class="text-xs text-slate-400 mb-8">How a bill travels from introduction to becoming law in Kenya's Senate.</p>
+
+        <!-- Main flow: stages 1–5 in a vertical timeline -->
+        <div class="relative">
+            <!-- Vertical connector line -->
+            <div class="absolute left-4 top-5 bottom-5 w-0.5 bg-gradient-to-b from-slate-300 via-violet-300 to-blue-400 hidden sm:block"></div>
+
+            <div class="space-y-0">
+
+                <!-- Stage 1 -->
+                <div class="flex gap-4 items-start pb-5">
+                    <div class="shrink-0 w-8 h-8 rounded-full bg-slate-100 border-2 border-slate-300 flex items-center justify-center z-10">
+                        <span class="text-[11px] font-black text-slate-500">1</span>
+                    </div>
+                    <div class="flex-1 pt-0.5">
+                        <p class="font-bold text-slate-800 text-sm">First Reading</p>
+                        <p class="text-slate-500 text-xs mt-0.5 leading-relaxed">Bill is formally introduced in the Senate. No debate at this stage — it is published in the Kenya Gazette for public notice.</p>
+                    </div>
+                </div>
+
+                <!-- Stage 2 -->
+                <div class="flex gap-4 items-start pb-5">
+                    <div class="shrink-0 w-8 h-8 rounded-full bg-slate-100 border-2 border-slate-400 flex items-center justify-center z-10">
+                        <span class="text-[11px] font-black text-slate-600">2</span>
+                    </div>
+                    <div class="flex-1 pt-0.5">
+                        <p class="font-bold text-slate-800 text-sm">Second Reading</p>
+                        <p class="text-slate-500 text-xs mt-0.5 leading-relaxed">The Senate debates the general principles of the bill. A vote decides whether it proceeds. Bills can be negatived at this stage.</p>
+                    </div>
+                </div>
+
+                <!-- Stage 3 -->
+                <div class="flex gap-4 items-start pb-5">
+                    <div class="shrink-0 w-8 h-8 rounded-full bg-violet-50 border-2 border-violet-400 flex items-center justify-center z-10">
+                        <span class="text-[11px] font-black text-violet-600">3</span>
+                    </div>
+                    <div class="flex-1 pt-0.5">
+                        <p class="font-bold text-slate-800 text-sm">Committee of the Whole Senate <span class="font-normal text-slate-400">(CoWT)</span></p>
+                        <p class="text-slate-500 text-xs mt-0.5 leading-relaxed">The full Senate reviews the bill clause by clause. Amendments are debated and adopted.</p>
+                    </div>
+                </div>
+
+                <!-- Stage 4 -->
+                <div class="flex gap-4 items-start pb-5">
+                    <div class="shrink-0 w-8 h-8 rounded-full bg-slate-100 border-2 border-slate-500 flex items-center justify-center z-10">
+                        <span class="text-[11px] font-black text-slate-700">4</span>
+                    </div>
+                    <div class="flex-1 pt-0.5">
+                        <p class="font-bold text-slate-800 text-sm">Third Reading <span class="font-normal text-slate-400">/ Passed Senate</span></p>
+                        <p class="text-slate-500 text-xs mt-0.5 leading-relaxed">Final vote in the Senate. If passed, the bill moves to the National Assembly for their concurrence.</p>
+                    </div>
+                </div>
+
+                <!-- Stage 5 -->
+                <div class="flex gap-4 items-start pb-5">
+                    <div class="shrink-0 w-8 h-8 rounded-full bg-blue-50 border-2 border-blue-500 flex items-center justify-center z-10">
+                        <span class="text-[11px] font-black text-blue-700">5</span>
+                    </div>
+                    <div class="flex-1 pt-0.5">
+                        <p class="font-bold text-slate-800 text-sm">At National Assembly</p>
+                        <p class="text-slate-500 text-xs mt-0.5 leading-relaxed">The bill has been passed by the Senate and sent to the National Assembly. They may pass it with or without amendments, or reject it.</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Branching stages: 6a Mediation (if disagreement) / 6b straight to President -->
+        <div class="mt-1 mb-5">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="h-px flex-1 bg-slate-200"></div>
+                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 shrink-0">What happens next depends on whether both houses agree</span>
+                <div class="h-px flex-1 bg-slate-200"></div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <!-- 6a: Mediation -->
+                <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 flex gap-3 items-start">
+                    <div class="shrink-0 w-8 h-8 rounded-full bg-amber-100 border-2 border-amber-400 flex items-center justify-center">
+                        <span class="text-[11px] font-black text-amber-700">6a</span>
+                    </div>
+                    <div>
+                        <p class="font-bold text-slate-800 text-sm">Mediation Committee <span class="text-[10px] font-semibold text-amber-600 ml-1">If houses disagree</span></p>
+                        <p class="text-slate-500 text-xs mt-0.5 leading-relaxed">A joint Senate–National Assembly Mediation Committee is formed to agree a common version acceptable to both chambers.</p>
+                    </div>
+                </div>
+                <!-- 6b: Presidential Memorandum -->
+                <div class="rounded-2xl border border-orange-200 bg-orange-50 p-4 flex gap-3 items-start">
+                    <div class="shrink-0 w-8 h-8 rounded-full bg-orange-100 border-2 border-orange-400 flex items-center justify-center">
+                        <span class="text-[11px] font-black text-orange-700">6b</span>
+                    </div>
+                    <div>
+                        <p class="font-bold text-slate-800 text-sm">Presidential Memorandum <span class="text-[10px] font-semibold text-orange-600 ml-1">If President objects</span></p>
+                        <p class="text-slate-500 text-xs mt-0.5 leading-relaxed">After a bill is passed by both Houses, the President may refer it back for reconsideration with a memorandum outlining reservations.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stage 7: Final -->
+        <div class="flex gap-4 items-start rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+            <div class="shrink-0 w-8 h-8 rounded-full bg-emerald-500 border-2 border-emerald-600 flex items-center justify-center shadow-sm">
+                <span class="text-[11px] font-black text-white">7</span>
+            </div>
+            <div class="pt-0.5">
+                <p class="font-bold text-emerald-900 text-sm">Assented into Law ✓</p>
+                <p class="text-emerald-700 text-xs mt-0.5 leading-relaxed">The President signs the bill. It becomes an Act of Parliament and part of Kenyan law upon the date of assent.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Attribution ───────────────────────────────────── -->
+    <p class="text-center text-[11px] text-slate-400 mt-8">
+        Data sourced from the Parliament of Kenya Bills Tracker ({{ as_at_date }}).
+        <a href="{{ source_url }}" target="_blank" rel="noopener" class="underline hover:text-slate-600">View original PDF ↗</a>
+    </p>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    var rows    = Array.from(document.querySelectorAll('.bill-row'));
+    var search  = document.getElementById('billSearch');
+    var cFilter = document.getElementById('committeeFilter');
+    var yFilter = document.getElementById('yearFilter');
+    var statusBtns = document.querySelectorAll('#statusFilterRow .filter-btn');
+    var countEl = document.getElementById('resultsCount');
+    var empty   = document.getElementById('emptyState');
+    var total   = rows.length;
+
+    var activeStatus = '';
+
+    // Pipeline counts (set once)
+    var pipeCounts = { at_2nd_reading: 0, at_cowt: 0, at_na: 0, in_mediation: 0, assented: 0 };
+    rows.forEach(function (r) {
+        var s = r.dataset.status;
+        if (pipeCounts.hasOwnProperty(s)) pipeCounts[s]++;
+    });
+    document.getElementById('pipe-2nd').textContent  = pipeCounts.at_2nd_reading;
+    document.getElementById('pipe-cowt').textContent = pipeCounts.at_cowt;
+    document.getElementById('pipe-na').textContent   = pipeCounts.at_na;
+    document.getElementById('pipe-med').textContent  = pipeCounts.in_mediation;
+    document.getElementById('pipe-law').textContent  = pipeCounts.assented;
+
+    function applyFilters() {
+        var q   = search.value.toLowerCase().trim();
+        var com = cFilter.value;
+        var yr  = yFilter.value;
+        var visible = 0;
+
+        rows.forEach(function (r) {
+            var matchStatus    = !activeStatus || r.dataset.status === activeStatus;
+            var matchCommittee = !com || r.dataset.committee === com;
+            var matchYear      = !yr  || r.dataset.year === yr;
+            var matchSearch    = !q   || r.dataset.search.includes(q);
+
+            if (matchStatus && matchCommittee && matchYear && matchSearch) {
+                r.classList.remove('hidden-row');
+                visible++;
+            } else {
+                r.classList.add('hidden-row');
+            }
+        });
+
+        countEl.textContent = 'Showing ' + visible + ' of ' + total + ' bills';
+        empty.classList.toggle('hidden', visible > 0);
+    }
+
+    // Status buttons
+    statusBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            activeStatus = btn.dataset.status;
+            statusBtns.forEach(function (b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            applyFilters();
+        });
+    });
+
+    // Stat card clicks
+    document.querySelectorAll('.filter-btn-stat').forEach(function (card) {
+        card.addEventListener('click', function () {
+            var s = card.dataset.filterStatus;
+            if (!s) return;
+            activeStatus = s;
+            statusBtns.forEach(function (b) {
+                b.classList.toggle('active', b.dataset.status === s);
+            });
+            applyFilters();
+            document.getElementById('billsTable').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    });
+
+    search.addEventListener('input', applyFilters);
+    cFilter.addEventListener('change', applyFilters);
+    yFilter.addEventListener('change', applyFilters);
+
+    document.getElementById('clearFilters').addEventListener('click', clearAllFilters);
+
+    function clearAllFilters() {
+        search.value = '';
+        cFilter.value = '';
+        yFilter.value = '';
+        activeStatus = '';
+        statusBtns.forEach(function (b) { b.classList.toggle('active', b.dataset.status === ''); });
+        applyFilters();
+    }
+    window.clearAllFilters = clearAllFilters;
+
+
+})();
+</script>
+{% endblock %}
