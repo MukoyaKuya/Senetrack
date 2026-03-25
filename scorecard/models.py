@@ -256,3 +256,58 @@ class ParliamentaryPerformance(models.Model):
     sessions_attended = models.IntegerField(default=0)
     
     trend_data = models.JSONField(default=list)
+
+
+class ContactMessage(models.Model):
+    """Feedback, data corrections, and methodology challenges submitted via the About page."""
+
+    class MessageType(models.TextChoices):
+        DATA_ERROR = "data_error", "Data Error"
+        METHODOLOGY = "methodology", "Methodology Challenge"
+        GENERAL = "general", "General Feedback"
+        MEDIA = "media", "Media Enquiry"
+        OTHER = "other", "Other"
+
+    class Status(models.TextChoices):
+        NEW = "new", "New"
+        UNDER_REVIEW = "under_review", "Under Review"
+        RESOLVED = "resolved", "Resolved"
+        DISMISSED = "dismissed", "Dismissed"
+
+    message_type = models.CharField(
+        max_length=20,
+        choices=MessageType.choices,
+        default=MessageType.GENERAL,
+        db_index=True,
+    )
+    name = models.CharField(max_length=150)
+    email = models.EmailField(blank=True)
+    organisation = models.CharField(max_length=150, blank=True, help_text="Organisation / affiliation (optional)")
+    subject = models.CharField(max_length=250)
+    body = models.TextField()
+    senator_ref = models.ForeignKey(
+        Senator,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="contact_messages",
+        help_text="Senator this message relates to (if any)",
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.NEW,
+        db_index=True,
+    )
+    admin_notes = models.TextField(blank=True, help_text="Internal notes (not shown to sender)")
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    submitted_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-submitted_at"]
+        verbose_name = "Contact Message"
+        verbose_name_plural = "Contact Messages"
+
+    def __str__(self):
+        return f"[{self.get_message_type_display()}] {self.subject[:60]} — {self.name}"

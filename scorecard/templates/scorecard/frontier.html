@@ -223,7 +223,7 @@
 {% endblock %}
 
 {% block extra_js %}
-{{ charts_json|json_script:"frontier-charts-data" }}
+{{ charts_data|json_script:"frontier-charts-data" }}
 <script>
 (function() {
     var charts = {};

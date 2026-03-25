@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from unfold.admin import ModelAdmin
-from .models import Senator, ParliamentaryPerformance, SenatorQuote, County, CountyImage, Party
+from .models import Senator, ParliamentaryPerformance, SenatorQuote, County, CountyImage, Party, ContactMessage
 
 
 class CountyImageInline(admin.StackedInline):
@@ -176,3 +176,66 @@ class PartyAdmin(ModelAdmin):
 @admin.register(ParliamentaryPerformance)
 class ParliamentaryPerformanceAdmin(ModelAdmin):
     list_display = ('senator', 'speeches', 'attendance_rate', 'sponsored_bills', 'committee_role')
+
+
+@admin.register(ContactMessage)
+class ContactMessageAdmin(ModelAdmin):
+    list_display = (
+        'submitted_at', 'type_badge', 'name', 'email', 'subject_preview',
+        'senator_ref', 'status_badge',
+    )
+    list_filter = ('message_type', 'status', 'submitted_at')
+    search_fields = ('name', 'email', 'subject', 'body', 'organisation')
+    readonly_fields = ('submitted_at', 'updated_at', 'ip_address')
+    ordering = ('-submitted_at',)
+    date_hierarchy = 'submitted_at'
+    fieldsets = (
+        ('Submission', {
+            'fields': ('submitted_at', 'message_type', 'status'),
+        }),
+        ('Sender', {
+            'fields': ('name', 'email', 'organisation', 'ip_address'),
+        }),
+        ('Message', {
+            'fields': ('subject', 'body', 'senator_ref'),
+        }),
+        ('Internal', {
+            'fields': ('admin_notes', 'updated_at'),
+            'description': 'Internal notes are never shown to the sender.',
+        }),
+    )
+
+    def subject_preview(self, obj):
+        return (obj.subject[:55] + '…') if len(obj.subject) > 55 else obj.subject
+    subject_preview.short_description = 'Subject'
+
+    def type_badge(self, obj):
+        colours = {
+            'data_error':  ('#b91c1c', '#fef2f2'),
+            'methodology': ('#1d4ed8', '#eff6ff'),
+            'general':     ('#059669', '#ecfdf5'),
+            'media':       ('#7c3aed', '#f5f3ff'),
+            'other':       ('#475569', '#f8fafc'),
+        }
+        fg, bg = colours.get(obj.message_type, ('#475569', '#f8fafc'))
+        return format_html(
+            '<span style="display:inline-block;padding:2px 8px;border-radius:999px;'
+            'font-size:11px;font-weight:700;color:{};background:{};">{}</span>',
+            fg, bg, obj.get_message_type_display(),
+        )
+    type_badge.short_description = 'Type'
+
+    def status_badge(self, obj):
+        colours = {
+            'new':          ('#92400e', '#fffbeb'),
+            'under_review': ('#1d4ed8', '#eff6ff'),
+            'resolved':     ('#059669', '#ecfdf5'),
+            'dismissed':    ('#475569', '#f8fafc'),
+        }
+        fg, bg = colours.get(obj.status, ('#475569', '#f8fafc'))
+        return format_html(
+            '<span style="display:inline-block;padding:2px 8px;border-radius:999px;'
+            'font-size:11px;font-weight:700;color:{};background:{};">{}</span>',
+            fg, bg, obj.get_status_display(),
+        )
+    status_badge.short_description = 'Status'

@@ -24,6 +24,46 @@
     <meta name="twitter:title" content="{% block twitter_title %}SENETRACK | Kenya Senate Scorecard{% endblock %}">
     <meta name="twitter:description" content="{% block twitter_description %}Track and assess the performance of Kenyan Senators.{% endblock %}">
     <meta name="twitter:image" content="{% block twitter_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'scorecard/images/hero-parliament.png' %}{% endblock %}">
+    {# Canonical URL — prevents duplicate-content issues with query strings #}
+    <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
+    {# Structured data — WebSite + Organization for Google rich results #}
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "{{ request.scheme }}://{{ request.get_host }}/#website",
+          "url": "{{ request.scheme }}://{{ request.get_host }}/",
+          "name": "SENETRACK",
+          "description": "Independent civic-tech platform tracking Kenya Senate performance using official Hansard data.",
+          "inLanguage": "en-KE",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "{{ request.scheme }}://{{ request.get_host }}/senators/?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "Organization",
+          "@id": "{{ request.scheme }}://{{ request.get_host }}/#organization",
+          "name": "SENETRACK",
+          "url": "{{ request.scheme }}://{{ request.get_host }}/",
+          "description": "Independent civic-technology platform dedicated to transparency and accountability in the Kenya Senate.",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "{{ request.scheme }}://{{ request.get_host }}{% static 'scorecard/images/hero-parliament.png' %}"
+          },
+          "sameAs": ["https://github.com/senetrack/senetrack"]
+        }
+      ]
+    }
+    </script>
+    {# Plausible privacy-friendly analytics — opt-in via PLAUSIBLE_DOMAIN env var #}
+    {% if PLAUSIBLE_DOMAIN %}<script defer data-domain="{{ PLAUSIBLE_DOMAIN }}" src="https://plausible.io/js/script.js"></script>{% endif %}
     <script src="{% static 'scorecard/vendor/tailwind.js' %}"></script>
     <link href="{% static 'scorecard/vendor/flowbite.min.css' %}" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">

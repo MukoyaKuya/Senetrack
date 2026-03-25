@@ -114,7 +114,7 @@ def frontier_insights(request):
         },
     }
 
-    charts_json = json.dumps(charts).replace("</", "<\\/")
+    # charts_json removed to avoid double encoding when using json_script in template
 
     # Always load image URLs from DB so frontier cards show photos (avoid stale/empty cache)
     if senators_display:
@@ -144,7 +144,7 @@ def frontier_insights(request):
             "filter_frontier": filter_frontier,
             "frontier_stats": frontier_chart,
             "frontier_by_metric": frontier_by_metric,
-            "charts_json": charts_json,
+            "charts_data": charts,
             "filters": {"frontiers": filter_frontiers, "frontier": filter_frontier},
             "total_active": total_active,
             "avg_overall": avg_overall,

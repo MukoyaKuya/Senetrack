@@ -1,10 +1,10 @@
 {% extends "scorecard/base_light.html" %}
 {% load static %}
 
-{% block title %}SPM — Methodology & Transparency{% endblock %}
-{% block meta_description %}How SENETRACK calculates senator performance scores — full methodology, data dictionary, known limitations, and update schedule.{% endblock %}
-{% block og_title %}SPM Methodology | Kenya Senate Scorecard{% endblock %}
-{% block og_description %}Full methodology, data dictionary, disclaimers, and update schedule for the SENETRACK Senator Performance Metric.{% endblock %}
+{% block title %}About SENETRACK — Mission, Methodology & Transparency{% endblock %}
+{% block meta_description %}SENETRACK is an independent civic-tech platform tracking Kenya Senate performance. Learn about our mission, who built it, how to contribute, and the full SPM scoring methodology.{% endblock %}
+{% block og_title %}About SENETRACK | Kenya Senate Scorecard{% endblock %}
+{% block og_description %}Independent civic-tech platform tracking Kenya Senate performance. Our mission, team, open-source contribution guide, and full SPM scoring methodology.{% endblock %}
 
 {% block nav %}
 {% include "partials/nav_light.html" with nav_active="about" nav_show_back=True %}
@@ -24,20 +24,149 @@
     .toc-link:hover { color: #b91c1c; }
     .limitation-card { border-left: 3px solid #f59e0b; background: #fffbeb; border-radius: 8px; padding: 14px 16px; }
     .disclaimer-card { border-left: 3px solid #64748b; background: #f8fafc; border-radius: 8px; padding: 14px 16px; }
+    /* Honeypot field — visually hidden but NOT display:none (bots skip that) */
+    .hp-field {
+        position: absolute;
+        left: -9999px;
+        top: -9999px;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        opacity: 0;
+        pointer-events: none;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="max-w-5xl mx-auto px-4 sm:px-6 py-10 pb-20">
 
+    <!-- ══ PROJECT ABOUT SECTION ══════════════════════════════════════ -->
+    <div id="about-project" class="mb-12">
+        <span class="pill bg-red-100 text-red-700 mb-3">ABOUT THE PROJECT</span>
+        <h1 class="font-brutal text-2xl md:text-4xl font-black text-slate-900 uppercase tracking-tight mb-3 mt-3">
+            About SENETRACK
+        </h1>
+        <p class="text-slate-500 text-sm max-w-2xl mb-8">
+            An independent civic-technology platform dedicated to making the Kenya Senate's work legible to every citizen.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+            <!-- Mission -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center mb-4">
+                    <i data-lucide="target" class="w-5 h-5 text-red-700"></i>
+                </div>
+                <h2 class="font-brutal text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">Mission</h2>
+                <p class="text-slate-600 text-sm">
+                    Bring radical transparency to Kenya's Senate by converting raw Hansard transcripts, voting records,
+                    and attendance data into clear, comparable performance scores — so citizens can hold their senators
+                    accountable with evidence, not just opinion.
+                </p>
+            </div>
+            <!-- Who Built It -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center mb-4">
+                    <i data-lucide="users" class="w-5 h-5 text-blue-700"></i>
+                </div>
+                <h2 class="font-brutal text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">Who Built It</h2>
+                <p class="text-slate-600 text-sm mb-3">
+                    SENETRACK is built and maintained by a small team of civic-tech enthusiasts who believe open data
+                    and algorithmic accountability can strengthen Kenyan democracy.
+                </p>
+                <p class="text-slate-500 text-xs">
+                    We are not affiliated with, endorsed by, or funded by the Parliament of Kenya or any political party.
+                </p>
+            </div>
+            <!-- Contribute / Report -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center mb-4">
+                    <i data-lucide="git-pull-request" class="w-5 h-5 text-emerald-700"></i>
+                </div>
+                <h2 class="font-brutal text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">Contribute</h2>
+                <p class="text-slate-600 text-sm mb-3">
+                    SENETRACK is built in the open. Whether you are a developer, data journalist, or civic researcher,
+                    there are several ways to help:
+                </p>
+                <ul class="text-slate-600 text-xs space-y-1">
+                    <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5"></i>Report a data error via GitHub Issues</li>
+                    <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5"></i>Submit corrections to senator records</li>
+                    <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5"></i>Challenge the methodology (see section 10)</li>
+                    <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5"></i>Contribute to the Hansard parser &amp; scraper</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Values row -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-6">
+            <h2 class="font-brutal text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Our Principles</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div class="text-center">
+                    <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2">
+                        <i data-lucide="shield-check" class="w-5 h-5 text-slate-600"></i>
+                    </div>
+                    <p class="font-bold text-slate-800 text-xs uppercase tracking-wide">Independence</p>
+                    <p class="text-slate-500 text-xs mt-0.5">No government funding or political ties</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2">
+                        <i data-lucide="eye" class="w-5 h-5 text-slate-600"></i>
+                    </div>
+                    <p class="font-bold text-slate-800 text-xs uppercase tracking-wide">Transparency</p>
+                    <p class="text-slate-500 text-xs mt-0.5">All weights and formulas are published</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2">
+                        <i data-lucide="database" class="w-5 h-5 text-slate-600"></i>
+                    </div>
+                    <p class="font-bold text-slate-800 text-xs uppercase tracking-wide">Evidence-Based</p>
+                    <p class="text-slate-500 text-xs mt-0.5">Official records only — no opinion polls</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2">
+                        <i data-lucide="refresh-cw" class="w-5 h-5 text-slate-600"></i>
+                    </div>
+                    <p class="font-bold text-slate-800 text-xs uppercase tracking-wide">Open to Revision</p>
+                    <p class="text-slate-500 text-xs mt-0.5">Methodology evolves with better data</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report / Contact strip -->
+        <div class="rounded-2xl border border-amber-200 bg-amber-50 p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+                <i data-lucide="flag" class="w-5 h-5 text-amber-700"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="font-bold text-amber-900 text-sm">Found a data error or methodology issue?</p>
+                <p class="text-amber-800 text-xs mt-0.5">
+                    Use the feedback form below — tell us what the record shows, what it should show, and your source.
+                    We review all submissions and respond to data corrections within 2 weeks.
+                </p>
+            </div>
+            <a href="#feedback"
+               class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-700 text-white text-xs font-bold hover:bg-amber-800 transition-colors">
+                <i data-lucide="message-square" class="w-4 h-4"></i>
+                Send Feedback
+            </a>
+        </div>
+    </div>
+
+    <!-- ══ METHODOLOGY SECTION DIVIDER ════════════════════════════════ -->
+    <div class="flex items-center gap-4 mb-8">
+        <div class="h-px flex-1 bg-slate-200"></div>
+        <span class="pill bg-slate-100 text-slate-600">SCORING METHODOLOGY</span>
+        <div class="h-px flex-1 bg-slate-200"></div>
+    </div>
+
     <!-- Header -->
     <div class="mb-8">
         <span class="pill bg-red-100 text-red-700 mb-3">METHODOLOGY & TRANSPARENCY</span>
-        <h1 class="font-brutal text-2xl md:text-4xl font-black text-slate-900 uppercase tracking-tight mb-3">
+        <h2 class="font-brutal text-2xl md:text-3xl font-black text-slate-900 uppercase tracking-tight mb-3">
             Senator Performance Metric
-        </h1>
+        </h2>
         <p class="text-slate-500 text-sm max-w-2xl">
-            This page documents every aspect of how SENETRACK computes SPM scores — including the exact weights, data sources,
+            This section documents every aspect of how SENETRACK computes SPM scores — including the exact weights, data sources,
             grading scale, known limitations, disclaimers, and update schedule. We publish this so that citizens,
             researchers, and civil society can scrutinise and challenge our methodology.
         </p>
@@ -426,15 +555,173 @@
             <p class="text-slate-600 text-sm mb-3">
                 We actively welcome challenges to our methodology and corrections to data errors from:
             </p>
-            <ul class="list-disc list-inside text-slate-600 text-sm space-y-1 mb-4">
+            <ul class="list-disc list-inside text-slate-600 text-sm space-y-1 mb-5">
                 <li>Researchers and political scientists</li>
                 <li>Civil society organisations working in parliamentary monitoring</li>
                 <li>Journalists who spot inconsistencies</li>
                 <li>Senators or their offices who identify factual errors in their own records</li>
             </ul>
-            <p class="text-slate-500 text-xs italic">
-                SENETRACK is a living platform. Feedback will be reviewed, and where corrections are merited the
-                methodology page will be updated with a note explaining what changed and why.
+
+            {% if submitted %}
+            <!-- Success state -->
+            <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-5 flex items-start gap-4 mb-4">
+                <div class="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                    <i data-lucide="check-circle" class="w-5 h-5 text-emerald-700"></i>
+                </div>
+                <div>
+                    <p class="font-bold text-emerald-900 text-sm">Message received — thank you!</p>
+                    <p class="text-emerald-700 text-xs mt-0.5">
+                        Your submission has been logged and will be reviewed by the SENETRACK team.
+                        Data corrections are typically processed within 2 weeks. We may follow up via the
+                        email address you provided if we need more information.
+                    </p>
+                </div>
+            </div>
+            {% else %}
+            <!-- Contact form -->
+            <form method="post" action="#feedback" class="space-y-4" novalidate id="contactForm">
+                {% csrf_token %}
+
+                {# ── Timing token: JS fills with Date.now() on page load ── #}
+                <input type="hidden"
+                       name="{{ contact_form.form_loaded_at.html_name }}"
+                       id="id_form_loaded_at"
+                       value="{{ contact_form.form_loaded_at.value|default:'' }}">
+
+                {# ── Honeypot: looks like a real field to bots; humans never see it ── #}
+                <div class="hp-field" aria-hidden="true">
+                    <label for="{{ contact_form.website_url.id_for_label }}">Website (leave blank)</label>
+                    <input type="text"
+                           name="{{ contact_form.website_url.html_name }}"
+                           id="{{ contact_form.website_url.id_for_label }}"
+                           value=""
+                           tabindex="-1"
+                           autocomplete="off">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Message type -->
+                    <div class="sm:col-span-2">
+                        <label for="{{ contact_form.message_type.id_for_label }}" class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wide">
+                            {{ contact_form.message_type.label }}
+                        </label>
+                        <select name="{{ contact_form.message_type.html_name }}"
+                                id="{{ contact_form.message_type.id_for_label }}"
+                                class="w-full rounded-lg border {% if contact_form.message_type.errors %}border-red-400 bg-red-50{% else %}border-slate-200 bg-white{% endif %} px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent">
+                            {% for val, label in contact_form.fields.message_type.choices %}
+                            <option value="{{ val }}" {% if contact_form.message_type.value == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        {% if contact_form.message_type.errors %}<p class="text-red-600 text-xs mt-1">{{ contact_form.message_type.errors|join:", " }}</p>{% endif %}
+                    </div>
+
+                    <!-- Name -->
+                    <div>
+                        <label for="{{ contact_form.name.id_for_label }}" class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wide">
+                            {{ contact_form.name.label }} <span class="text-red-600">*</span>
+                        </label>
+                        <input type="text"
+                               name="{{ contact_form.name.html_name }}"
+                               id="{{ contact_form.name.id_for_label }}"
+                               value="{{ contact_form.name.value|default:'' }}"
+                               placeholder="{{ contact_form.fields.name.widget.attrs.placeholder }}"
+                               class="w-full rounded-lg border {% if contact_form.name.errors %}border-red-400 bg-red-50{% else %}border-slate-200 bg-white{% endif %} px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent">
+                        {% if contact_form.name.errors %}<p class="text-red-600 text-xs mt-1">{{ contact_form.name.errors|join:", " }}</p>{% endif %}
+                    </div>
+
+                    <!-- Email -->
+                    <div>
+                        <label for="{{ contact_form.email.id_for_label }}" class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wide">
+                            {{ contact_form.email.label }}
+                        </label>
+                        <input type="email"
+                               name="{{ contact_form.email.html_name }}"
+                               id="{{ contact_form.email.id_for_label }}"
+                               value="{{ contact_form.email.value|default:'' }}"
+                               placeholder="{{ contact_form.fields.email.widget.attrs.placeholder }}"
+                               class="w-full rounded-lg border {% if contact_form.email.errors %}border-red-400 bg-red-50{% else %}border-slate-200 bg-white{% endif %} px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent">
+                        {% if contact_form.email.errors %}<p class="text-red-600 text-xs mt-1">{{ contact_form.email.errors|join:", " }}</p>{% endif %}
+                    </div>
+
+                    <!-- Organisation -->
+                    <div>
+                        <label for="{{ contact_form.organisation.id_for_label }}" class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wide">
+                            {{ contact_form.organisation.label }}
+                        </label>
+                        <input type="text"
+                               name="{{ contact_form.organisation.html_name }}"
+                               id="{{ contact_form.organisation.id_for_label }}"
+                               value="{{ contact_form.organisation.value|default:'' }}"
+                               placeholder="{{ contact_form.fields.organisation.widget.attrs.placeholder }}"
+                               class="w-full rounded-lg border {% if contact_form.organisation.errors %}border-red-400 bg-red-50{% else %}border-slate-200 bg-white{% endif %} px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent">
+                    </div>
+
+                    <!-- Senator ref -->
+                    <div>
+                        <label for="{{ contact_form.senator_ref.id_for_label }}" class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wide">
+                            {{ contact_form.senator_ref.label }}
+                        </label>
+                        <select name="{{ contact_form.senator_ref.html_name }}"
+                                id="{{ contact_form.senator_ref.id_for_label }}"
+                                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent">
+                            <option value="">— Not senator-specific —</option>
+                            {% for senator in contact_form.fields.senator_ref.queryset %}
+                            <option value="{{ senator.pk }}" {% if contact_form.senator_ref.value|stringformat:"s" == senator.pk|stringformat:"s" %}selected{% endif %}>{{ senator.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Subject -->
+                <div>
+                    <label for="{{ contact_form.subject.id_for_label }}" class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wide">
+                        {{ contact_form.subject.label }} <span class="text-red-600">*</span>
+                    </label>
+                    <input type="text"
+                           name="{{ contact_form.subject.html_name }}"
+                           id="{{ contact_form.subject.id_for_label }}"
+                           value="{{ contact_form.subject.value|default:'' }}"
+                           placeholder="{{ contact_form.fields.subject.widget.attrs.placeholder }}"
+                           class="w-full rounded-lg border {% if contact_form.subject.errors %}border-red-400 bg-red-50{% else %}border-slate-200 bg-white{% endif %} px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent">
+                    {% if contact_form.subject.errors %}<p class="text-red-600 text-xs mt-1">{{ contact_form.subject.errors|join:", " }}</p>{% endif %}
+                </div>
+
+                <!-- Body -->
+                <div>
+                    <label for="{{ contact_form.body.id_for_label }}" class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wide">
+                        {{ contact_form.body.label }} <span class="text-red-600">*</span>
+                    </label>
+                    <textarea name="{{ contact_form.body.html_name }}"
+                              id="{{ contact_form.body.id_for_label }}"
+                              rows="6"
+                              placeholder="{{ contact_form.fields.body.widget.attrs.placeholder }}"
+                              class="w-full rounded-lg border {% if contact_form.body.errors %}border-red-400 bg-red-50{% else %}border-slate-200 bg-white{% endif %} px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent resize-y">{{ contact_form.body.value|default:'' }}</textarea>
+                    {% if contact_form.body.errors %}<p class="text-red-600 text-xs mt-1">{{ contact_form.body.errors|join:", " }}</p>{% endif %}
+                </div>
+
+                {% if contact_form.non_field_errors %}
+                <div class="rounded-lg border border-red-200 bg-red-50 p-3">
+                    <p class="text-red-700 text-xs">{{ contact_form.non_field_errors|join:" " }}</p>
+                </div>
+                {% endif %}
+
+                <div class="flex items-center justify-between gap-4 pt-1">
+                    <p class="text-slate-400 text-xs">
+                        Your message is stored securely and reviewed by the SENETRACK team only.
+                        We do not share your details with third parties.
+                    </p>
+                    <button type="submit" id="contactFormSubmit"
+                            class="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-red-700 text-white text-sm font-bold hover:bg-red-800 transition-colors focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i data-lucide="send" class="w-4 h-4" id="contactSendIcon"></i>
+                        <span id="contactBtnLabel">Send Message</span>
+                    </button>
+                </div>
+            </form>
+            {% endif %}
+
+            <p class="text-slate-400 text-xs italic mt-5">
+                SENETRACK is a living platform. Where corrections are merited the methodology page will be updated
+                with a note explaining what changed and why.
             </p>
         </div>
 
@@ -447,4 +734,94 @@
         </a>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    // ── 1. Timing token — record when the page finished loading ────
+    var loadedField = document.getElementById('id_form_loaded_at');
+    if (loadedField && !loadedField.value) {
+        loadedField.value = Date.now().toString();
+    }
+
+    // ── 2. Submit guard — disable button on first click to prevent double-submit ──
+    var form = document.getElementById('contactForm');
+    var btn  = document.getElementById('contactFormSubmit');
+    var label = document.getElementById('contactBtnLabel');
+    var icon  = document.getElementById('contactSendIcon');
+
+    if (form && btn) {
+        form.addEventListener('submit', function () {
+            // Brief delay so browser validation runs first
+            setTimeout(function () {
+                if (form.checkValidity && !form.checkValidity()) return;
+                btn.disabled = true;
+                if (label) label.textContent = 'Sending…';
+                if (icon) { icon.setAttribute('data-lucide', 'loader'); if (typeof lucide !== 'undefined') lucide.createIcons(); }
+            }, 0);
+        });
+    }
+
+    // ── 3. Soft client-side content check (UX only, server is authoritative) ──
+    var bodyField = document.getElementById('{{ contact_form.body.id_for_label }}');
+    var subjectField = document.getElementById('{{ contact_form.subject.id_for_label }}');
+
+    // Non-Latin script ranges that are blocked server-side
+    var nonLatinRe = /[\u0400-\u04FF\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF\u0600-\u06FF\u0590-\u05FF\u0900-\u097F\u0E00-\u0E7F]/g;
+
+    function hasNonLatin(str) {
+        return (str.match(nonLatinRe) || []).length > 2;
+    }
+
+    function looksGibberish(str) {
+        if (str.length < 15) return false;
+        var letters = str.replace(/[^a-zA-Z]/g, '').toLowerCase();
+        if (!letters) return false;
+        var vowels = (letters.match(/[aeiou]/g) || []).length;
+        if (vowels / letters.length < 0.08) return true;
+        var unique = new Set(letters.split('')).size;
+        if (unique < 4 && letters.length > 12) return true;
+        var kbSeqs = ['qwerty', 'asdfg', 'zxcvb', '12345'];
+        for (var i = 0; i < kbSeqs.length; i++) {
+            if (str.toLowerCase().indexOf(kbSeqs[i]) !== -1) return true;
+        }
+        return false;
+    }
+
+    function attachContentHints(field, label) {
+        if (!field) return;
+
+        var scriptHint = document.createElement('p');
+        scriptHint.className = 'text-red-600 text-xs mt-1 hidden';
+        scriptHint.textContent = 'This platform only accepts messages written in English (Latin alphabet).';
+        scriptHint.id = field.id + '_script_hint';
+        field.parentNode.appendChild(scriptHint);
+
+        var gibberishHint = document.createElement('p');
+        gibberishHint.className = 'text-amber-600 text-xs mt-1 hidden';
+        gibberishHint.textContent = label + ' looks like random characters. Please write a clear message.';
+        gibberishHint.id = field.id + '_hint';
+        field.parentNode.appendChild(gibberishHint);
+
+        field.addEventListener('blur', function () {
+            var val = field.value;
+            if (hasNonLatin(val)) {
+                scriptHint.classList.remove('hidden');
+                gibberishHint.classList.add('hidden');
+            } else {
+                scriptHint.classList.add('hidden');
+                if (looksGibberish(val)) {
+                    gibberishHint.classList.remove('hidden');
+                } else {
+                    gibberishHint.classList.add('hidden');
+                }
+            }
+        });
+    }
+
+    attachContentHints(bodyField, 'Message');
+    attachContentHints(subjectField, 'Subject');
+})();
+</script>
 {% endblock %}

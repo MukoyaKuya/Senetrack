@@ -1,5 +1,13 @@
 from django.conf import settings
 
+
+def sitewide_context(request):
+    """Inject sitewide settings (analytics, etc.) into every template context."""
+    return {
+        "PLAUSIBLE_DOMAIN": getattr(settings, "PLAUSIBLE_DOMAIN", ""),
+    }
+
+
 class ContentSecurityPolicyMiddleware:
     """
     Simple middleware to inject Content-Security-Policy (CSP) headers.

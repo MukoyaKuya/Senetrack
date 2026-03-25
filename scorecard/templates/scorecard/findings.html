@@ -1,0 +1,329 @@
+{% extends "scorecard/base_light.html" %}
+{% load static humanize %}
+
+{% block title %}Key Findings — Senate Performance Insights{% endblock %}
+{% block meta_description %}Monthly insights and key findings from SENETRACK — top performers, trends, and data-driven summaries of Kenya Senate activity.{% endblock %}
+{% block og_title %}Key Findings | SENETRACK Kenya Senate Scorecard{% endblock %}
+{% block og_description %}Data-driven findings from Kenya Senate tracking: top performers, nominated senator trends, attendance patterns, and quarterly SPM summaries.{% endblock %}
+
+{% block nav %}
+{% include "partials/nav_light.html" with nav_active="findings" %}
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .finding-card { border-left: 4px solid; }
+    .finding-card-red    { border-color: #b91c1c; }
+    .finding-card-blue   { border-color: #0284c7; }
+    .finding-card-green  { border-color: #059669; }
+    .finding-card-amber  { border-color: #d97706; }
+    .finding-card-purple { border-color: #7c3aed; }
+    .stat-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 0.68rem; font-weight: 700; }
+    .tag { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: 999px; font-size: 0.65rem; font-weight: 700; background: #f1f5f9; color: #475569; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 py-10 pb-20">
+
+    <!-- Header -->
+    <div class="mb-8">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-700 uppercase tracking-wider mb-3">
+            <i data-lucide="bar-chart-2" class="w-3 h-3"></i>
+            Key Findings
+        </span>
+        <h1 class="font-brutal text-2xl md:text-4xl font-black text-slate-900 uppercase tracking-tight mb-3">
+            Data Findings &amp; Insights
+        </h1>
+        <p class="text-slate-500 text-sm max-w-2xl">
+            Curated findings from SENETRACK's ongoing analysis of Kenya Senate activity. Updated each quarter as new
+            Hansard data is imported. These are data-driven observations — not editorial opinion.
+        </p>
+    </div>
+
+    <!-- Pinned / Featured finding -->
+    {% if featured %}
+    <div class="bg-red-700 rounded-2xl p-6 md:p-8 mb-8 text-white">
+        <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                <i data-lucide="zap" class="w-5 h-5 text-white"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <span class="text-[10px] font-bold text-red-200 uppercase tracking-widest">Featured Finding — {{ featured.period }}</span>
+                <h2 class="font-brutal text-lg md:text-xl font-black uppercase tracking-tight mt-1 mb-2">{{ featured.title }}</h2>
+                <p class="text-red-100 text-sm leading-relaxed">{{ featured.summary }}</p>
+                {% if featured.stat %}
+                <div class="mt-4 inline-flex items-baseline gap-1">
+                    <span class="font-brutal text-3xl font-black">{{ featured.stat }}</span>
+                    <span class="text-red-200 text-sm">{{ featured.stat_label }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Stats strip -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
+        <div class="bg-white rounded-xl border border-slate-200 p-4 text-center">
+            <p class="font-brutal text-2xl font-black text-slate-900">{{ stats.total_senators }}</p>
+            <p class="text-slate-500 text-xs mt-0.5">Active Senators</p>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-4 text-center">
+            <p class="font-brutal text-2xl font-black text-slate-900">{{ stats.avg_score }}</p>
+            <p class="text-slate-500 text-xs mt-0.5">Avg SPM Score</p>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-4 text-center">
+            <p class="font-brutal text-2xl font-black {% if stats.grade_a_pct >= 20 %}text-emerald-700{% else %}text-amber-700{% endif %}">{{ stats.grade_a_pct }}%</p>
+            <p class="text-slate-500 text-xs mt-0.5">Score ≥ 75 (A-range)</p>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-4 text-center">
+            <p class="font-brutal text-2xl font-black text-red-700">{{ stats.below_50_pct }}%</p>
+            <p class="text-slate-500 text-xs mt-0.5">Score Below 50</p>
+        </div>
+    </div>
+
+    <!-- ── Top 5 performers ───────────────────────────────────────── -->
+    {% if top_performers %}
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm mb-6">
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+                <i data-lucide="trophy" class="w-4 h-4 text-amber-500"></i>
+                <h2 class="font-brutal text-sm font-bold text-slate-900 uppercase tracking-wider">Top 5 Performers — 2023–2026 Term</h2>
+            </div>
+            <span class="tag">Updated Mar 2026</span>
+        </div>
+        <div class="divide-y divide-slate-50">
+            {% for s in top_performers %}
+            <div class="px-6 py-3 flex items-center gap-4 hover:bg-slate-50/60 transition-colors">
+                <span class="font-brutal text-xl font-black text-slate-300 w-6 text-center shrink-0">{{ forloop.counter }}</span>
+                <div class="w-9 h-9 rounded-full bg-slate-100 overflow-hidden shrink-0">
+                    {% if s.display_image_url %}
+                    <img src="{{ s.display_image_url }}" alt="{{ s.name }}" class="w-full h-full object-cover">
+                    {% else %}
+                    <div class="w-full h-full avatar-initials flex items-center justify-center text-white font-bold text-sm">{{ s.name|slice:":1" }}</div>
+                    {% endif %}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="font-bold text-slate-900 text-sm hover:text-red-700 transition-colors truncate block">{{ s.name }}</a>
+                    <p class="text-slate-400 text-xs truncate">{{ s.county }} · {{ s.party }}</p>
+                </div>
+                <div class="text-right shrink-0">
+                    <span class="font-brutal text-lg font-black text-slate-900">{{ s.overall_score }}</span>
+                    <span class="block text-xs font-bold {% if s.grade == 'A' %}text-emerald-700{% elif s.grade|slice:':1' == 'A' or s.grade|slice:':1' == 'B' %}text-blue-700{% else %}text-amber-700{% endif %}">{{ s.grade }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="px-6 py-3 border-t border-slate-100">
+            <a href="{% url 'scorecard:senator-list' %}" class="text-xs font-bold text-red-700 hover:text-red-800 transition-colors flex items-center gap-1">
+                View all senators <i data-lucide="arrow-right" class="w-3 h-3"></i>
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ── Finding cards ─────────────────────────────────────────── -->
+    <div class="space-y-5">
+
+        <!-- Finding: Nominated senators gap -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm finding-card finding-card-amber overflow-hidden">
+            <div class="p-6">
+                <div class="flex items-start justify-between gap-4 mb-3">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="stat-badge bg-amber-100 text-amber-800">NOMINATED SENATORS</span>
+                            <span class="tag">2023–2026 Term</span>
+                        </div>
+                        <h3 class="font-brutal text-base font-bold text-slate-900 uppercase tracking-wide">
+                            Nominated Senators Score Lower on Average — Structural Disadvantage
+                        </h3>
+                    </div>
+                    <div class="shrink-0 text-right">
+                        <p class="font-brutal text-3xl font-black text-amber-700">{{ nominated_gap|default:"–" }}</p>
+                        <p class="text-amber-600 text-xs">pts below elected avg</p>
+                    </div>
+                </div>
+                <p class="text-slate-600 text-sm leading-relaxed mb-3">
+                    Nominated senators automatically score <strong>0 on the County Representation pillar</strong> (5 pts) since they
+                    do not represent a specific county. When comparing within the full senate, this structural disadvantage
+                    is compounded if nominated senators are also newer entrants with less Hansard coverage.
+                    SENETRACK recommends comparing nominated senators only within their own cohort.
+                </p>
+                <div class="flex items-center gap-2 mt-2">
+                    <i data-lucide="info" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+                    <p class="text-slate-400 text-xs">See the Methodology page for the compensating bills bonus applied to nominated senators.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Finding: Attendance distribution -->
+        {% if attendance_stats %}
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm finding-card finding-card-blue overflow-hidden">
+            <div class="p-6">
+                <div class="flex items-start justify-between gap-4 mb-3">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="stat-badge bg-blue-100 text-blue-800">ATTENDANCE</span>
+                            <span class="tag">Hansard 2025</span>
+                        </div>
+                        <h3 class="font-brutal text-base font-bold text-slate-900 uppercase tracking-wide">
+                            Plenary Attendance: Wide Spread Between Top &amp; Bottom Quartile
+                        </h3>
+                    </div>
+                </div>
+                <p class="text-slate-600 text-sm leading-relaxed mb-4">
+                    Senators in the top quartile attend an average of <strong>{{ attendance_stats.top_quartile_avg }} sessions</strong> out of 102,
+                    while those in the bottom quartile average just <strong>{{ attendance_stats.bottom_quartile_avg }} sessions</strong> —
+                    a gap of <strong>{{ attendance_stats.gap }} sessions</strong>. The data shows attendance is not evenly distributed:
+                    a small cohort of highly-engaged senators account for a disproportionate share of plenary participation.
+                </p>
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="bg-blue-50 rounded-xl p-3 text-center">
+                        <p class="font-brutal text-xl font-black text-blue-900">{{ attendance_stats.top_quartile_avg }}</p>
+                        <p class="text-blue-600 text-[10px] font-bold uppercase tracking-wide">Top 25%</p>
+                    </div>
+                    <div class="bg-slate-50 rounded-xl p-3 text-center">
+                        <p class="font-brutal text-xl font-black text-slate-700">{{ attendance_stats.median_avg }}</p>
+                        <p class="text-slate-500 text-[10px] font-bold uppercase tracking-wide">Median</p>
+                    </div>
+                    <div class="bg-red-50 rounded-xl p-3 text-center">
+                        <p class="font-brutal text-xl font-black text-red-800">{{ attendance_stats.bottom_quartile_avg }}</p>
+                        <p class="text-red-600 text-[10px] font-bold uppercase tracking-wide">Bottom 25%</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Finding: Bills sponsorship concentration -->
+        {% if bills_stats %}
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm finding-card finding-card-green overflow-hidden">
+            <div class="p-6">
+                <div class="flex items-start justify-between gap-4 mb-3">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="stat-badge bg-emerald-100 text-emerald-800">LEGISLATION</span>
+                            <span class="tag">2023–2026 Term</span>
+                        </div>
+                        <h3 class="font-brutal text-base font-bold text-slate-900 uppercase tracking-wide">
+                            Bills Are Concentrated: {{ bills_stats.top_10_pct }}% of Senators Sponsor {{ bills_stats.top_10_bills_pct }}% of Bills
+                        </h3>
+                    </div>
+                </div>
+                <p class="text-slate-600 text-sm leading-relaxed mb-3">
+                    Legislative output is highly unequal. A small group of senators sponsor the vast majority of bills,
+                    while <strong>{{ bills_stats.zero_bills_pct }}% of senators have sponsored zero bills</strong> in the current term.
+                    This concentration means the Bills Sponsored sub-score has high variance and is log-scaled to prevent
+                    outliers from distorting the overall SPM distribution.
+                </p>
+                <a href="{% url 'scorecard:bills-tracker' %}" class="text-xs font-bold text-emerald-700 hover:text-emerald-800 transition-colors flex items-center gap-1">
+                    Explore the Bills Tracker <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Finding: Grade distribution -->
+        {% if grade_dist %}
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm finding-card finding-card-purple overflow-hidden">
+            <div class="p-6">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="stat-badge bg-violet-100 text-violet-800">GRADE DISTRIBUTION</span>
+                    <span class="tag">Current Term</span>
+                </div>
+                <h3 class="font-brutal text-base font-bold text-slate-900 uppercase tracking-wide mb-3">
+                    Most Senators Cluster in the C–B Range
+                </h3>
+                <p class="text-slate-600 text-sm leading-relaxed mb-4">
+                    The SPM distribution is approximately normal, with most senators scoring between 40 and 70.
+                    Outstanding performers (grade A, score ≥ 80) represent a small but distinct top cohort.
+                </p>
+                <div class="flex items-end gap-1.5 h-16">
+                    {% for band in grade_dist %}
+                    <div class="flex-1 flex flex-col items-center gap-1">
+                        <div class="w-full rounded-t-sm bg-slate-200 relative" style="height: {{ band.bar_height }}px; min-height: 4px; background-color: {{ band.color }};"></div>
+                        <span class="text-[9px] font-bold text-slate-500">{{ band.label }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                <p class="text-slate-400 text-xs mt-2 text-right">Bar height proportional to senator count in each grade band.</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Finding: Data coverage note -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm finding-card finding-card-red overflow-hidden">
+            <div class="p-6">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="stat-badge bg-red-100 text-red-800">DATA QUALITY</span>
+                    <span class="tag">Mar 2026</span>
+                </div>
+                <h3 class="font-brutal text-base font-bold text-slate-900 uppercase tracking-wide mb-2">
+                    "Still Computing" Senators: Limited Data, Not Low Performance
+                </h3>
+                <p class="text-slate-600 text-sm leading-relaxed">
+                    <strong>{{ stats.still_computing }}</strong> senator{{ stats.still_computing|pluralize }} currently show "Still Computing" — this means their Hansard
+                    data record has not yet met the minimum evidence threshold required for a reliable SPM score.
+                    This is a data-coverage issue, not necessarily a reflection of poor performance. Senators who
+                    joined after the last Hansard import will appear in this state until the next data cycle.
+                </p>
+            </div>
+        </div>
+
+    </div><!-- /findings -->
+
+    <!-- ── Archive / Previous Terms ──────────────────────────────── -->
+    <div class="mt-12">
+        <div class="flex items-center gap-4 mb-6">
+            <div class="h-px flex-1 bg-slate-200"></div>
+            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 uppercase tracking-wider">
+                <i data-lucide="archive" class="w-3 h-3"></i>
+                Term Archive
+            </span>
+            <div class="h-px flex-1 bg-slate-200"></div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Current term -->
+            <div class="bg-white rounded-2xl border-2 border-red-200 shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 uppercase">
+                        <i data-lucide="radio" class="w-3 h-3"></i> Live
+                    </span>
+                    <span class="text-xs text-slate-400">2023 – 2027</span>
+                </div>
+                <h3 class="font-brutal text-sm font-bold text-slate-900 uppercase tracking-wide mb-1">13th Parliament</h3>
+                <p class="text-slate-500 text-xs mb-3">Current Senate term. Data updated quarterly from Hansard reports and Mzalendo division lists.</p>
+                <a href="{% url 'scorecard:senator-list' %}" class="text-xs font-bold text-red-700 hover:text-red-800 transition-colors flex items-center gap-1">
+                    View senators <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                </a>
+            </div>
+            <!-- Previous term placeholder -->
+            <div class="bg-slate-50 rounded-2xl border border-slate-200 border-dashed p-5 flex flex-col items-center justify-center text-center min-h-[120px]">
+                <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+                    <i data-lucide="clock" class="w-5 h-5 text-slate-400"></i>
+                </div>
+                <h3 class="font-brutal text-sm font-bold text-slate-400 uppercase tracking-wide mb-1">12th Parliament</h3>
+                <p class="text-slate-400 text-xs">2017–2022 term archive coming soon. Historical data import is planned for a future release.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Methodology CTA ─────────────────────────────────────── -->
+    <div class="mt-10 bg-slate-900 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+            <i data-lucide="book-open" class="w-5 h-5 text-white"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+            <p class="font-brutal text-sm font-bold text-white uppercase tracking-wider">Want to understand these numbers?</p>
+            <p class="text-slate-400 text-xs mt-0.5">Every finding on this page is derived from the fully documented SPM methodology. Read it, challenge it, or suggest improvements.</p>
+        </div>
+        <a href="{% url 'scorecard:about' %}" class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-slate-900 text-xs font-bold hover:bg-slate-100 transition-colors">
+            <i data-lucide="file-text" class="w-4 h-4"></i>
+            Read Methodology
+        </a>
+    </div>
+
+</div>
+{% endblock %}
