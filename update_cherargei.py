@@ -1,8 +1,3 @@
-"""
-Update Samson Kiprotich Cherargei - Legislative contributions from public sources.
-Sources: Tuko, Capital FM, Wikipedia, Parliament - Employment Bill (passed Senate),
-Prevention of Livestock Bill 2023, Constitution Amendment Bill 2024.
-"""
 import os
 import sys
 import django
