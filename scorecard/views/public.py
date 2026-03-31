@@ -304,6 +304,12 @@ def key_findings(request):
     })
 
 
+def methodology(request):
+    """Redirect /methodology/ to the methodology section of the About page."""
+    from django.shortcuts import redirect as _redirect
+    return _redirect("/about/#engine", permanent=False)
+
+
 def privacy_policy(request):
     """Privacy Policy page."""
     return render(request, "scorecard/privacy.html")

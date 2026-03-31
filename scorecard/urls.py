@@ -16,6 +16,7 @@ urlpatterns = [
     path('frontier/map/data/', views.frontier_map_data, name='frontier-map-data'),
     path('insights/export/csv/', views.export_insights_csv, name='insights-export-csv'),
     path('about/', views.about, name='about'),
+    path('methodology/', views.methodology, name='methodology'),
     path('privacy/', views.privacy_policy, name='privacy'),
     path('terms/', views.terms_of_service, name='terms'),
     path('findings/', views.key_findings, name='key-findings'),

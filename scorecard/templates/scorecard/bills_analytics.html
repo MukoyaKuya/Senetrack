@@ -12,16 +12,46 @@
 {% block extra_head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
+    html { scrollbar-gutter: stable; }
     .insight-card { transition: box-shadow 0.15s, transform 0.15s; }
     .insight-card:hover { box-shadow: 0 4px 0 0 #e2e8f0; transform: translateY(-2px); }
     .section-title { font-family: 'Space Mono', monospace; }
     .funnel-bar { transition: width 0.6s cubic-bezier(.4,0,.2,1); }
     .chart-wrap { position: relative; }
+    .chart-wrap canvas { cursor: pointer; }
     .toc-nav::-webkit-scrollbar { height: 4px; }
     .toc-nav::-webkit-scrollbar-track { background: transparent; }
     .toc-nav::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 2px; }
     .heat-cell { transition: opacity 0.15s; }
     .heat-cell:hover { opacity: 0.8; }
+    
+    #bill-modal-overlay {
+        display: flex !important;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.22s ease, visibility 0s linear 0.22s;
+        will-change: opacity;
+    }
+    #bill-modal-overlay.is-open {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transition: opacity 0.22s ease, visibility 0s linear 0s;
+    }
+    #bill-modal {
+        transform: translateY(20px) scale(0.97);
+        opacity: 0;
+        transition: transform 0.28s cubic-bezier(0.34, 1.4, 0.64, 1), opacity 0.22s ease;
+        will-change: transform, opacity;
+    }
+    #bill-modal-overlay.is-open #bill-modal {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+    .ttl-row, .stalled-row { cursor: pointer !important; pointer-events: auto !important; }
+    [id^="s-"] { contain: content; position: relative; z-index: 1; transition: box-shadow 0.2s ease, transform 0.2s ease; }
+    [id^="s-"]:hover { box-shadow: 0 6px 24px rgba(15,23,42,0.09); transform: translateY(-2px); z-index: 2; }
 </style>
 {% endblock %}
 
@@ -1312,8 +1342,8 @@
 
         <!-- ── Bill explainer modal ─────────────────────────────────── -->
         <div id="bill-modal-overlay"
-             class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center p-0 sm:p-6"
-             style="background:rgba(2,6,23,0.7);backdrop-filter:blur(8px);">
+             class="fixed inset-0 z-50 items-end sm:items-center justify-center p-0 sm:p-6"
+             style="background:rgba(2,6,23,0.7);">
 
             <div id="bill-modal"
                  class="relative w-full sm:max-w-lg bg-white sm:rounded-3xl rounded-t-[28px] overflow-hidden"
@@ -2021,16 +2051,14 @@
             durEl.style.color   = d.value;
             durEl.textContent   = yrs === 0 ? '< 1 yr' : `${yrs} yr${yrs > 1 ? 's' : ''}`;
 
-            overlay.classList.remove('hidden');
-            overlay.classList.add('flex');
-            document.body.style.overflow = 'hidden';
-            if (window.lucide) lucide.createIcons();
+            document.body.classList.add('modal-open');
+            overlay.classList.add('is-open');
+            if (window.lucide) lucide.createIcons({ attrs: { 'class': 'lucide-icon' }, nodes: [overlay] });
         }
 
         function closeModal() {
-            overlay.classList.add('hidden');
-            overlay.classList.remove('flex');
-            document.body.style.overflow = '';
+            overlay.classList.remove('is-open');
+            document.body.classList.remove('modal-open');
         }
 
         // ── Stalled modal variant ─────────────────────────────────────────
@@ -2137,20 +2165,27 @@
             durEl.style.fontSize = '10px';
             durEl.textContent    = (row.dataset.committee || '—').replace(/\s*Committee$/i,'');
 
-            overlay.classList.remove('hidden');
-            overlay.classList.add('flex');
-            document.body.style.overflow = 'hidden';
-            if (window.lucide) lucide.createIcons();
+            document.body.classList.add('modal-open');
+            overlay.classList.add('is-open');
+            if (window.lucide) lucide.createIcons({ attrs: { 'class': 'lucide-icon' }, nodes: [overlay] });
         }
 
         // resetStatTiles is now handled inline inside openModal (TTL path)
         function resetStatTiles() { /* no-op — TTL openModal resets tiles itself */ }
 
-        document.querySelectorAll('.ttl-row').forEach(r => r.addEventListener('click', () => { resetStatTiles(); openModal(r); }));
-        document.querySelectorAll('.stalled-row').forEach(r => r.addEventListener('click', () => openStalledModal(r)));
-        document.getElementById('modal-close').addEventListener('click', closeModal);
-        overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+        document.addEventListener('click', (e) => {
+            const row = e.target.closest('.ttl-row, .stalled-row');
+            if (row) {
+                if (row.classList.contains('ttl-row')) { resetStatTiles(); openModal(row); }
+                else { openStalledModal(row); }
+            } else if (e.target.closest('#modal-close') || e.target === overlay) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && overlay.classList.contains('is-open')) { closeModal(); }
+        });
     })();
 
     // ── 17. Time-to-Law: avg by assent year (line) ───────────────────────
