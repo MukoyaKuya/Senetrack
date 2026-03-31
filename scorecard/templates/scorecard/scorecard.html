@@ -219,7 +219,7 @@
                 </div>
 
                 <!-- Radial Performance Gauge (grade-based coloring) -->
-                <div class="flex flex-col items-center shrink-0">
+                <div class="flex flex-col items-center shrink-0 gap-2">
                     <div class="w-36 h-36 sm:w-40 sm:h-40 md:w-44 md:h-44 relative"
                         style="filter: drop-shadow(0 12px 30px rgba(15,23,42,0.18));">
                         <svg class="w-full h-full transform -rotate-90" viewBox="0 0 160 160">
@@ -247,6 +247,11 @@
                             </span>
                         </div>
                     </div>
+                    <a href="{% url 'scorecard:about' %}#engine"
+                       class="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-400 hover:text-blue-600 transition-colors">
+                        <i data-lucide="info" class="w-3 h-3"></i>
+                        How is this score calculated?
+                    </a>
                 </div>
             </div>
         </div>
@@ -736,12 +741,20 @@
         </div>
     </main>
 
-    <footer class="mt-12 flex justify-center pb-8 pt-6">
-        <a href="{% url 'scorecard:senator-list' %}"
-            class="group flex items-center gap-2 font-brutal text-sm font-bold text-slate-900 hover:text-white transition-all bg-white hover:bg-slate-700 border border-slate-200 rounded-lg px-6 py-3">
-            <i data-lucide="arrow-left" class="w-4 h-4 transition-transform group-hover:-translate-x-1"></i>
-            Back to list
-        </a>
+    <footer class="mt-12 border-t border-slate-200 bg-white py-6 text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <a href="{% url 'scorecard:senator-list' %}"
+                class="group flex items-center gap-2 font-brutal text-sm font-bold text-slate-900 hover:text-white transition-all bg-white hover:bg-slate-700 border border-slate-200 rounded-lg px-5 py-2.5">
+                <i data-lucide="arrow-left" class="w-4 h-4 transition-transform group-hover:-translate-x-1"></i>
+                Back to list
+            </a>
+            <nav class="flex items-center gap-4 flex-wrap justify-center font-medium" aria-label="Footer links">
+                <a href="{% url 'scorecard:about' %}" class="hover:text-slate-900 transition-colors">About</a>
+                <a href="{% url 'scorecard:about' %}#engine" class="hover:text-slate-900 transition-colors">Methodology</a>
+                <a href="{% url 'scorecard:privacy' %}" class="hover:text-slate-900 transition-colors">Privacy Policy</a>
+                <a href="{% url 'scorecard:terms' %}" class="hover:text-slate-900 transition-colors">Terms of Service</a>
+            </nav>
+        </div>
     </footer>
     <script>
         try { if (typeof lucide !== 'undefined') lucide.createIcons(); } catch(e) {}

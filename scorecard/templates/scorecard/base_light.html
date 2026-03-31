@@ -86,7 +86,17 @@
     <main>
         {% block content %}{% endblock %}
     </main>
-    <footer class="text-center py-6 text-xs text-slate-500 font-medium font-brutal">SENETRACK &mdash; Assessing Senators' Performance in the Kenyan Senate</footer>
+    <footer class="border-t border-slate-200 bg-white py-6 text-xs text-slate-500 font-medium">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <span class="font-brutal text-slate-400">SENETRACK &mdash; Assessing Senators' Performance in the Kenyan Senate</span>
+            <nav class="flex items-center gap-4 flex-wrap justify-center" aria-label="Footer links">
+                <a href="{% url 'scorecard:about' %}" class="hover:text-slate-900 transition-colors">About</a>
+                <a href="{% url 'scorecard:about' %}#engine" class="hover:text-slate-900 transition-colors">Methodology</a>
+                <a href="{% url 'scorecard:privacy' %}" class="hover:text-slate-900 transition-colors">Privacy Policy</a>
+                <a href="{% url 'scorecard:terms' %}" class="hover:text-slate-900 transition-colors">Terms of Service</a>
+            </nav>
+        </div>
+    </footer>
     <script src="{% static 'scorecard/vendor/flowbite.min.js' %}"></script>
     <script>try { if (typeof lucide !== 'undefined') lucide.createIcons(); } catch(e) {}</script>
     <script>

@@ -304,6 +304,16 @@ def key_findings(request):
     })
 
 
+def privacy_policy(request):
+    """Privacy Policy page."""
+    return render(request, "scorecard/privacy.html")
+
+
+def terms_of_service(request):
+    """Terms of Service page."""
+    return render(request, "scorecard/terms.html")
+
+
 def service_worker(request):
     """Serve the service worker at /sw.js for PWA scope (root)."""
     path = Path(settings.BASE_DIR) / "scorecard" / "static" / "scorecard" / "sw.js"

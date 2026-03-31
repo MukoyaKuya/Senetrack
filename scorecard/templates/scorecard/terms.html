@@ -1,0 +1,182 @@
+{% extends "scorecard/base_light.html" %}
+{% load static %}
+
+{% block title %}Terms of Service{% endblock %}
+{% block meta_description %}SENETRACK Terms of Service — conditions governing use of the platform and its data.{% endblock %}
+{% block og_title %}Terms of Service | SENETRACK{% endblock %}
+{% block og_description %}SENETRACK Terms of Service — conditions governing use of the platform and its data.{% endblock %}
+
+{% block nav %}
+{% include "partials/nav_light.html" with nav_show_back=True %}
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .prose-section { border-left: 4px solid #e2e8f0; padding-left: 1rem; margin-bottom: 1.5rem; }
+    .prose-section h2 { font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #0f172a; margin-bottom: 0.5rem; }
+    .prose-section p, .prose-section li { font-size: 0.875rem; color: #475569; line-height: 1.75; }
+    .prose-section ul { list-style: disc; padding-left: 1.25rem; margin-top: 0.5rem; }
+    .prose-section li + li { margin-top: 0.25rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 py-10 pb-20">
+
+    <div class="mb-10">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest mb-4">
+            <i data-lucide="file-text" class="w-3 h-3"></i> Legal
+        </span>
+        <h1 class="font-brutal text-2xl md:text-4xl font-black text-slate-900 uppercase tracking-tight mb-3">Terms of Service</h1>
+        <p class="text-slate-500 text-sm">Last updated: <strong>March 2026</strong></p>
+        <p class="text-slate-500 text-sm mt-2 max-w-xl">
+            By using SENETRACK you agree to these terms. Please read them carefully. If you do not agree,
+            please discontinue use of the platform.
+        </p>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm divide-y divide-slate-100 p-8 md:p-10 space-y-8">
+
+        <div class="prose-section">
+            <h2>1 · About SENETRACK</h2>
+            <p>
+                SENETRACK is an independent, non-partisan civic-technology platform that tracks and publishes
+                the parliamentary performance of Kenya Senate senators using official public records. It is
+                operated by a volunteer civic-tech team and is not affiliated with, endorsed by, or funded
+                by the Parliament of Kenya, the Senate, or any political party or government body.
+            </p>
+        </div>
+
+        <div class="prose-section pt-8">
+            <h2>2 · Use of the Platform</h2>
+            <p>You may use SENETRACK for lawful, personal, educational, journalistic, and civic-engagement purposes. You agree not to:</p>
+            <ul>
+                <li>Use the platform or its data for any unlawful purpose.</li>
+                <li>Scrape, harvest, or systematically copy data in a manner that disrupts the service or violates this agreement.</li>
+                <li>Republish or redistribute SENETRACK data in a way that misrepresents its source, accuracy, or limitations.</li>
+                <li>Use SPM scores as the sole basis for any legal, regulatory, electoral, or formal decision-making process.</li>
+                <li>Attempt to gain unauthorised access to any part of the platform or its infrastructure.</li>
+            </ul>
+        </div>
+
+        <div class="prose-section pt-8">
+            <h2>3 · Data & Accuracy</h2>
+            <p>
+                All senator performance data is sourced from official public records — the Kenya Hansard,
+                Parliament of Kenya attendance registers, division lists (via Mzalendo), and the official
+                Statements Tracker. While we make every effort to ensure accuracy, SENETRACK cannot guarantee
+                that all data is complete, current, or free of errors.
+            </p>
+            <p class="mt-2">
+                SPM scores are algorithmic proxies computed from measurable parliamentary activity. They are
+                indicative only and do not constitute a comprehensive or definitive assessment of a senator's
+                effectiveness, character, or contribution to public life. Scores are subject to revision as
+                better data becomes available.
+            </p>
+            <p class="mt-2">
+                If you identify a data error, please report it via the feedback form on the
+                <a href="{% url 'scorecard:about' %}#feedback" class="underline hover:text-slate-900">About page</a>.
+            </p>
+        </div>
+
+        <div class="prose-section pt-8">
+            <h2>4 · Intellectual Property</h2>
+            <p>
+                The SENETRACK platform design, codebase, scoring methodology, and original written content
+                are the intellectual property of the SENETRACK team. The underlying parliamentary data
+                (Hansard transcripts, voting records, attendance registers) is sourced from public domain
+                government records.
+            </p>
+            <p class="mt-2">
+                You may quote, cite, or reproduce limited extracts from SENETRACK for journalistic,
+                educational, or research purposes provided you clearly attribute SENETRACK as the source
+                and link back to the relevant page on <strong>senetrack.co.ke</strong>.
+            </p>
+        </div>
+
+        <div class="prose-section pt-8">
+            <h2>5 · No Legal or Electoral Use</h2>
+            <p>
+                SPM scores and performance data published on SENETRACK are for <strong>public information
+                and civic engagement purposes only</strong>. They must not be used as the sole or primary
+                basis for any legal proceeding, regulatory decision, formal electoral process, or any other
+                official determination.
+            </p>
+        </div>
+
+        <div class="prose-section pt-8">
+            <h2>6 · CSV Export & Data Re-use</h2>
+            <p>
+                The CSV export feature is provided to support civic research, data journalism, and public
+                accountability projects. Re-use of exported data is permitted subject to the following
+                conditions:
+            </p>
+            <ul>
+                <li>Clearly attribute SENETRACK as the data source.</li>
+                <li>Include a note of the data's limitations and the date it was exported.</li>
+                <li>Do not present SENETRACK scores as official government assessments.</li>
+            </ul>
+        </div>
+
+        <div class="prose-section pt-8">
+            <h2>7 · Limitation of Liability</h2>
+            <p>
+                SENETRACK is provided "as is" without warranty of any kind, express or implied. To the fullest
+                extent permitted by law, the SENETRACK team shall not be liable for any direct, indirect,
+                incidental, or consequential damages arising from your use of, or inability to use, the
+                platform or any data it contains.
+            </p>
+        </div>
+
+        <div class="prose-section pt-8">
+            <h2>8 · External Links</h2>
+            <p>
+                SENETRACK may contain links to external websites such as the Parliament of Kenya Hansard
+                portal or Mzalendo. We are not responsible for the content, accuracy, or privacy practices
+                of any linked third-party site.
+            </p>
+        </div>
+
+        <div class="prose-section pt-8">
+            <h2>9 · Changes to These Terms</h2>
+            <p>
+                We may update these Terms of Service from time to time. Material changes will be noted with
+                an updated "Last updated" date at the top of this page. Continued use of SENETRACK after an
+                update constitutes acceptance of the revised terms.
+            </p>
+        </div>
+
+        <div class="prose-section pt-8">
+            <h2>10 · Governing Law</h2>
+            <p>
+                These Terms of Service are governed by the laws of the Republic of Kenya. Any disputes
+                arising from your use of SENETRACK shall be subject to the jurisdiction of the courts
+                of Kenya.
+            </p>
+        </div>
+
+        <div class="prose-section pt-8">
+            <h2>11 · Contact</h2>
+            <p>
+                For any questions about these Terms, please use the feedback form on the
+                <a href="{% url 'scorecard:about' %}#feedback" class="underline hover:text-slate-900">About page</a>.
+            </p>
+        </div>
+
+    </div>
+
+    <div class="mt-8 flex flex-wrap gap-4 justify-center">
+        <a href="{% url 'scorecard:privacy' %}"
+           class="inline-flex items-center gap-2 font-brutal text-sm font-bold text-slate-700 hover:text-white transition-all bg-white hover:bg-slate-800 border border-slate-200 rounded-lg px-5 py-2.5">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            Privacy Policy
+        </a>
+        <a href="{% url 'scorecard:about' %}"
+           class="inline-flex items-center gap-2 font-brutal text-sm font-bold text-slate-900 hover:text-white transition-all bg-white hover:bg-red-700 border border-slate-200 rounded-lg px-5 py-2.5">
+            About SENETRACK
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </a>
+    </div>
+
+</div>
+{% endblock %}

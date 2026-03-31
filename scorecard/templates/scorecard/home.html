@@ -191,7 +191,17 @@
     </section>
     {% endif %}
 
-    <footer class="text-center py-6 text-xs text-slate-500 font-medium bg-slate-950">SENETRACK &mdash; Assessing Senators' Performance in the Kenyan Senate</footer>
+    <footer class="border-t border-slate-800 bg-slate-950 py-6 text-xs text-slate-500 font-medium">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <span class="font-brutal text-slate-600">SENETRACK &mdash; Assessing Senators' Performance in the Kenyan Senate</span>
+            <nav class="flex items-center gap-4 flex-wrap justify-center" aria-label="Footer links">
+                <a href="/about/" class="hover:text-slate-300 transition-colors">About</a>
+                <a href="/about/#engine" class="hover:text-slate-300 transition-colors">Methodology</a>
+                <a href="/privacy/" class="hover:text-slate-300 transition-colors">Privacy Policy</a>
+                <a href="/terms/" class="hover:text-slate-300 transition-colors">Terms of Service</a>
+            </nav>
+        </div>
+    </footer>
 
     <script src="{% static 'scorecard/vendor/flowbite.min.js' %}"></script>
     <script>try { if (typeof lucide !== 'undefined') lucide.createIcons(); } catch(e) {}</script>

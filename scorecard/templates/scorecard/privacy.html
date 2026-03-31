@@ -1,0 +1,160 @@
+{% extends "scorecard/base_light.html" %}
+{% load static %}
+
+{% block title %}Privacy Policy{% endblock %}
+{% block meta_description %}SENETRACK Privacy Policy — how we handle data, what we collect, and your rights as a visitor.{% endblock %}
+{% block og_title %}Privacy Policy | SENETRACK{% endblock %}
+{% block og_description %}SENETRACK Privacy Policy — how we handle data, what we collect, and your rights as a visitor.{% endblock %}
+
+{% block nav %}
+{% include "partials/nav_light.html" with nav_show_back=True %}
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .prose-section { border-left: 4px solid #e2e8f0; padding-left: 1rem; margin-bottom: 1.5rem; }
+    .prose-section h2 { font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #0f172a; margin-bottom: 0.5rem; }
+    .prose-section p, .prose-section li { font-size: 0.875rem; color: #475569; line-height: 1.75; }
+    .prose-section ul { list-style: disc; padding-left: 1.25rem; margin-top: 0.5rem; }
+    .prose-section li + li { margin-top: 0.25rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 py-10 pb-20">
+
+    <div class="mb-10">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest mb-4">
+            <i data-lucide="shield" class="w-3 h-3"></i> Legal
+        </span>
+        <h1 class="font-brutal text-2xl md:text-4xl font-black text-slate-900 uppercase tracking-tight mb-3">Privacy Policy</h1>
+        <p class="text-slate-500 text-sm">Last updated: <strong>March 2026</strong></p>
+        <p class="text-slate-500 text-sm mt-2 max-w-xl">
+            SENETRACK is an independent civic-technology platform. This policy explains what data we collect,
+            how we use it, and your rights as a visitor.
+        </p>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm divide-y divide-slate-100 p-8 md:p-10 space-y-8">
+
+        <div class="prose-section">
+            <h2>1 · Who We Are</h2>
+            <p>
+                SENETRACK is an independent, non-partisan civic-technology platform that tracks and analyses the
+                parliamentary performance of Kenya Senate senators using publicly available official records.
+                We are not affiliated with, endorsed by, or funded by the Parliament of Kenya, the Senate,
+                or any political party.
+            </p>
+        </div>
+
+        <div class="prose-section pt-8">
+            <h2>2 · Data We Collect</h2>
+            <p>We collect the minimum data necessary to operate the platform:</p>
+            <ul>
+                <li><strong>Contact form submissions</strong> — name, optional email, subject, and message body, submitted voluntarily via the feedback form on the About page. These are stored securely and used only to respond to your query.</li>
+                <li><strong>IP addresses</strong> — recorded at the time of a contact form submission for spam and abuse prevention. IP addresses are not linked to browsing activity.</li>
+                <li><strong>Anonymous analytics</strong> — if enabled, we use <a href="https://plausible.io" class="underline hover:text-slate-900" target="_blank" rel="noopener noreferrer">Plausible Analytics</a>, a privacy-first, cookie-free analytics tool. Plausible does not use cookies, does not track individuals across sites, and does not collect personal data. Aggregate page-view statistics only.</li>
+            </ul>
+        </div>
+
+        <div class="prose-section pt-8">
+            <h2>3 · Data We Do Not Collect</h2>
+            <ul>
+                <li>We do not use advertising trackers or third-party marketing cookies.</li>
+                <li>We do not build user profiles or track individuals across sessions.</li>
+                <li>We do not sell, rent, or share personal data with any third party for commercial purposes.</li>
+                <li>We do not require account creation or login to use any part of the platform.</li>
+            </ul>
+        </div>
+
+        <div class="prose-section pt-8">
+            <h2>4 · Senator & Parliamentary Data</h2>
+            <p>
+                All senator performance data displayed on SENETRACK is sourced from official public records —
+                the Kenya Hansard, Parliament of Kenya attendance registers, division lists (via Mzalendo),
+                and the official Statements Tracker. This data is in the public domain and its publication
+                here does not constitute a privacy violation.
+            </p>
+            <p class="mt-2">
+                Senator profile photographs displayed on this platform are sourced from publicly available
+                parliamentary records or public domain sources. If you are a senator or representative and
+                believe an image has been used incorrectly, please contact us via the feedback form.
+            </p>
+        </div>
+
+        <div class="prose-section pt-8">
+            <h2>5 · Cookies</h2>
+            <p>
+                SENETRACK does not set any tracking or advertising cookies. The only browser storage used
+                is for essential site functionality (e.g. the PWA service worker for offline caching of
+                static assets). No personal information is stored in browser storage.
+            </p>
+        </div>
+
+        <div class="prose-section pt-8">
+            <h2>6 · Data Retention</h2>
+            <p>
+                Contact form submissions are retained for a reasonable period to allow us to respond to
+                queries and track data corrections. IP addresses logged for spam prevention are retained
+                for a maximum of 90 days and then deleted. We do not retain any other personal data.
+            </p>
+        </div>
+
+        <div class="prose-section pt-8">
+            <h2>7 · Your Rights</h2>
+            <p>You have the right to:</p>
+            <ul>
+                <li>Request access to any personal data we hold about you.</li>
+                <li>Request correction or deletion of personal data you have submitted (e.g. a contact form message).</li>
+                <li>Object to any processing of your personal data.</li>
+            </ul>
+            <p class="mt-2">
+                To exercise any of these rights, please contact us using the feedback form on the
+                <a href="{% url 'scorecard:about' %}#feedback" class="underline hover:text-slate-900">About page</a>.
+            </p>
+        </div>
+
+        <div class="prose-section pt-8">
+            <h2>8 · Third-Party Services</h2>
+            <ul>
+                <li><strong>Cloudinary</strong> — senator and party images are hosted on Cloudinary's CDN for fast delivery. Images served via Cloudinary are subject to <a href="https://cloudinary.com/privacy" class="underline hover:text-slate-900" target="_blank" rel="noopener noreferrer">Cloudinary's privacy policy</a>.</li>
+                <li><strong>Google Fonts</strong> — web fonts are loaded from Google Fonts CDN. Google may log font requests; see <a href="https://policies.google.com/privacy" class="underline hover:text-slate-900" target="_blank" rel="noopener noreferrer">Google's privacy policy</a>.</li>
+                <li><strong>Plausible Analytics</strong> (if enabled) — privacy-first, no personal data collected. See <a href="https://plausible.io/privacy" class="underline hover:text-slate-900" target="_blank" rel="noopener noreferrer">Plausible's privacy policy</a>.</li>
+            </ul>
+        </div>
+
+        <div class="prose-section pt-8">
+            <h2>9 · Changes to This Policy</h2>
+            <p>
+                We may update this Privacy Policy from time to time. Material changes will be noted with an
+                updated "Last updated" date at the top of this page. Continued use of SENETRACK after a
+                policy update constitutes acceptance of the revised policy.
+            </p>
+        </div>
+
+        <div class="prose-section pt-8">
+            <h2>10 · Contact</h2>
+            <p>
+                For any privacy-related queries, data requests, or concerns, please use the feedback form on
+                the <a href="{% url 'scorecard:about' %}#feedback" class="underline hover:text-slate-900">About page</a>.
+                We aim to respond within 14 days.
+            </p>
+        </div>
+
+    </div>
+
+    <div class="mt-8 flex flex-wrap gap-4 justify-center">
+        <a href="{% url 'scorecard:about' %}"
+           class="inline-flex items-center gap-2 font-brutal text-sm font-bold text-slate-900 hover:text-white transition-all bg-white hover:bg-red-700 border border-slate-200 rounded-lg px-5 py-2.5">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            About SENETRACK
+        </a>
+        <a href="{% url 'scorecard:terms' %}"
+           class="inline-flex items-center gap-2 font-brutal text-sm font-bold text-slate-700 hover:text-white transition-all bg-white hover:bg-slate-800 border border-slate-200 rounded-lg px-5 py-2.5">
+            Terms of Service
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </a>
+    </div>
+
+</div>
+{% endblock %}

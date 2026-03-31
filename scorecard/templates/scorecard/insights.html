@@ -34,6 +34,26 @@
 </header>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 pb-20 space-y-8">
+
+    <!-- Methodology callout -->
+    <div class="rounded-xl border border-slate-200 bg-slate-50 px-5 py-3 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <div class="flex items-center gap-3 flex-1 min-w-0">
+            <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                <i data-lucide="info" class="w-4 h-4 text-blue-700"></i>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">
+                <strong class="text-slate-800">How scores are calculated:</strong>
+                Structural (55 pts) = Voting Reliability + Attendance + Bills Sponsored ·
+                Debate (45 pts) = Words + Speeches + Motions · Log scaling prevents outliers from distorting rankings.
+            </p>
+        </div>
+        <a href="{% url 'scorecard:about' %}#engine"
+           class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-700 text-white text-xs font-bold hover:bg-blue-800 transition-colors whitespace-nowrap">
+            <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+            Full Methodology
+        </a>
+    </div>
+
     <!-- Filters -->
     <section class="bg-white border border-slate-200 rounded-lg p-4">
         <form method="get" action="" class="flex flex-wrap items-end gap-3" id="insightsFilterForm">
@@ -820,7 +840,7 @@
             <ol class="space-y-1 text-sm text-slate-700">
                 {% for s in top10 %}
                 <li class="flex items-center justify-between">
-                    <span class="truncate mr-2">{{ forloop.counter }}. {{ s.name }} <span class="text-xs text-slate-400">({{ s.county }})</span></span>
+                    <a href="{% url 'scorecard:senator-detail' s.senator_id %}" class="truncate mr-2 hover:text-red-700 hover:underline">{{ forloop.counter }}. {{ s.name }} <span class="text-xs text-slate-400">({{ s.county }})</span></a>
                     <span class="font-bold text-slate-900">{{ s.overall_score|floatformat:0 }}</span>
                 </li>
                 {% empty %}
