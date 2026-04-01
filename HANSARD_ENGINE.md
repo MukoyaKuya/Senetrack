@@ -3,7 +3,7 @@
 The Hansard Engine is the core scoring mechanism for the 2025 Senator Performance Tracking on Senetrack. It is designed to provide a fair, data-driven assessment of legislative activity, balancing reliable participation (structural) with active house participation (debate).
 
 ## 1. Core Methodology
-
+d
 The engine splits a Senator's performance into two primary categories, totaling 100 points:
 - **Structural (55 Points)**: Focuses on reliability, attendance, and formal legislative output.
 - **Debate (45 Points)**: Focuses on the volume, frequency, and impact of a Senator's contributions on the floor.
