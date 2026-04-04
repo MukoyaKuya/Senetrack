@@ -1,6 +1,6 @@
 # Push Senetrack to GitHub
 
-Your code is committed locally but not yet on [github.com/MukoyaKuya/Senetrack](https://github.com/MukoyaKuya/Senetrack). Push it from your machine (Git will ask for your credentials).
+The code is committed locally but not yet on [github.com/MukoyaKuya/Senetrack](https://github.com/MukoyaKuya/Senetrack). Push it from your machine (Git will ask for your credentials).
 
 ## Option 1: HTTPS with Personal Access Token (easiest)
 
