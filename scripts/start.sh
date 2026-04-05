@@ -4,8 +4,8 @@ set -e
 echo "Running migrations..."
 python manage.py migrate --noinput
 
-echo "Running migrations..."
-python manage.py migrate --noinput
+echo "Syncing performance data from JSON..."
+python manage.py sync_performance --apply
 
 echo "Starting Gunicorn server..."
 # Use the PORT environment variable provided by Cloud Run, default to 8080

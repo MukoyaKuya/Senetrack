@@ -55,20 +55,28 @@ class Command(BaseCommand):
         ]
 
         for entry in entries:
-            sid = entry["senator_id"]
-
-            try:
-                senator = Senator.objects.select_related("perf").get(senator_id=sid)
-            except Senator.DoesNotExist:
-                self.stdout.write(self.style.WARNING(f"  NOT FOUND: {sid} ({entry.get('name', '?')})"))
-                not_found += 1
-                continue
-
-            perf = getattr(senator, "perf", None)
-            if perf is None:
-                self.stdout.write(self.style.WARNING(f"  NO PERF: {senator.name} ({sid})"))
-                skipped += 1
-                continue
+            sid = entry['senator_id']
+            name = entry['name']
+            
+            # Find or Create Senator
+            senator, s_created = Senator.objects.get_or_create(
+                senator_id=sid,
+                defaults={
+                    'name': name,
+                    'party': 'Independent' if 'party' not in entry else entry['party'],
+                    # Default handle for new senators
+                    'twitter_handle': f"@{sid.replace('-', '')}", 
+                }
+            )
+            if s_created:
+                self.stdout.write(self.style.SUCCESS(f"  Created new Senator: {name} ({sid})"))
+            
+            # Find or Create Performance
+            perf, p_created = ParliamentaryPerformance.objects.get_or_create(
+                senator=senator
+            )
+            if p_created:
+                self.stdout.write(self.style.SUCCESS(f"  Created Performance record for: {name}"))
 
             # Check for any changes (metrics from JSON)
             has_changes = False
@@ -80,6 +88,9 @@ class Command(BaseCommand):
                     if old_val != new_val:
                         has_changes = True
                         change_details.append(f"{m}: {old_val} -> {new_val}")
+            
+            # Always sync if newly created
+            if p_created: has_changes = True
 
             if not has_changes:
                 unchanged += 1
