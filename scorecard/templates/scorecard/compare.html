@@ -1,10 +1,8 @@
 {% extends "scorecard/base_light.html" %}
 {% load static scorecard_extras %}
 
-{% block title %}Compare Senators{% endblock %}
-{% block meta_description %}Compare senator performance side by side.{% endblock %}
-{% block og_title %}Compare Senators | Kenya Senate Scorecard{% endblock %}
-{% block og_description %}Compare senator performance side by side.{% endblock %}
+{% block title %}Senator Performance Comparison{% endblock %}
+{% block meta_description %}Compare raw legislative metrics and performance scores side by side.{% endblock %}
 
 {% block nav %}
 {% include "partials/nav_light.html" with nav_active="compare" %}
@@ -12,213 +10,342 @@
 
 {% block extra_head %}
 <style>
-.compare-card { transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease; }
-.compare-card:hover { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); transform: translateY(-2px); border-color: #94a3b8; }
-.compare-card-leader { border-color: #0f172a; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.25); }
-.avatar-initials { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
-.pillar-bar { height: 6px; border-radius: 3px; background: #e2e8f0; overflow: hidden; }
-.pillar-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
-.compare-hero {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 30%, #0f172a 100%);
-    position: relative;
-    overflow: hidden;
-}
-.compare-hero::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -20%;
-    width: 60%;
-    height: 150%;
-    background: radial-gradient(ellipse, rgba(239, 68, 68, 0.15) 0%, transparent 70%);
-    pointer-events: none;
-}
-.compare-hero::after {
-    content: '';
-    position: absolute;
-    bottom: -30%;
-    left: -10%;
-    width: 40%;
-    height: 80%;
-    background: radial-gradient(ellipse, rgba(34, 197, 129, 0.1) 0%, transparent 70%);
-    pointer-events: none;
-}
-.compare-select-card {
-    background: linear-gradient(to bottom, #ffffff, #f8fafc);
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 10px 20px -5px rgba(0,0,0,0.06);
-}
-.compare-empty {
-    background: linear-gradient(165deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
-    border: 2px dashed #cbd5e1;
-}
-.compare-empty:hover { border-color: #94a3b8; }
-.preview-pill { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
+    :root {
+        --prof-navy: #0f172a;
+        --prof-slate: #475569;
+        --prof-border: #e2e8f0;
+        --prof-bg: #f8fafc;
+    }
+    
+    .comp-hero {
+        background: var(--prof-navy);
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid var(--prof-border);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .prof-card {
+        border-radius: 20px;
+        overflow: hidden;
+    }
+    
+    .prof-card-leader {
+        border: 1px solid #94a3b8;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .metric-row {
+        border-bottom: 1px solid #f1f5f9;
+        padding: 12px 0;
+    }
+    .metric-row:last-child { border-bottom: none; }
+
+    .score-badge {
+        font-family: 'Inter', sans-serif;
+        font-weight: 800;
+        border-radius: 8px;
+    }
+
+    .vs-badge {
+        background: #f1f5f9;
+        color: #94a3b8;
+        font-weight: 900;
+        font-size: 0.65rem;
+        letter-spacing: 0.1em;
+    }
+
+    .search-select-trigger {
+        font-weight: 600;
+        border-radius: 12px;
+    }
+
+    .btn-compare {
+        background: var(--prof-navy);
+        border-radius: 12px;
+        transition: all 0.2s ease;
+    }
+    .btn-compare:hover {
+        background: #1e293b;
+        transform: translateY(-1px);
+    }
+
+    .label-caps {
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #94a3b8;
+    }
+
+    .stat-value {
+        font-weight: 800;
+        color: var(--prof-navy);
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--prof-slate);
+    }
+
+    .avatar-sm {
+        border-radius: 12px;
+        border: 1px solid var(--prof-border);
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<header class="compare-hero text-white border-b border-slate-800 relative">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-16 text-center relative z-10">
-        <div class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-red-600/20 mb-6">
-            <i data-lucide="git-compare" class="w-7 h-7 text-red-400"></i>
-        </div>
-        <h1 class="font-brutal text-4xl md:text-5xl font-black tracking-tight uppercase">Compare Senators</h1>
-        <p class="text-slate-300 mt-3 text-base md:text-lg font-medium max-w-2xl mx-auto">Select two senators and see how they stack up across attendance, voting, legislative output, and more.</p>
-        <div class="flex flex-wrap justify-center gap-4 mt-6 text-sm">
-            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/60 text-slate-200">
-                <i data-lucide="bar-chart-2" class="w-4 h-4 text-emerald-400"></i>
-                Side-by-side scores
-            </span>
-            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/60 text-slate-200">
-                <i data-lucide="target" class="w-4 h-4 text-amber-400"></i>
-                5 key pillars
-            </span>
-            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/60 text-slate-200">
-                <i data-lucide="trending-up" class="w-4 h-4 text-blue-400"></i>
-                See who leads
-            </span>
-        </div>
+<header class="comp-hero text-white py-10 lg:py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 text-center">
+        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">Performance Comparison</h1>
+        <p class="text-slate-400 text-sm md:text-base max-w-xl mx-auto">Analyze raw legislative metrics and output across selected candidates.</p>
     </div>
 </header>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 py-10 pb-20">
-    <div class="compare-select-card rounded-2xl border border-slate-200 p-6 md:p-8 mb-10">
-        <div class="flex items-center gap-3 mb-6">
-            <div class="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
-                <i data-lucide="users" class="w-5 h-5 text-red-600"></i>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 pb-24 -mt-6">
+    <!-- Selection Dashboard -->
+    <div class="glass-card rounded-2xl p-5 md:p-6 mb-8 relative z-40">
+        <form method="get" action="{% url 'scorecard:compare-senators' %}" id="compare-form" class="flex flex-col lg:flex-row gap-4 items-stretch lg:items-end">
+            <div class="flex-1">
+                <label class="label-caps mb-2 block">Senator 1</label>
+                <div class="search-select-wrap relative" data-target="senator1-hidden">
+                    <div class="search-select-trigger w-full py-3 px-4 border border-slate-200 bg-white text-slate-800 cursor-pointer hover:border-slate-300 transition-all flex items-center justify-between gap-2 shadow-sm" tabindex="0">
+                        <span class="search-select-label truncate text-slate-400">Select candidate...</span>
+                        <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 search-select-chevron transition-transform"></i>
+                    </div>
+                    <div class="search-select-dropdown hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
+                        <div class="p-2 border-b border-slate-100 bg-slate-50">
+                            <input type="text" class="search-select-input w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-medium outline-none focus:border-slate-400" placeholder="Filter..." autocomplete="off">
+                        </div>
+                        <div class="search-select-options overflow-y-auto max-h-60 py-1">
+                            {% for s in all_senators %}
+                            <div class="search-select-option px-4 py-2 text-sm font-semibold text-slate-700 cursor-pointer hover:bg-slate-50 flex items-center justify-between"
+                                data-value="{{ s.senator_id }}"
+                                data-label="{{ s.name }} ({{ s.county_fk.name }})">
+                                <span>{{ s.name }}</span>
+                                <span class="text-[9px] uppercase text-slate-400">{{ s.county_fk.name }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <input type="hidden" name="ids" id="senator1-hidden" value="{% if compared.0 %}{{ compared.0.senator.senator_id }}{% endif %}">
+                </div>
             </div>
-            <div>
-                <h2 class="text-xl font-bold text-slate-800">Select Senators to Compare</h2>
-                <p class="text-sm text-slate-500">Pick two senators to view their performance metrics side by side</p>
+
+            <div class="flex items-center justify-center -mb-1">
+                <div class="vs-badge w-8 h-8 rounded-full flex items-center justify-center border border-slate-200">VS</div>
             </div>
-        </div>
-        <form method="get" action="{% url 'scorecard:compare-senators' %}" class="flex flex-col lg:flex-row gap-4 lg:gap-6 items-stretch lg:items-end">
-            <div class="flex-1 min-w-0">
-                <label for="senator1" class="block text-sm font-semibold text-slate-700 mb-2">Senator 1</label>
-                <select name="ids" id="senator1" class="w-full py-3 px-4 rounded-xl border-2 border-slate-200 bg-white text-slate-800 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all hover:border-slate-300">
-                    <option value="">— Select senator —</option>
-                    {% for s in all_senators %}
-                    <option value="{{ s.senator_id }}" {% if compared.0 and compared.0.senator.senator_id == s.senator_id %}selected{% endif %}>{{ s.name }} ({{ s.county_fk.name }})</option>
-                    {% endfor %}
-                </select>
+
+            <div class="flex-1">
+                <label class="label-caps mb-2 block">Senator 2</label>
+                <div class="search-select-wrap relative" data-target="senator2-hidden">
+                    <div class="search-select-trigger w-full py-3 px-4 border border-slate-200 bg-white text-slate-800 cursor-pointer hover:border-slate-300 transition-all flex items-center justify-between gap-2 shadow-sm" tabindex="0">
+                        <span class="search-select-label truncate text-slate-400">Select candidate...</span>
+                        <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 search-select-chevron transition-transform"></i>
+                    </div>
+                    <div class="search-select-dropdown hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
+                        <div class="p-2 border-b border-slate-100 bg-slate-50">
+                            <input type="text" class="search-select-input w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-medium outline-none focus:border-slate-400" placeholder="Filter..." autocomplete="off">
+                        </div>
+                        <div class="search-select-options overflow-y-auto max-h-60 py-1">
+                            {% for s in all_senators %}
+                            <div class="search-select-option px-4 py-2 text-sm font-semibold text-slate-700 cursor-pointer hover:bg-slate-50 flex items-center justify-between"
+                                data-value="{{ s.senator_id }}"
+                                data-label="{{ s.name }} ({{ s.county_fk.name }})">
+                                <span>{{ s.name }}</span>
+                                <span class="text-[9px] uppercase text-slate-400">{{ s.county_fk.name }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <input type="hidden" name="ids" id="senator2-hidden" value="{% if compared.1 %}{{ compared.1.senator.senator_id }}{% endif %}">
+                </div>
             </div>
-            <div class="flex items-center justify-center lg:pb-1">
-                <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-200 text-slate-600 font-bold text-sm">vs</span>
-            </div>
-            <div class="flex-1 min-w-0">
-                <label for="senator2" class="block text-sm font-semibold text-slate-700 mb-2">Senator 2</label>
-                <select name="ids" id="senator2" class="w-full py-3 px-4 rounded-xl border-2 border-slate-200 bg-white text-slate-800 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all hover:border-slate-300">
-                    <option value="">— Select senator —</option>
-                    {% for s in all_senators %}
-                    <option value="{{ s.senator_id }}" {% if compared.1 and compared.1.senator.senator_id == s.senator_id %}selected{% endif %}>{{ s.name }} ({{ s.county_fk.name }})</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <button type="submit" class="inline-flex items-center justify-center gap-2 bg-red-700 hover:bg-red-600 text-white font-bold px-8 py-3 rounded-xl transition-all shadow-md hover:shadow-lg hover:scale-[1.02] shrink-0">
-                <i data-lucide="git-compare" class="w-5 h-5"></i>
-                Compare
+
+            <button type="submit" class="btn-compare text-white px-8 py-3 text-sm font-bold shadow-sm whitespace-nowrap">
+                Compare Performance
             </button>
         </form>
     </div>
 
     {% if compared %}
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <!-- Comparison Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
         {% for item in compared %}
-        <a href="{% url 'scorecard:senator-detail' item.senator.senator_id %}" class="block group">
-            <div class="compare-card {% if item.is_leader %}compare-card-leader{% endif %} bg-white rounded-xl border border-slate-200 overflow-hidden h-full">
-                <div class="p-6 md:p-8">
-                    <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
-                        <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden flex-shrink-0 mx-auto sm:mx-0 bg-slate-100 border-2 border-slate-100">
-                            {% if item.display_image_url %}
-                            <div class="w-full h-full bg-slate-100 bg-cover bg-center">
-                                <img src="{{ item.display_image_url|thumb:'w_300,h_300,c_fill,g_face' }}" alt="{{ item.senator.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" style="object-position:center 20%;" loading="eager" fetchpriority="high" decoding="async" width="96" height="96" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-                                <div class="avatar-initials w-full h-full hidden items-center justify-center text-white font-black text-2xl">{{ item.senator.name|slice:":1" }}</div>
-                            </div>
-                            {% else %}
-                            <div class="avatar-initials w-full h-full flex items-center justify-center text-white font-black text-2xl">{{ item.senator.name|slice:":1" }}</div>
-                            {% endif %}
-                        </div>
-                        <div class="flex-1 text-center sm:text-left">
-                            <h3 class="text-xl font-bold text-slate-800 group-hover:text-red-700 transition-colors">{{ item.senator.name }}</h3>
-                            <p class="text-sm text-slate-500 mt-0.5">
-                                {% if item.senator.nomination %}
-                                    Nominated · {{ item.senator.nomination }}
-                                {% else %}
-                                    {{ item.senator.county_fk.name }}
-                                {% endif %}
-                            </p>
-                            <p class="text-xs text-slate-400 mt-1">{{ item.senator.party }}</p>
-                            <div class="mt-4 flex items-center justify-center sm:justify-start gap-3">
-                                <div class="flex items-baseline gap-2">
-                                    <span class="text-3xl font-black text-slate-800">{{ item.results.overall_score|floatformat:0 }}</span>
-                                    <span class="inline-flex px-3 py-1 rounded-lg text-sm font-black" style="{% grade_badge_style item.results.grade %}">{{ item.results.grade }}</span>
-                                </div>
-                                {% if item.rank %}
-                                <div class="text-xs text-slate-500 font-medium">
-                                    Rank #{{ item.rank }}
-                                    {% if not item.is_leader and item.diff_from_leader %}
-                                        · -{{ item.diff_from_leader }} pts vs leader
-                                    {% elif item.is_leader %}
-                                        · Leader
-                                    {% endif %}
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
+        <div class="glass-card prof-card p-6 md:p-8 {% if item.is_leader %}prof-card-leader{% endif %}">
+            <!-- Profile Header -->
+            <div class="flex items-start gap-5 mb-8">
+                <div class="w-16 h-16 md:w-20 md:h-20 avatar-sm overflow-hidden flex-shrink-0 bg-slate-50">
+                    {% if item.display_image_url %}
+                    <img src="{{ item.display_image_url|thumb:'w_300,h_300,c_fill,g_face' }}" alt="{{ item.senator.name }}" class="w-full h-full object-cover">
+                    {% else %}
+                    <div class="w-full h-full flex items-center justify-center font-bold text-slate-300 text-2xl uppercase">{{ item.senator.name|slice:":1" }}</div>
+                    {% endif %}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="label-caps">Rank #{{ item.rank }}</span>
+                        {% if item.is_leader %}
+                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 text-[9px] font-black uppercase">
+                            <i data-lucide="crown" class="w-2.5 h-2.5"></i> Leader
+                        </span>
+                        {% endif %}
                     </div>
-                    <div class="mt-6 pt-6 border-t border-slate-100 space-y-4">
-                        {% with p=item.results.pillars %}
-                        <div>
-                            <div class="flex justify-between text-sm mb-1"><span class="text-slate-600">Participation</span><span class="font-semibold text-slate-800">{{ p.participation }}/30</span></div>
-                            <div class="pillar-bar"><div class="pillar-fill bg-emerald-500" style="width: {% widthratio p.participation 30 100 %}%"></div></div>
+                    <h3 class="text-xl font-extrabold text-slate-900 truncate">{{ item.senator.name }}</h3>
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-tight">{{ item.senator.county }} · {{ item.senator.party }}</p>
+                    
+                    <div class="mt-4 flex items-center gap-4">
+                        <div class="flex items-baseline gap-1">
+                            <span class="text-3xl font-black text-slate-900">{{ item.results.overall_score|floatformat:0 }}</span>
+                            <span class="text-xs font-bold text-slate-400">/100</span>
                         </div>
-                        <div>
-                            <div class="flex justify-between text-sm mb-1"><span class="text-slate-600">Legislative</span><span class="font-semibold text-slate-800">{{ p.legislative }}/20</span></div>
-                            <div class="pillar-bar"><div class="pillar-fill bg-blue-500" style="width: {% widthratio p.legislative 20 100 %}%"></div></div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm mb-1"><span class="text-slate-600">Committee</span><span class="font-semibold text-slate-800">{{ p.committee }}/25</span></div>
-                            <div class="pillar-bar"><div class="pillar-fill bg-amber-500" style="width: {% widthratio p.committee 25 100 %}%"></div></div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm mb-1"><span class="text-slate-600">Voting</span><span class="font-semibold text-slate-800">{{ p.voting }}/20</span></div>
-                            <div class="pillar-bar"><div class="pillar-fill bg-indigo-500" style="width: {% widthratio p.voting 20 100 %}%"></div></div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm mb-1"><span class="text-slate-600">County Rep.</span><span class="font-semibold text-slate-800">{{ p.county }}/5</span></div>
-                            <div class="pillar-bar"><div class="pillar-fill bg-teal-500" style="width: {% widthratio p.county 5 100 %}%"></div></div>
-                        </div>
-                        {% endwith %}
+                        <span class="score-badge px-3 py-1 text-sm font-black" style="{% grade_badge_style item.results.grade %}">{{ item.results.grade }}</span>
                     </div>
                 </div>
             </div>
-        </a>
+
+            <!-- Detailed Metrics -->
+            <div class="space-y-1">
+                <h4 class="label-caps mb-4 block underline decoration-slate-200 underline-offset-4">Legislative Metrics</h4>
+                
+                {% with pf=item.perf %}
+                <div class="metric-row flex justify-between items-center">
+                    <span class="stat-label">Attendance Rate</span>
+                    <span class="stat-value">{{ pf.attendance_rate|floatformat:1 }}%</span>
+                </div>
+                <div class="metric-row flex justify-between items-center">
+                    <span class="stat-label">Speeches in Plenary</span>
+                    <span class="stat-value">{{ pf.speeches }}</span>
+                </div>
+                <div class="metric-row flex justify-between items-center">
+                    <span class="stat-label">Sponsored Bills</span>
+                    <span class="stat-value">{{ pf.sponsored_bills }}</span>
+                </div>
+                <div class="metric-row flex justify-between items-center">
+                    <span class="stat-label">Bills Passed</span>
+                    <span class="stat-value">{{ pf.passed_bills }}</span>
+                </div>
+                <div class="metric-row flex justify-between items-center">
+                    <span class="stat-label">Committee Attendance</span>
+                    <span class="stat-value">{{ pf.committee_attendance|floatformat:0 }}%</span>
+                </div>
+                <div class="metric-row flex justify-between items-center">
+                    <span class="stat-label">Voting Participation</span>
+                    <span class="stat-value">{{ pf.attended_votes }}/{{ pf.total_votes }}</span>
+                </div>
+                <div class="metric-row flex justify-between items-center">
+                    <span class="stat-label">Oversight Actions</span>
+                    <span class="stat-value">{{ pf.oversight_actions|add:pf.statements_total }}</span>
+                </div>
+                {% endwith %}
+            </div>
+
+            <div class="mt-8">
+                 <a href="{% url 'scorecard:senator-detail' item.senator.senator_id %}" class="text-[10px] font-bold text-slate-400 hover:text-slate-600 uppercase tracking-widest flex items-center gap-2 transition-colors">
+                     Full Performance Profile
+                     <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                 </a>
+            </div>
+        </div>
         {% endfor %}
     </div>
     {% else %}
-    <div class="compare-empty rounded-2xl p-12 md:p-16 text-center transition-colors">
-        <div class="max-w-lg mx-auto">
-            <div class="w-20 h-20 rounded-2xl bg-white/80 shadow-sm flex items-center justify-center mx-auto mb-8 border border-slate-200/80">
-                <i data-lucide="git-compare" class="w-10 h-10 text-slate-500"></i>
+    <div class="glass-card rounded-[2rem] p-16 text-center border-dashed">
+        <div class="max-w-md mx-auto">
+            <div class="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-6 border border-slate-100">
+                <i data-lucide="git-compare" class="w-8 h-8 text-slate-300"></i>
             </div>
-            <h3 class="text-xl font-bold text-slate-700 mb-3">Ready to compare?</h3>
-            <p class="text-slate-600 mb-8 max-w-md mx-auto">Choose two senators from the dropdowns above and click <strong>Compare</strong> to see their scores, attendance, and legislative output side by side.</p>
-            <div class="flex flex-wrap justify-center gap-4 text-sm">
-                <div class="flex items-center gap-2 px-4 py-3 rounded-xl bg-white/70 border border-slate-200 shadow-sm">
-                    <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                    <span class="text-slate-700">Participation & attendance</span>
-                </div>
-                <div class="flex items-center gap-2 px-4 py-3 rounded-xl bg-white/70 border border-slate-200 shadow-sm">
-                    <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-                    <span class="text-slate-700">Legislative output</span>
-                </div>
-                <div class="flex items-center gap-2 px-4 py-3 rounded-xl bg-white/70 border border-slate-200 shadow-sm">
-                    <div class="w-2 h-2 rounded-full bg-amber-500"></div>
-                    <span class="text-slate-700">Committee work</span>
-                </div>
-            </div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">Senator Comparison</h3>
+            <p class="text-slate-500 text-sm mb-8 leading-relaxed">Select two candidates from the configuration console above to view side-by-side performance analytics.</p>
         </div>
     </div>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    var wraps = document.querySelectorAll('.search-select-wrap');
+    wraps.forEach(function (wrap) {
+        var trigger = wrap.querySelector('.search-select-trigger');
+        var label = wrap.querySelector('.search-select-label');
+        var chevron = wrap.querySelector('.search-select-chevron');
+        var dropdown = wrap.querySelector('.search-select-dropdown');
+        var input = wrap.querySelector('.search-select-input');
+        var options = wrap.querySelectorAll('.search-select-option');
+        var hiddenInput = document.getElementById(wrap.getAttribute('data-target'));
+        var isOpen = false;
+
+        function open() {
+            dropdown.classList.remove('hidden');
+            chevron.style.transform = 'rotate(180deg)';
+            trigger.style.borderColor = '#94a3b8';
+            isOpen = true;
+            setTimeout(function () { input.focus(); }, 10);
+        }
+
+        function close() {
+            dropdown.classList.add('hidden');
+            chevron.style.transform = '';
+            trigger.style.borderColor = '';
+            input.value = '';
+            filterOptions('');
+            isOpen = false;
+        }
+
+        function selectOption(opt) {
+            var val = opt.getAttribute('data-value');
+            var lbl = opt.getAttribute('data-label');
+            hiddenInput.value = val;
+            label.textContent = lbl;
+            label.classList.remove('text-slate-400');
+            label.classList.add('text-slate-800');
+            close();
+        }
+
+        function filterOptions(query) {
+            var q = query.toLowerCase().trim();
+            options.forEach(function (opt) {
+                var text = opt.getAttribute('data-label').toLowerCase();
+                opt.style.display = (!q || text.indexOf(q) !== -1) ? '' : 'none';
+            });
+        }
+
+        trigger.addEventListener('click', function () {
+            if (isOpen) close(); else open();
+        });
+
+        input.addEventListener('input', function () {
+            filterOptions(this.value);
+        });
+
+        options.forEach(function (opt) {
+            opt.addEventListener('click', function () {
+                selectOption(opt);
+            });
+        });
+
+        if (hiddenInput.value) {
+            options.forEach(function (opt) {
+                if (opt.getAttribute('data-value') === hiddenInput.value) {
+                    label.textContent = opt.getAttribute('data-label');
+                    label.classList.remove('text-slate-400');
+                    label.classList.add('text-slate-800');
+                }
+            });
+        }
+
+        document.addEventListener('click', function (e) {
+            if (isOpen && !wrap.contains(e.target)) close();
+        });
+    });
+})();
+</script>
 {% endblock %}

@@ -1,0 +1,187 @@
+{
+  "Kiprono Chemitei": {
+    "source_file": "update_chemitei.py",
+    "speeches": 0,
+    "sponsored_bills": 0,
+    "passed_bills": 0,
+    "total_votes": 0,
+    "attended_votes": 0,
+    "attendance_rate": -1.0,
+    "name_match": "Kiprono Chemitei"
+  },
+  "samson-kiprotich-cherargei": {
+    "source_file": "update_cherargei.py",
+    "sponsored_bills": 6,
+    "passed_bills": 2,
+    "senator_id": "samson-kiprotich-cherargei"
+  },
+  "Cheruiyot": {
+    "source_file": "update_cheruiyot.py",
+    "speeches": 2834,
+    "sponsored_bills": 18,
+    "passed_bills": 3,
+    "total_votes": 20,
+    "attended_votes": 20,
+    "attendance_rate": 100.0,
+    "name_match": "Cheruiyot"
+  },
+  "Chimera": {
+    "source_file": "update_chimera.py",
+    "speeches": 189,
+    "sponsored_bills": 2,
+    "passed_bills": 0,
+    "total_votes": 11,
+    "attended_votes": 11,
+    "attendance_rate": 100.0,
+    "name_match": "Chimera"
+  },
+  "moses-otieno-kajwang": {
+    "source_file": "update_kajwang.py",
+    "speeches": 1150,
+    "sponsored_bills": 3,
+    "passed_bills": 2,
+    "total_votes": 20,
+    "attended_votes": 19,
+    "attendance_rate": 93.13725490196079,
+    "committee_role": "Chair",
+    "motions_sponsored": 18,
+    "oversight_actions": 14,
+    "words_spoken": 172500,
+    "sessions_attended": 95,
+    "county_representation_score": 9.0,
+    "senator_id": "moses-otieno-kajwang"
+  },
+  "murungi-kathuri": {
+    "source_file": "update_kathuri.py",
+    "speeches": 6522,
+    "sponsored_bills": 3,
+    "passed_bills": 1,
+    "total_votes": 19,
+    "attended_votes": 18,
+    "attendance_rate": 94.73684210526315,
+    "committee_role": "Chair",
+    "senator_id": "murungi-kathuri"
+  },
+  "Keroche": {
+    "source_file": "update_keroche.py",
+    "speeches": 244,
+    "sponsored_bills": 0,
+    "passed_bills": 0,
+    "total_votes": 20,
+    "attended_votes": 18,
+    "attendance_rate": 90.0,
+    "name_match": "Keroche"
+  },
+  "Lemaletian": {
+    "source_file": "update_lemaletian.py",
+    "speeches": 885,
+    "sponsored_bills": 0,
+    "passed_bills": 0,
+    "total_votes": 20,
+    "attended_votes": 11,
+    "attendance_rate": 55.0,
+    "name_match": "Lemaletian"
+  },
+  "stewart-mwachiru-shadrack-madzayo": {
+    "source_file": "update_madzayo.py",
+    "speeches": 766,
+    "sponsored_bills": 8,
+    "total_votes": 18,
+    "attended_votes": 16,
+    "attendance_rate": 88.88888888888889,
+    "committee_role": "Minority Leader",
+    "senator_id": "stewart-mwachiru-shadrack-madzayo"
+  },
+  "Montet": {
+    "source_file": "update_montet.py",
+    "speeches": 882,
+    "sponsored_bills": 0,
+    "passed_bills": 0,
+    "total_votes": 20,
+    "attended_votes": 11,
+    "attendance_rate": 55.0,
+    "committee_role": "Chairperson",
+    "name_match": "Montet"
+  },
+  "Mundigi": {
+    "source_file": "update_mundigi.py",
+    "speeches": 495,
+    "sponsored_bills": 0,
+    "passed_bills": 0,
+    "total_votes": 20,
+    "attended_votes": 19,
+    "attendance_rate": 95.0,
+    "name_match": "Mundigi"
+  },
+  "Oburu": {
+    "source_file": "update_oburu.py",
+    "speeches": 304,
+    "sponsored_bills": 1,
+    "passed_bills": 0,
+    "total_votes": 20,
+    "attended_votes": 11,
+    "attendance_rate": 55.0,
+    "name_match": "Oburu"
+  },
+  "Oketch Eddy": {
+    "source_file": "update_oketch.py",
+    "speeches": 1264,
+    "sponsored_bills": 3,
+    "passed_bills": 0,
+    "total_votes": 20,
+    "attended_votes": 20,
+    "attendance_rate": 100.0,
+    "name_match": "Oketch Eddy"
+  },
+  "Onyonka": {
+    "source_file": "update_onyonka.py",
+    "speeches": 415,
+    "sponsored_bills": 0,
+    "passed_bills": 0,
+    "total_votes": 20,
+    "attended_votes": 15,
+    "attendance_rate": 75.0,
+    "name_match": "Onyonka"
+  },
+  "Roba": {
+    "source_file": "update_roba.py",
+    "speeches": 495,
+    "sponsored_bills": 12,
+    "passed_bills": 3,
+    "total_votes": 20,
+    "attended_votes": 17,
+    "attendance_rate": 85.0,
+    "name_match": "Roba"
+  },
+  "Shakilla": {
+    "source_file": "update_shakilla.py",
+    "speeches": 697,
+    "sponsored_bills": 0,
+    "passed_bills": 0,
+    "total_votes": 20,
+    "attended_votes": 11,
+    "attendance_rate": 55.0,
+    "committee_role": "Member",
+    "name_match": "Shakilla"
+  },
+  "Sifuna": {
+    "source_file": "update_sifuna.py",
+    "speeches": 1658,
+    "sponsored_bills": 3,
+    "passed_bills": 0,
+    "total_votes": 20,
+    "attended_votes": 18,
+    "attendance_rate": 90.0,
+    "name_match": "Sifuna"
+  },
+  "Wafula": {
+    "source_file": "update_wafula.py",
+    "speeches": 455,
+    "sponsored_bills": 2,
+    "passed_bills": 1,
+    "total_votes": 20,
+    "attended_votes": 19,
+    "attendance_rate": 95.0,
+    "name_match": "Wafula"
+  }
+}

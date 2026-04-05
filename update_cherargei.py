@@ -12,10 +12,11 @@ from scorecard.engine import perf_to_engine_data, HansardEngine
 senator = Senator.objects.filter(senator_id="samson-kiprotich-cherargei").first()
 if senator:
     perf = senator.perf
-    # Legislative: Employment Bill (passed Senate), Prevention of Livestock Bill 2023,
-    # Constitution Amendment Bill 2024. Sources: Tuko, Capital FM, Parliament.
-    perf.sponsored_bills = 3
-    perf.passed_bills = 1  # Employment (Amendment) Bill passed Senate
+    # Legislative: 6 bills per official Bills Tracker (updated 27.03.2026)
+    # Including Employment (Amendment) Bill, Prevention of Livestock Bill, Public Service Principles Bill, etc.
+    # Sources: Senate Bills Tracker PDF, Tuko, Capital FM, Parliament.
+    perf.sponsored_bills = 6
+    perf.passed_bills = 2  # Employment (Amendment) Bill + Public Service Principles Bill
     perf.save()
 
     data = perf_to_engine_data(perf)

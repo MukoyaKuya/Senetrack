@@ -25,13 +25,13 @@
     .heat-cell { transition: opacity 0.15s; }
     .heat-cell:hover { opacity: 0.8; }
     
+    /* Backdrop only — no flex layout on overlay */
     #bill-modal-overlay {
-        display: flex !important;
+        display: block !important;
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
         transition: opacity 0.22s ease, visibility 0s linear 0.22s;
-        will-change: opacity;
     }
     #bill-modal-overlay.is-open {
         opacity: 1;
@@ -39,15 +39,36 @@
         pointer-events: auto;
         transition: opacity 0.22s ease, visibility 0s linear 0s;
     }
-    #bill-modal {
-        transform: translateY(20px) scale(0.97);
-        opacity: 0;
-        transition: transform 0.28s cubic-bezier(0.34, 1.4, 0.64, 1), opacity 0.22s ease;
-        will-change: transform, opacity;
+    /* Mobile: card rises from bottom edge */
+    @media (max-width: 639px) {
+        #bill-modal-overlay {
+            display: flex !important;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        #bill-modal {
+            transform: translateY(30px); opacity: 0;
+            transition: transform 0.28s cubic-bezier(0.34,1.4,0.64,1), opacity 0.22s ease;
+        }
+        #bill-modal-overlay.is-open #bill-modal {
+            transform: translateY(0); opacity: 1;
+        }
     }
-    #bill-modal-overlay.is-open #bill-modal {
-        transform: translateY(0) scale(1);
-        opacity: 1;
+    /* Desktop: card is fixed-positioned; JS sets top dynamically */
+    @media (min-width: 640px) {
+        #bill-modal {
+            position: fixed !important;
+            left: 50% !important;
+            width: min(32rem, calc(100vw - 48px)) !important;
+            transform: translateX(-50%) translateY(16px) scale(0.97);
+            opacity: 0;
+            transition: transform 0.28s cubic-bezier(0.34,1.4,0.64,1), opacity 0.22s ease;
+            will-change: transform, opacity;
+        }
+        #bill-modal-overlay.is-open #bill-modal {
+            transform: translateX(-50%) translateY(0) scale(1);
+            opacity: 1;
+        }
     }
     .ttl-row, .stalled-row { cursor: pointer !important; pointer-events: auto !important; }
     [id^="s-"] { contain: content; position: relative; z-index: 1; transition: box-shadow 0.2s ease, transform 0.2s ease; }
@@ -1342,7 +1363,7 @@
 
         <!-- ── Bill explainer modal ─────────────────────────────────── -->
         <div id="bill-modal-overlay"
-             class="fixed inset-0 z-50 items-end sm:items-center justify-center p-0 sm:p-6"
+             class="fixed inset-0 z-50"
              style="background:rgba(2,6,23,0.7);">
 
             <div id="bill-modal"
@@ -2051,14 +2072,29 @@
             durEl.style.color   = d.value;
             durEl.textContent   = yrs === 0 ? '< 1 yr' : `${yrs} yr${yrs > 1 ? 's' : ''}`;
 
+            positionModal(row);
             document.body.classList.add('modal-open');
             overlay.classList.add('is-open');
             if (window.lucide) lucide.createIcons({ attrs: { 'class': 'lucide-icon' }, nodes: [overlay] });
         }
 
+        function positionModal(row) {
+            const modal = document.getElementById('bill-modal');
+            if (window.innerWidth < 640) { modal.style.top = ''; return; }
+            const rect = row.getBoundingClientRect();
+            const vp   = window.innerHeight;
+            const mH   = modal.offsetHeight || 460;
+            const gap  = 16;
+            // Prefer below the row; flip above if it would clip the bottom
+            let top = rect.bottom + gap;
+            if (top + mH > vp - gap) top = rect.top - mH - gap;
+            modal.style.top = Math.max(gap, top) + 'px';
+        }
+
         function closeModal() {
             overlay.classList.remove('is-open');
             document.body.classList.remove('modal-open');
+            document.getElementById('bill-modal').style.top = '';
         }
 
         // ── Stalled modal variant ─────────────────────────────────────────
@@ -2165,6 +2201,7 @@
             durEl.style.fontSize = '10px';
             durEl.textContent    = (row.dataset.committee || '—').replace(/\s*Committee$/i,'');
 
+            positionModal(row);
             document.body.classList.add('modal-open');
             overlay.classList.add('is-open');
             if (window.lucide) lucide.createIcons({ attrs: { 'class': 'lucide-icon' }, nodes: [overlay] });

@@ -1,0 +1,16 @@
+
+=== Crystal Asige ===
+DB stored score: 63.88, grade: B-
+Recalculated score: 63.88, grade: B-
+Structural: 29.6, Debate: 29.29
+Pillars: {'voting': 16.25, 'plenary': 6.08, 'bills': 7.27, 'words': 16.74, 'speeches': 9.25, 'motions': 3.3, 'county': 5.0}
+Extras: {'statements_bonus': 0.0, 'statements_2025': 0}
+Raw data: speeches=146, words=19487, sessions=31, motions=2, bills=6, votes=13/20, nominated=True
+
+=== Joyce Chepkoech Korir ===
+DB stored score: 60.43, grade: B-
+Recalculated score: 60.43, grade: B-
+Structural: 24.92, Debate: 32.51
+Pillars: {'voting': 16.25, 'plenary': 6.08, 'bills': 2.59, 'words': 16.5, 'speeches': 10.17, 'motions': 5.84, 'county': 3.0}
+Extras: {'statements_bonus': 0.0, 'statements_2025': 0}
+Raw data: speeches=241, words=16906, sessions=31, motions=6, bills=1, votes=13/20, nominated=True

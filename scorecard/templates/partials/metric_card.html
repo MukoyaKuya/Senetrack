@@ -1,27 +1,29 @@
-<div class="pillar-card bg-white p-4 rounded-lg border border-slate-200 overflow-hidden">
-  <div class="flex items-center gap-3 mb-3">
+<div class="pillar-card bg-white p-4 rounded-lg border border-slate-200 overflow-hidden relative flex flex-col h-full">
+  {# ── Title row: fixed 2-line height so all cards align ── #}
+  <div class="flex items-center gap-3 mb-3" style="min-height:44px;">
     <div class="p-2.5 rounded-lg {{ bg_class }} shrink-0">
       <i data-lucide="{{ icon }}" class="w-5 h-5 {{ text_class }}"></i>
     </div>
     <h3 class="text-sm font-semibold text-slate-700 leading-tight min-w-0">{{ title }}</h3>
   </div>
-  <div class="flex items-end justify-between">
-    <div>
+
+  {# ── Score + sparkline: grows to fill available space ── #}
+  <div class="flex items-end justify-between flex-1">
+    <div class="min-w-0">
       <div class="flex items-baseline gap-1">
         <span class="text-2xl font-bold text-slate-900">{{ value|floatformat:0 }}</span>
         <span class="text-sm text-slate-300 font-medium">/ {{ total }}</span>
       </div>
-      <div class="flex items-center gap-1 text-xs mt-1 {% if trend == 'up' %}text-emerald-600{% else %}text-orange-600{% endif %}">
+      <div class="flex items-center gap-1 text-xs mt-1 {% if trend == 'up' %}text-emerald-600{% else %}text-orange-600{% endif %}" style="min-height:32px;">
         {% if trend == 'up' %}
-        <i data-lucide="trending-up" class="w-3 h-3"></i>
+        <i data-lucide="trending-up" class="w-3 h-3 shrink-0"></i>
         {% else %}
-        <i data-lucide="trending-down" class="w-3 h-3"></i>
+        <i data-lucide="trending-down" class="w-3 h-3 shrink-0"></i>
         {% endif %}
-        <span>{{ change }} since last session</span>
+        <span class="leading-tight">{{ change }} since last session</span>
       </div>
     </div>
-    <div class="flex items-end gap-[2px] h-8">
-      {# Simple static bars simulation for aesthetics #}
+    <div class="flex items-end gap-[2px] h-8 shrink-0">
       <div class="w-1 rounded-t-sm {{ bar_class }} opacity-40" style="height: 40%"></div>
       <div class="w-1 rounded-t-sm {{ bar_class }} opacity-40" style="height: 60%"></div>
       <div class="w-1 rounded-t-sm {{ bar_class }} opacity-40" style="height: 30%"></div>
@@ -34,10 +36,17 @@
       <div class="w-1 rounded-t-sm {{ bar_class }}" style="height: 85%"></div>
     </div>
   </div>
-  {% if subtext %}
-  <div class="mt-3 pt-3 border-t-2 border-slate-200 flex items-center justify-between text-[10px] text-slate-500">
+
+  {# ── Footer: always same height regardless of subtext ── #}
+  <div class="mt-3 pt-3 border-t-2 border-slate-200 flex items-center justify-between text-[10px] text-slate-500" style="min-height:30px;">
+    {% if subtext %}
     <span class="bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200 text-slate-700 font-medium">{{ subtext }}</span>
-    <i data-lucide="info" class="w-3 h-3 text-slate-300"></i>
+    {% else %}
+    <span></span>
+    {% endif %}
+    <button type="button" class="pillar-info-btn flex items-center justify-center rounded-full w-5 h-5 hover:bg-slate-100 transition-colors cursor-pointer"
+        aria-label="About {{ title }}">
+      <i data-lucide="info" class="w-3.5 h-3.5 text-slate-400 hover:text-slate-600"></i>
+    </button>
   </div>
-  {% endif %}
 </div>

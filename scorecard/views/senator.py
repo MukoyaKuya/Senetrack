@@ -237,6 +237,7 @@ def compare_senators(request):
         senators = list(Senator.objects.filter(senator_id__in=senator_ids).select_related("perf"))
     compared = []
     for s in senators:
+        senator_display = build_senator_display(s)
         res = get_engine_result(getattr(s, "perf", None)) or {
             "overall_score": 0,
             "grade": "—",
@@ -251,16 +252,17 @@ def compare_senators(request):
         }
         compared.append(
             {
-                "senator": s,
+                "senator": senator_display,
                 "results": res,
-                "image_url": s.image.url if s.image else (s.image_url or ""),
+                "display_image_url": senator_display.display_image_url,
+                "perf": getattr(s, "perf", None),
             }
         )
 
     # Enrich comparison data with rank and score deltas
     if compared:
         scores_with_index = [
-            (item["results"].get("overall_score", 0) or 0, idx)
+            (float(item["results"].get("overall_score", 0) or 0), idx)
             for idx, item in enumerate(compared)
         ]
         scores_with_index.sort(key=lambda t: (-t[0], t[1]))
@@ -268,9 +270,9 @@ def compare_senators(request):
         rank_map = {idx: rank for rank, (_, idx) in enumerate(scores_with_index, start=1)}
 
         for idx, item in enumerate(compared):
-            score = item["results"].get("overall_score", 0) or 0
+            score = float(item["results"].get("overall_score", 0) or 0)
             item["rank"] = rank_map.get(idx, None)
-            item["diff_from_leader"] = leader_score - score
+            item["diff_from_leader"] = round(leader_score - score, 1)
             item["is_leader"] = idx == leader_idx
 
     comparison_summary = {}

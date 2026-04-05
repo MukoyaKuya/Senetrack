@@ -392,16 +392,23 @@
                 </h2>
             </div>
 
+
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 {% if results.pillars.participation < 10 %}
-                {% include "partials/metric_card.html" with title="Parliament Participation" value=results.pillars.participation total="30" trend="up" change="43%" icon="bar-chart-2" bg_class="bg-red-50" text_class="text-red-600" bar_class="bg-red-400" %}
-                {% elif results.pillars.participation > 24 %}
-                {% include "partials/metric_card.html" with title="Parliament Participation" value=results.pillars.participation total="30" trend="up" change="43%" icon="bar-chart-2" bg_class="bg-emerald-50" text_class="text-emerald-600" bar_class="bg-emerald-400" %}
+                {% include "partials/metric_card.html" with title="Parliament Participation" value=results.pillars.participation total="30" trend="up" change="43%" subtext="Below Average" icon="bar-chart-2" bg_class="bg-red-50" text_class="text-red-600" bar_class="bg-red-400" %}
+                {% elif results.pillars.participation >= 17 %}
+                    {% if results.pillars.participation > 24 %}
+                    {% include "partials/metric_card.html" with title="Parliament Participation" value=results.pillars.participation total="30" trend="up" change="43%" subtext="Above National Average" icon="bar-chart-2" bg_class="bg-emerald-50" text_class="text-emerald-600" bar_class="bg-emerald-400" %}
+                    {% else %}
+                    {% include "partials/metric_card.html" with title="Parliament Participation" value=results.pillars.participation total="30" trend="up" change="43%" subtext="Above National Average" icon="bar-chart-2" bg_class="bg-orange-50" text_class="text-orange-600" bar_class="bg-orange-400" %}
+                    {% endif %}
                 {% else %}
-                {% include "partials/metric_card.html" with title="Parliament Participation" value=results.pillars.participation total="30" trend="up" change="43%" icon="bar-chart-2" bg_class="bg-orange-50" text_class="text-orange-600" bar_class="bg-orange-400" %}
+                {% include "partials/metric_card.html" with title="Parliament Participation" value=results.pillars.participation total="30" trend="up" change="43%" subtext="Average" icon="bar-chart-2" bg_class="bg-orange-50" text_class="text-orange-600" bar_class="bg-orange-400" %}
                 {% endif %}
-                {% if results.pillars.legislative < 7 %}
-                {% include "partials/metric_card.html" with title="Legislative Contributions" value=results.pillars.legislative total="20" trend="up" change="25%" subtext="Above National Average" icon="file-text" bg_class="bg-red-50" text_class="text-red-600" bar_class="bg-red-400" %}
+                {% if results.pillars.legislative < 5 %}
+                {% include "partials/metric_card.html" with title="Legislative Contributions" value=results.pillars.legislative total="20" trend="up" change="25%" subtext="Below Average" icon="file-text" bg_class="bg-red-50" text_class="text-red-600" bar_class="bg-red-400" %}
+                {% elif results.pillars.legislative < 10 %}
+                {% include "partials/metric_card.html" with title="Legislative Contributions" value=results.pillars.legislative total="20" trend="up" change="25%" subtext="Average" icon="file-text" bg_class="bg-orange-50" text_class="text-orange-600" bar_class="bg-orange-400" %}
                 {% elif results.pillars.legislative > 16 %}
                 {% include "partials/metric_card.html" with title="Legislative Contributions" value=results.pillars.legislative total="20" trend="up" change="25%" subtext="Above National Average" icon="file-text" bg_class="bg-emerald-50" text_class="text-emerald-600" bar_class="bg-emerald-400" %}
                 {% else %}
@@ -410,18 +417,91 @@
                 {% if results.pillars.voting < 7 %}
                 {% include "partials/metric_card.html" with title="Voting Instance" value=results.pillars.voting total="20" trend="up" change="National Average" icon="check-square" bg_class="bg-red-50" text_class="text-red-600" bar_class="bg-red-400" %}
                 {% elif results.pillars.voting > 16 %}
-                {% include "partials/metric_card.html" with title="Voting Instance" value=results.pillars.voting total="20" trend="up" change="National Average" icon="check-square" bg_class="bg-emerald-50" text_class="text-emerald-600" bar_class="bg-emerald-400" %}
+                {% include "partials/metric_card.html" with title="Voting Instance" value=results.pillars.voting total="20" trend="up" change="National Average" subtext="Above National Average" icon="check-square" bg_class="bg-emerald-50" text_class="text-emerald-600" bar_class="bg-emerald-400" %}
+                {% elif results.pillars.voting >= 10 %}
+                {% include "partials/metric_card.html" with title="Voting Instance" value=results.pillars.voting total="20" trend="up" change="National Average" subtext="Above National Average" icon="check-square" bg_class="bg-orange-50" text_class="text-orange-600" bar_class="bg-orange-400" %}
                 {% else %}
                 {% include "partials/metric_card.html" with title="Voting Instance" value=results.pillars.voting total="20" trend="up" change="National Average" icon="check-square" bg_class="bg-orange-50" text_class="text-orange-600" bar_class="bg-orange-400" %}
                 {% endif %}
+                {% if results.pillars.committee >= 15 %}
                 {% include "partials/metric_card.html" with title="Committee Membership" value=results.pillars.committee total="25" trend="up" change="15%" subtext="Above National Average" icon="users" bg_class="bg-teal-50" text_class="text-teal-600" bar_class="bg-teal-400" %}
-                {% if senator.nomination %}
-                {% include "partials/metric_card.html" with title="Interests Representation" value=results.pillars.county total="5" trend="up" change="1%" subtext="Above National Average" icon="map-pin" bg_class="bg-green-50" text_class="text-green-600" bar_class="bg-green-400" %}
                 {% else %}
-                {% include "partials/metric_card.html" with title="County Representation" value=results.pillars.county total="5" trend="up" change="1%" subtext="Above National Average" icon="map-pin" bg_class="bg-green-50" text_class="text-green-600" bar_class="bg-green-400" %}
+                {% include "partials/metric_card.html" with title="Committee Membership" value=results.pillars.committee total="25" trend="up" change="15%" icon="users" bg_class="bg-teal-50" text_class="text-teal-600" bar_class="bg-teal-400" %}
+                {% endif %}
+                {% if senator.nomination %}
+                    {% if results.pillars.county >= 3 %}
+                    {% include "partials/metric_card.html" with title="Interests Representation" value=results.pillars.county total="5" trend="up" change="1%" subtext="Above National Average" icon="map-pin" bg_class="bg-green-50" text_class="text-green-600" bar_class="bg-green-400" %}
+                    {% else %}
+                    {% include "partials/metric_card.html" with title="Interests Representation" value=results.pillars.county total="5" trend="up" change="1%" icon="map-pin" bg_class="bg-green-50" text_class="text-green-600" bar_class="bg-green-400" %}
+                    {% endif %}
+                {% else %}
+                    {% if results.pillars.county >= 3 %}
+                    {% include "partials/metric_card.html" with title="County Representation" value=results.pillars.county total="5" trend="up" change="1%" subtext="Above National Average" icon="map-pin" bg_class="bg-green-50" text_class="text-green-600" bar_class="bg-green-400" %}
+                    {% else %}
+                    {% include "partials/metric_card.html" with title="County Representation" value=results.pillars.county total="5" trend="up" change="1%" icon="map-pin" bg_class="bg-green-50" text_class="text-green-600" bar_class="bg-green-400" %}
+                    {% endif %}
                 {% endif %}
             </div>
         </section>
+
+        <!-- Pillar Info Popup Overlay -->
+        <div id="pillar-info-overlay"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 px-4 sm:px-6 hidden"
+            style="backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-slate-200 overflow-hidden"
+                style="animation:fadeIn 0.18s ease-out;">
+                <!-- Header -->
+                <div class="relative">
+                    <div class="h-14 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900"></div>
+                    <div class="absolute inset-x-0 top-0 h-14 flex items-center justify-between px-5">
+                        <div class="flex items-center gap-3">
+                            <div id="pillar-info-icon" class="w-9 h-9 rounded-xl bg-white/95 border border-slate-200 shadow-sm flex items-center justify-center">
+                            </div>
+                            <div class="text-white">
+                                <p class="text-[9px] font-semibold tracking-[0.2em] uppercase text-slate-300 mb-0.5">
+                                    Performance Pillar
+                                </p>
+                                <h3 id="pillar-info-title" class="text-sm font-bold leading-tight"></h3>
+                            </div>
+                        </div>
+                        <button type="button" id="pillar-info-close"
+                            class="ml-3 inline-flex items-center justify-center rounded-full p-1.5 text-slate-300 hover:text-white hover:bg-white/10 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <!-- Body -->
+                <div class="px-5 pt-4 pb-5 bg-slate-50/60">
+                    <div class="rounded-xl bg-white border border-slate-200 px-4 py-4 shadow-[0_6px_16px_rgba(15,23,42,0.04)]">
+                        <p id="pillar-info-desc" class="text-sm text-slate-700 leading-relaxed"></p>
+                    </div>
+                    <div class="mt-3 grid grid-cols-2 gap-3">
+                        <div class="rounded-xl bg-white border border-slate-200 px-3.5 py-3 shadow-[0_6px_16px_rgba(15,23,42,0.04)]">
+                            <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-[0.14em] mb-1">
+                                Max Points
+                            </p>
+                            <p id="pillar-info-max" class="text-lg font-bold text-slate-900"></p>
+                        </div>
+                        <div class="rounded-xl bg-white border border-slate-200 px-3.5 py-3 shadow-[0_6px_16px_rgba(15,23,42,0.04)]">
+                            <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-[0.14em] mb-1">
+                                Current Score
+                            </p>
+                            <p id="pillar-info-score" class="text-lg font-bold text-slate-900"></p>
+                        </div>
+                    </div>
+                    <div class="mt-3 rounded-xl bg-white border border-slate-200 px-4 py-3 shadow-[0_6px_16px_rgba(15,23,42,0.04)]">
+                        <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-[0.14em] mb-1.5">
+                            What Counts
+                        </p>
+                        <p id="pillar-info-factors" class="text-xs text-slate-600 leading-relaxed"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Main Content Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -900,6 +980,117 @@
                     var name = btn.getAttribute('data-party-tab');
                     setTab(name);
                 });
+            });
+        })();
+
+        // Pillar Info Popup
+        (function () {
+            var overlay = document.getElementById('pillar-info-overlay');
+            var closeBtn = document.getElementById('pillar-info-close');
+            var titleEl = document.getElementById('pillar-info-title');
+            var descEl = document.getElementById('pillar-info-desc');
+            var maxEl = document.getElementById('pillar-info-max');
+            var scoreEl = document.getElementById('pillar-info-score');
+            var factorsEl = document.getElementById('pillar-info-factors');
+            var iconContainer = document.getElementById('pillar-info-icon');
+            if (!overlay) return;
+
+            var pillarData = {
+                'Parliament Participation': {
+                    desc: 'Measures how actively the senator participates in plenary sessions through physical attendance and floor speeches. A high score reflects consistent presence and verbal engagement during parliamentary debates.',
+                    max: '30 pts',
+                    factors: 'Plenary attendance rate (how many sittings the senator attended out of total sessions) and speech frequency (number of floor speeches delivered, scaled logarithmically).',
+                    icon: 'bar-chart-2',
+                    color: '#f97316'
+                },
+                'Legislative Contributions': {
+                    desc: 'Evaluates the senator\'s output in introducing and advancing legislation. This includes bills personally sponsored or co-sponsored and their progress through the legislative pipeline.',
+                    max: '20 pts',
+                    factors: 'Number of bills sponsored (scaled using log scoring against the most prolific senator), progress of sponsored bills through committee, Senate passage, and assent stages.',
+                    icon: 'file-text',
+                    color: '#3b82f6'
+                },
+                'Voting Instance': {
+                    desc: 'Tracks the senator\'s reliability in participating in division (recorded) votes. Senators are expected to be present and cast their vote on key legislative decisions.',
+                    max: '20 pts',
+                    factors: 'Ratio of votes attended to total eligible votes. A senator who attends 15 of 20 votes scores 75% of the available points. Full attendance = full marks.',
+                    icon: 'check-square',
+                    color: '#10b981'
+                },
+                'Committee Membership': {
+                    desc: 'Assesses the senator\'s depth of engagement in committee work — the backbone of legislative scrutiny. It combines the volume and quality of contributions in committee proceedings.',
+                    max: '25 pts',
+                    factors: 'Total words spoken in parliamentary proceedings (log-scaled, reflecting depth of engagement) and the number of motions sponsored or contributed to.',
+                    icon: 'users',
+                    color: '#14b8a6'
+                },
+                'County Representation': {
+                    desc: 'Reflects how well the senator represents and advocates for their county\'s interests in the Senate. This includes constituency engagement and devolution-related legislative efforts.',
+                    max: '5 pts',
+                    factors: 'County representation score based on engagement with county-specific matters, devolution advocacy, and responsiveness to county-level issues.',
+                    icon: 'map-pin',
+                    color: '#22c55e'
+                },
+                'Interests Representation': {
+                    desc: 'For nominated senators, this measures how effectively they represent the special interests they were nominated for — such as youth, women, persons with disabilities, or marginalized groups.',
+                    max: '5 pts',
+                    factors: 'Engagement with the nominated interest group, relevant motions and statements filed, and advocacy for the constituency of interest.',
+                    icon: 'map-pin',
+                    color: '#22c55e'
+                }
+            };
+
+            // Read current score values from the cards
+            var pillarCards = document.querySelectorAll('.pillar-card');
+
+            function getPillarScore(title) {
+                for (var i = 0; i < pillarCards.length; i++) {
+                    var h3 = pillarCards[i].querySelector('h3');
+                    if (h3 && h3.textContent.trim() === title) {
+                        var scoreSpan = pillarCards[i].querySelector('.text-2xl');
+                        return scoreSpan ? scoreSpan.textContent.trim() : '—';
+                    }
+                }
+                return '—';
+            }
+
+            function openPopup(title) {
+                var data = pillarData[title];
+                if (!data) return;
+                titleEl.textContent = title;
+                descEl.textContent = data.desc;
+                maxEl.textContent = data.max;
+                scoreEl.textContent = getPillarScore(title);
+                factorsEl.textContent = data.factors;
+                // Set icon
+                iconContainer.innerHTML = '<i data-lucide="' + data.icon + '" style="width:20px;height:20px;color:' + data.color + '"></i>';
+                if (typeof lucide !== 'undefined') lucide.createIcons({ nodes: [iconContainer] });
+                overlay.classList.remove('hidden');
+            }
+
+            function closePopup() {
+                overlay.classList.add('hidden');
+            }
+
+            // Attach to all info buttons
+            var infoBtns = document.querySelectorAll('.pillar-info-btn');
+            infoBtns.forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    var card = btn.closest('.pillar-card');
+                    if (!card) return;
+                    var h3 = card.querySelector('h3');
+                    if (!h3) return;
+                    openPopup(h3.textContent.trim());
+                });
+            });
+
+            if (closeBtn) closeBtn.addEventListener('click', closePopup);
+            overlay.addEventListener('click', function (e) {
+                if (e.target === overlay) closePopup();
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && !overlay.classList.contains('hidden')) closePopup();
             });
         })();
     </script>
