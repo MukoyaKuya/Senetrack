@@ -1,4 +1,4 @@
-# Senetrack Hansard 2025 Performance Engine
+# Senetrack Hansard 2025 Performance Engine.
 
 The Hansard Engine is the core scoring mechanism for the 2025 Senator Performance Tracking on Senetrack. It is designed to provide a fair, data-driven assessment of legislative activity, balancing reliable participation (structural) with active house participation (debate).
 
