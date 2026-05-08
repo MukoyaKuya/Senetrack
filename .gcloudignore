@@ -16,4 +16,4 @@ __pycache__/
 media/
 static_root/
 .env
-.env.*
+ 
