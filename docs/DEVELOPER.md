@@ -4,7 +4,7 @@ Quick reference for running, testing, and updating the ReportFormv2 codebase.
 
 ## Setup
 
-- **Python:** 3.10+
+- **Python:** 3.14 (3.10+ supported)
 - **Database:** SQLite by default; set `DATABASE_URL` for PostgreSQL in production.
 - **Optional:** `REDIS_URL` for cache/sessions; `MAPBOX_ACCESS_TOKEN` for frontier map.
 

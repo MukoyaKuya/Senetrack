@@ -4,9 +4,15 @@ set -e
 echo "Running migrations..."
 python manage.py migrate --noinput
 
-echo "Syncing performance data from JSON..."
-python manage.py sync_performance --apply
+if [ "${SKIP_SYNC_PERFORMANCE:-false}" != "true" ]; then
+  echo "Syncing performance data from JSON..."
+  python manage.py sync_performance --apply
+else
+  echo "Skipping sync_performance (SKIP_SYNC_PERFORMANCE=true)"
+fi
 
-echo "Starting Gunicorn server..."
-# Use the PORT environment variable provided by Cloud Run, default to 8080
-exec gunicorn root.wsgi:application --bind 0.0.0.0:${PORT:-8080} --workers 2 --threads 4 --timeout 60
+export GUNICORN_BIND="${GUNICORN_BIND:-0.0.0.0:${PORT:-8080}}"
+export GUNICORN_WORKERS="${GUNICORN_WORKERS:-2}"
+
+echo "Starting Gunicorn on ${GUNICORN_BIND} with ${GUNICORN_WORKERS} worker(s)..."
+exec gunicorn root.wsgi:application -c gunicorn.conf.py

@@ -1,0 +1,6 @@
+# Pyrefly configuration for Senetrack
+python-interpreter = ".venv/Scripts/python.exe"
+ignore-missing-imports = ["*"]
+
+[errors]
+missing-import = "ignore"

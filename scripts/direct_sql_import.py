@@ -1,4 +1,5 @@
 import json
+import os
 import psycopg2
 import sys
 from urllib.parse import urlparse
@@ -60,5 +61,13 @@ def direct_import(json_file, db_url):
     conn.close()
 
 if __name__ == "__main__":
-    db_url = "postgresql://neondb_owner:npg_UAeBkERHhF24@ep-falling-wind-adz4ytm9-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-    direct_import("voting_records_dump.json", db_url)
+    json_file = sys.argv[1] if len(sys.argv) > 1 else "voting_records_dump.json"
+    db_url = sys.argv[2] if len(sys.argv) > 2 else os.environ.get("DATABASE_URL", "").strip()
+    if not db_url:
+        print(
+            "Usage: python scripts/direct_sql_import.py [json_file] [database_url]",
+            file=sys.stderr,
+        )
+        print("Or set DATABASE_URL.", file=sys.stderr)
+        sys.exit(1)
+    direct_import(json_file, db_url)

@@ -13,10 +13,16 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 
-import dj_database_url
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv  # pyrefly: ignore [missing-import] # type: ignore
+    load_dotenv()
+except ImportError:
+    load_dotenv = None
 
-load_dotenv()
+try:
+    import dj_database_url  # pyrefly: ignore [missing-import] # type: ignore
+except ImportError:
+    dj_database_url = None
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -50,6 +56,12 @@ ALLOWED_HOSTS = [
     for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,senetrack-1073897174388.europe-west1.run.app,senetrack-1073897174388.us-east1.run.app,senetrack-1073897174388.us-central1.run.app').split(',') 
     if h.strip()
 ]
+
+# Support Render external hostname and .onrender.com automatically
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME and RENDER_EXTERNAL_HOSTNAME not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
 CSRF_TRUSTED_ORIGINS = [
     f"https://{h}" for h in ALLOWED_HOSTS if h not in ('localhost', '127.0.0.1')
 ]
@@ -110,13 +122,15 @@ WSGI_APPLICATION = 'root.wsgi.application'
 # Locally with DEBUG=True the app falls back to SQLite automatically.
 
 _IS_CLOUD_RUN = os.environ.get('K_SERVICE') is not None
+_IS_RENDER = os.environ.get('RENDER') is not None
+_IS_CLOUD = _IS_CLOUD_RUN or _IS_RENDER
 _use_remote_db = (
-    _IS_CLOUD_RUN
+    _IS_CLOUD
     or not DEBUG
     or os.environ.get('USE_REMOTE_DB', 'false').lower() in ('true', '1', 'yes')
 )
 
-_db_config = dj_database_url.config(default=None, conn_max_age=60) if _use_remote_db else None
+_db_config = dj_database_url.config(default=None, conn_max_age=60) if (_use_remote_db and dj_database_url) else None
 if _db_config:
     DATABASES = {'default': _db_config}
 else:
@@ -214,8 +228,8 @@ if not DEBUG:
     # Don't fail if source maps or other referenced files are missing
     WHITENOISE_MANIFEST_STRICT = False
 
-# Use Cloudinary for media storage on Cloud Run or when explicitly requested
-if not DEBUG or _IS_CLOUD_RUN or os.environ.get('USE_CLOUDINARY', 'false').lower() == 'true':
+# Use Cloudinary for media storage on Cloud Run, Render, or when explicitly requested
+if not DEBUG or _IS_CLOUD or os.environ.get('USE_CLOUDINARY', 'false').lower() == 'true':
     STORAGES["default"] = {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     }

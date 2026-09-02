@@ -63,7 +63,7 @@ class County(models.Model):
         if "res.cloudinary.com" in url:
             return url
         if url.startswith('/media/'):
-            is_cloud = os.environ.get('K_SERVICE') is not None
+            is_cloud = os.environ.get('K_SERVICE') is not None or os.environ.get('RENDER') is not None
             if not settings.DEBUG or is_cloud:
                 cloud_name = _get_cloudinary_cloud_name(settings)
                 if cloud_name:
@@ -79,7 +79,7 @@ class County(models.Model):
         if "res.cloudinary.com" in url:
             return url
         if url.startswith('/media/'):
-            is_cloud = os.environ.get('K_SERVICE') is not None
+            is_cloud = os.environ.get('K_SERVICE') is not None or os.environ.get('RENDER') is not None
             if not settings.DEBUG or is_cloud:
                 cloud_name = _get_cloudinary_cloud_name(settings)
                 if cloud_name:
@@ -129,7 +129,7 @@ class Party(models.Model):
         if "res.cloudinary.com" in url:
             return url
         if url.startswith('/media/'):
-            is_cloud = os.environ.get('K_SERVICE') is not None
+            is_cloud = os.environ.get('K_SERVICE') is not None or os.environ.get('RENDER') is not None
             if not settings.DEBUG or is_cloud:
                 relative_path = url.replace('/media/parties/', '')
                 if relative_path in ['upa_logo.png', 'kanu_logo.png', 'anc_logo.png']:
@@ -180,7 +180,7 @@ class Senator(models.Model):
             return url
 
         if url.startswith('/media/'):
-            is_cloud = os.environ.get('K_SERVICE') is not None
+            is_cloud = os.environ.get('K_SERVICE') is not None or os.environ.get('RENDER') is not None
             if not settings.DEBUG or is_cloud:
                 cloud_name = _get_cloudinary_cloud_name(settings)
                 if cloud_name:

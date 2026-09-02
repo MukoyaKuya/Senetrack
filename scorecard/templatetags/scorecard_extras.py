@@ -63,8 +63,8 @@ def thumb(url, params):
     
     # In production, if it's a local media URL, resolve to Cloudinary
     if url_str.startswith('/media/'):
-        # On Cloud Run, always resolve to Cloudinary even in DEBUG mode because local storage is ephemeral
-        is_cloud = os.environ.get('K_SERVICE') is not None
+        # In production or cloud containers (Cloud Run, Render), resolve to Cloudinary
+        is_cloud = os.environ.get('K_SERVICE') is not None or os.environ.get('RENDER') is not None
         if not settings.DEBUG or is_cloud:
             cloud_name = settings.CLOUDINARY_STORAGE.get('CLOUD_NAME', 'dlj4gpozf')
             relative_path = url_str.replace('/media/', '')
